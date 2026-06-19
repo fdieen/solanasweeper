@@ -8,14 +8,6 @@ export default function CubeGrid() {
     let destroyed = false;
     let animFrameId: number;
 
-    // Wrapper fixed op viewport, canvas erin — zo kan Three.js de canvas-style niet breken
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden;';
-    const canvas = document.createElement('canvas');
-    canvas.style.cssText = 'display:block;width:100%;height:100%;';
-    wrapper.appendChild(canvas);
-    document.body.appendChild(wrapper);
-
     async function init() {
       const THREE = await import('three');
       const { EffectComposer } = await import('three/examples/jsm/postprocessing/EffectComposer.js');
@@ -23,6 +15,10 @@ export default function CubeGrid() {
       const { UnrealBloomPass } = await import('three/examples/jsm/postprocessing/UnrealBloomPass.js');
 
       if (destroyed) return;
+
+      // Canvas staat al in de DOM via layout.tsx — nooit door JS aangemaakt
+      const canvas = document.getElementById('cube-canvas') as HTMLCanvasElement;
+      if (!canvas) return;
 
       const isMobile = window.innerWidth < 768;
 
@@ -211,7 +207,7 @@ export default function CubeGrid() {
     return () => {
       destroyed = true;
       cleanup.then(fn => fn?.());
-      if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+      // Canvas blijft in DOM (staat in layout.tsx)
     };
   }, []);
 
