@@ -1,12 +1,9 @@
 import Header from '@/components/Header';
-import HeroClient from '@/components/HeroClient';
 import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <main style={{ position: 'relative', minHeight: '100vh', background: '#04040a' }}>
-      {/* Three.js background */}
-      <HeroClient />
+    <main style={{ position: 'relative', minHeight: '100vh' }}>
 
       {/* Atmospheric CSS glows */}
       <div style={{
