@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 import type * as THREE_TYPE from 'three';
 
 export default function CubeGrid() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     let destroyed = false;
     let animFrameId: number;
+
+    // Canvas direct op body — buiten elke React container
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;display:block;pointer-events:none;';
+    document.body.appendChild(canvas);
 
     async function init() {
       const THREE = await import('three');
@@ -17,8 +19,7 @@ export default function CubeGrid() {
       const { RenderPass } = await import('three/examples/jsm/postprocessing/RenderPass.js');
       const { UnrealBloomPass } = await import('three/examples/jsm/postprocessing/UnrealBloomPass.js');
 
-      if (destroyed || !canvasRef.current) return;
-      const canvas = canvasRef.current;
+      if (destroyed) return;
 
       const isMobile = window.innerWidth < 768;
 
@@ -126,7 +127,7 @@ export default function CubeGrid() {
 
       cubeGroup.rotation.y = Math.PI / 4;
       cubeGroup.scale.setScalar(0.72);
-      cubeGroup.position.set(1.5, -1.5, 0);
+      cubeGroup.position.set(1.5, 0.5, 0);
       scene.add(cubeGroup);
 
       // Mouse
@@ -195,7 +196,6 @@ export default function CubeGrid() {
       window.addEventListener('resize', onResize);
 
       return () => {
-        destroyed = true;
         cancelAnimationFrame(animFrameId);
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('resize', onResize);
@@ -205,21 +205,12 @@ export default function CubeGrid() {
     }
 
     const cleanup = init();
-    return () => { destroyed = true; cleanup.then(fn => fn?.()); };
+    return () => {
+      destroyed = true;
+      cleanup.then(fn => fn?.());
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    };
   }, []);
 
-  return createPortal(
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        top: 0, left: 0,
-        width: '100vw', height: '100vh',
-        zIndex: 0,
-        display: 'block',
-        pointerEvents: 'none',
-      }}
-    />,
-    document.body
-  );
+  return null;
 }
