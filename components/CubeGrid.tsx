@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type * as THREE_TYPE from 'three';
 
 export default function CubeGrid() {
@@ -207,10 +208,18 @@ export default function CubeGrid() {
     return () => { destroyed = true; cleanup.then(fn => fn?.()); };
   }, []);
 
-  return (
+  return createPortal(
     <canvas
       ref={canvasRef}
-      style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
-    />
+      style={{
+        position: 'fixed',
+        top: 0, left: 0,
+        width: '100vw', height: '100vh',
+        zIndex: 0,
+        display: 'block',
+        pointerEvents: 'none',
+      }}
+    />,
+    document.body
   );
 }
