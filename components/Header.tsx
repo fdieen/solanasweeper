@@ -8,9 +8,9 @@ export default function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-5">
-        <span style={{ fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
+        <a href="/" style={{ fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '1.05rem', letterSpacing: '-0.01em', color: '#fff', textDecoration: 'none' }}>
           SolSweep
-        </span>
+        </a>
         <button
           onClick={() => setOpen(true)}
           style={{
