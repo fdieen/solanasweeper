@@ -77,10 +77,15 @@ export default function Header() {
           ×
         </button>
 
-        {['How it works', 'Safety', 'FAQ', 'Roadmap'].map((item) => (
+        {[
+          { label: 'How it works', href: '/how-it-works' },
+          { label: 'Safety', href: '/safety' },
+          { label: 'FAQ', href: '/faq' },
+          { label: 'Roadmap', href: '/roadmap' },
+        ].map(({ label, href }) => (
           <a
-            key={item}
-            href="#"
+            key={label}
+            href={href}
             onClick={() => setOpen(false)}
             style={{
               fontFamily: 'General Sans, sans-serif',
@@ -95,7 +100,7 @@ export default function Header() {
             onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
           >
-            {item}
+            {label}
           </a>
         ))}
 

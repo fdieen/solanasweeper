@@ -1,5 +1,6 @@
 import Header from '@/components/Header';
 import HeroClient from '@/components/HeroClient';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
@@ -121,6 +122,7 @@ export default function Home() {
             ))}
           </div>
         </section>
+        <Footer />
       </div>
     </main>
   );
