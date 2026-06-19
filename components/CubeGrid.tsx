@@ -8,10 +8,13 @@ export default function CubeGrid() {
     let destroyed = false;
     let animFrameId: number;
 
-    // Canvas direct op body — buiten elke React container
+    // Wrapper fixed op viewport, canvas erin — zo kan Three.js de canvas-style niet breken
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden;';
     const canvas = document.createElement('canvas');
-    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;display:block;pointer-events:none;';
-    document.body.appendChild(canvas);
+    canvas.style.cssText = 'display:block;width:100%;height:100%;';
+    wrapper.appendChild(canvas);
+    document.body.appendChild(wrapper);
 
     async function init() {
       const THREE = await import('three');
@@ -25,7 +28,7 @@ export default function CubeGrid() {
 
       const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.0;
 
@@ -189,7 +192,7 @@ export default function CubeGrid() {
       const onResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(window.innerWidth, window.innerHeight, false);
         composer.setSize(window.innerWidth, window.innerHeight);
         bloom.resolution.set(window.innerWidth, window.innerHeight);
       };
@@ -208,7 +211,7 @@ export default function CubeGrid() {
     return () => {
       destroyed = true;
       cleanup.then(fn => fn?.());
-      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
     };
   }, []);
 
