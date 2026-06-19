@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <main style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden', background: '#04040a' }}>
+    <main style={{ position: 'relative', minHeight: '100vh', background: '#04040a' }}>
       {/* Three.js background */}
       <HeroClient />
 

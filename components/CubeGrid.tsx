@@ -32,7 +32,7 @@ export default function CubeGrid() {
 
       const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 200);
       camera.position.set(10, 13, 10);
-      camera.lookAt(1, 0, 1);
+      camera.lookAt(-2.5, 0, -2.5);
 
       const composer = new EffectComposer(renderer);
       composer.addPass(new RenderPass(scene, camera));
@@ -124,6 +124,7 @@ export default function CubeGrid() {
       cubeGroup.add(platform);
 
       cubeGroup.rotation.y = Math.PI / 4;
+      cubeGroup.scale.setScalar(0.72);
       cubeGroup.position.set(1.5, -1.5, 0);
       scene.add(cubeGroup);
 
