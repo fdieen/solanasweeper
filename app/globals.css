@@ -9,17 +9,15 @@
 
 * { box-sizing: border-box; }
 
-html {
-  background: var(--bg);
-  min-height: 100%;
-}
-
-body {
+html, body {
   background: var(--bg);
   color: #fff;
   font-family: 'General Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
 }
 
 ::-webkit-scrollbar { width: 6px; }

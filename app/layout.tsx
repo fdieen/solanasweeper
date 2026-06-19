@@ -12,7 +12,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <CanvasBackground />
-        {children}
+        <div style={{ position: 'absolute', inset: 0, overflowY: 'auto' }}>
+          {children}
+        </div>
       </body>
     </html>
   );
