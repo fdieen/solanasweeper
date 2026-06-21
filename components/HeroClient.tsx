@@ -2,8 +2,13 @@
 
 import dynamic from 'next/dynamic';
 
-const CubeGrid = dynamic(() => import('./CubeGrid'), { ssr: false });
+const HeroCanvas = dynamic(() => import('./HeroCanvas'), { ssr: false });
 
-export default function HeroClient() {
-  return <CubeGrid />;
+type Props = {
+  transparent?: boolean;
+  lookAt?: [number, number, number];
+};
+
+export default function HeroClient({ transparent, lookAt }: Props) {
+  return <HeroCanvas transparent={transparent} lookAt={lookAt} />;
 }

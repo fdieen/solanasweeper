@@ -1,15 +1,32 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import RobotMascot from './RobotMascot';
+import ConnectWalletButton from './ConnectWalletButton';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const showRobot = pathname === '/';
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-5">
-        <a href="/" style={{ fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '1.05rem', letterSpacing: '-0.01em', color: '#fff', textDecoration: 'none' }}>
-          SolSweep
+      {showRobot && <RobotMascot menuOpen={open} />}
+      <header
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
+        style={{
+          background: 'linear-gradient(180deg, rgba(12,8,24,0.30) 0%, rgba(12,8,24,0.12) 100%)',
+          backdropFilter: 'blur(22px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+          borderBottom: '1px solid rgba(153,69,255,0.16)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+        }}
+      >
+        <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <img src="/logo.svg" alt="SolSweep" style={{ height: '32px', width: 'auto' }} />
         </a>
         <button
           onClick={() => setOpen(true)}
@@ -104,23 +121,9 @@ export default function Header() {
           </a>
         ))}
 
-        <button
-          style={{
-            marginTop: '24px',
-            fontFamily: 'General Sans, sans-serif',
-            fontWeight: 600,
-            fontSize: '0.95rem',
-            background: '#fff',
-            color: '#05050a',
-            border: 'none',
-            borderRadius: '999px',
-            padding: '13px 24px',
-            cursor: 'pointer',
-            width: '100%',
-          }}
-        >
-          Connect Wallet
-        </button>
+        <div style={{ marginTop: '24px' }}>
+          <ConnectWalletButton fullWidth showArrow={false} />
+        </div>
       </nav>
     </>
   );

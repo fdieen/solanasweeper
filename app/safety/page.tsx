@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import InnerLayout from '@/components/InnerLayout';
+import KeyClient from '@/components/KeyClient';
 
 export const metadata: Metadata = {
-  title: 'Safety — SolSweep',
-  description: 'Non-custodial. You sign every transaction. Your keys never leave your wallet.',
+  title: 'Safety',
+  description: 'Non-custodial. You sign every transaction. Your keys never leave your wallet. Swaps powered by Jupiter.',
+  alternates: { canonical: '/safety' },
 };
 
 const doList = [
@@ -14,10 +16,10 @@ const doList = [
 ];
 
 const dontList = [
-  'Hold your private keys — ever',
+  'Hold your private keys, ever',
   'Submit transactions without your signature',
   'Move funds without your explicit approval',
-  'Claim to be audited (it\'s on the roadmap — not yet true)',
+  'Claim to be audited (it\'s on the roadmap, not yet true)',
 ];
 
 const trustItems = [
@@ -29,24 +31,31 @@ const trustItems = [
   {
     label: 'You sign everything',
     color: '#9945FF',
-    body: 'No transaction is submitted without your explicit signature. You can inspect the transaction in your wallet before approving. On Solana, all transactions are public on-chain — nothing is hidden.',
+    body: 'No transaction is submitted without your explicit signature. You can inspect the transaction in your wallet before approving. On Solana, all transactions are public on-chain. Nothing is hidden.',
   },
   {
     label: 'Powered by Jupiter',
     color: '#14F195',
-    body: 'Token → SOL swaps use Jupiter, Solana\'s largest DEX aggregator. We don\'t run our own liquidity pools or market-make against you.',
+    body: 'Token to SOL swaps use Jupiter, Solana\'s largest DEX aggregator. We don\'t run our own liquidity pools or market-make against you.',
   },
   {
     label: 'Burns are permanent',
     color: '#9945FF',
-    body: 'In Pro Mode, burning tokens is irreversible. We make this unmissable before you sign. Fun Mode (closing empty accounts) is the safe default — no tokens are destroyed.',
+    body: 'In Pro Mode, burning tokens is irreversible. We make this unmissable before you sign. Fun Mode (closing empty accounts) is the safe default. No tokens are destroyed.',
   },
 ];
 
 export default function Safety() {
   return (
-    <InnerLayout>
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: 'clamp(100px, 14vw, 160px) clamp(24px, 6vw, 80px) 80px' }}>
+    <InnerLayout bg={`
+      radial-gradient(ellipse 90% 70% at 50% 35%, rgba(40,30,90,0.30) 0%, transparent 70%),
+      radial-gradient(ellipse 65% 50% at 90% 12%, rgba(20,241,149,0.22) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 50% at 10% 10%, rgba(153,69,255,0.24) 0%, transparent 55%),
+      radial-gradient(ellipse 65% 50% at 85% 95%, rgba(20,241,149,0.16) 0%, transparent 60%),
+      radial-gradient(ellipse 55% 45% at 15% 100%, rgba(153,69,255,0.20) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(30,20,60,0.22) 0%, rgba(12,10,26,0.10) 50%, rgba(20,40,40,0.18) 100%)
+    `}>
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: '860px', margin: '0 auto', padding: 'clamp(100px, 14vw, 160px) clamp(24px, 6vw, 80px) 80px' }}>
 
         <p style={{
           fontFamily: 'General Sans, sans-serif', fontWeight: 400,
@@ -55,13 +64,32 @@ export default function Safety() {
         }}>
           Security & trust
         </p>
-        <h1 style={{
-          fontFamily: 'General Sans, sans-serif', fontWeight: 700,
-          fontSize: 'clamp(2.2rem, 4.5vw, 3.8rem)', letterSpacing: '-0.03em',
-          lineHeight: 1.05, color: '#fff', marginBottom: '24px',
-        }}>
-          Your keys.<br />Your SOL.
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 3vw, 40px)', marginBottom: '24px' }}>
+          <h1 style={{
+            fontFamily: 'General Sans, sans-serif', fontWeight: 700,
+            fontSize: 'clamp(2.2rem, 4.5vw, 3.8rem)', letterSpacing: '-0.03em',
+            lineHeight: 1.05, color: '#fff', margin: 0,
+          }}>
+            Your keys.<br />Your SOL.
+          </h1>
+          <div style={{
+            position: 'relative',
+            zIndex: 3,
+            width: 'clamp(110px, 16vw, 180px)',
+            height: 'clamp(110px, 16vw, 180px)',
+            flexShrink: 0,
+          }}>
+            {/* Zachte glow achter de sleutel zodat de donkere randen niet wegvallen */}
+            <div style={{
+              position: 'absolute', inset: '-10%',
+              background: 'radial-gradient(circle, rgba(120,60,200,0.22) 0%, rgba(20,241,149,0.10) 45%, transparent 70%)',
+              filter: 'blur(14px)',
+              zIndex: -1,
+              pointerEvents: 'none',
+            }} />
+            <KeyClient />
+          </div>
+        </div>
         <p style={{
           fontFamily: 'General Sans, sans-serif', fontWeight: 400,
           fontSize: '1rem', lineHeight: 1.7,
@@ -151,7 +179,7 @@ export default function Safety() {
             fontSize: '0.88rem', lineHeight: 1.7,
             color: 'rgba(255,255,255,0.4)',
           }}>
-            <strong style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>Security audit</strong> — A full audit is planned and on the roadmap. We will not claim &ldquo;audited&rdquo; until it is done. That is a deliberate choice — false trust signals are worse than none.
+            <strong style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>Security audit.</strong> A full audit is planned and on the roadmap. We will not claim &ldquo;audited&rdquo; until it is done. That is a deliberate choice, false trust signals are worse than none.
           </p>
         </div>
       </div>

@@ -1,16 +1,18 @@
 import type { Metadata } from 'next';
 import InnerLayout from '@/components/InnerLayout';
+import ScannerBot from '@/components/ScannerBot';
 
 export const metadata: Metadata = {
-  title: 'How it works — SolSweep',
-  description: 'Connect your wallet, scan for junk, and reclaim locked SOL in three steps.',
+  title: 'How it works',
+  description: 'Connect your wallet, scan for junk, and reclaim locked SOL in three steps. Fun Mode and Pro Mode explained.',
+  alternates: { canonical: '/how-it-works' },
 };
 
 const steps = [
   {
     num: '01',
     title: 'Connect your wallet',
-    body: 'Hit Connect Wallet and approve in Phantom, Solflare, or Backpack. We never touch your keys — the connection is read-only until you explicitly sign a transaction.',
+    body: 'Hit Connect Wallet and approve in Phantom, Solflare, or Backpack. We never touch your keys. The connection is read-only until you explicitly sign a transaction.',
     color: '#14F195',
   },
   {
@@ -29,7 +31,14 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <InnerLayout>
+    <InnerLayout bg={`
+      radial-gradient(ellipse 90% 70% at 50% 40%, rgba(60,30,110,0.30) 0%, transparent 70%),
+      radial-gradient(ellipse 70% 50% at 12% 8%, rgba(153,69,255,0.30) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 45% at 92% 18%, rgba(20,241,149,0.20) 0%, transparent 55%),
+      radial-gradient(ellipse 65% 50% at 85% 95%, rgba(153,69,255,0.26) 0%, transparent 60%),
+      radial-gradient(ellipse 55% 45% at 18% 100%, rgba(20,241,149,0.16) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(40,22,75,0.22) 0%, rgba(14,10,28,0.10) 50%, rgba(40,22,75,0.20) 100%)
+    `}>
       <div style={{ maxWidth: '860px', margin: '0 auto', padding: 'clamp(100px, 14vw, 160px) clamp(24px, 6vw, 80px) 80px' }}>
 
         {/* Header */}
@@ -48,49 +57,55 @@ export default function HowItWorks() {
           Connect, scan,<br />reclaim.
         </h1>
 
-        {/* Steps */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-          {steps.map((step, i) => (
-            <div key={step.num} style={{
-              display: 'grid',
-              gridTemplateColumns: '80px 1fr',
-              gap: '0 32px',
-              padding: '40px 0',
-              borderTop: i === 0 ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.08)',
-            }}>
-              {/* Big number */}
-              <div style={{
-                fontFamily: 'General Sans, sans-serif', fontWeight: 700,
-                fontSize: '3rem', lineHeight: 1,
-                color: step.color,
-                opacity: 0.9,
-                letterSpacing: '-0.04em',
-                paddingTop: '4px',
+        {/* Steps — liquid glass cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {steps.map((step) => {
+            const c = step.color === '#14F195' ? '20,241,149' : '153,69,255';
+            return (
+              <div key={step.num} style={{
+                display: 'grid',
+                gridTemplateColumns: '80px 1fr',
+                gap: '0 32px',
+                padding: '32px',
+                borderRadius: '20px',
+                background: `linear-gradient(135deg, rgba(${c},0.10) 0%, rgba(255,255,255,0.04) 45%, rgba(${c},0.06) 100%)`,
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: `1px solid rgba(${c},0.22)`,
+                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 32px rgba(${c},0.08)`,
               }}>
-                {step.num}
-              </div>
-
-              <div>
-                <h2 style={{
-                  fontFamily: 'General Sans, sans-serif', fontWeight: 600,
-                  fontSize: 'clamp(1.1rem, 2vw, 1.35rem)', letterSpacing: '-0.02em',
-                  color: '#fff', marginBottom: '12px',
+                {/* Big number */}
+                <div style={{
+                  fontFamily: 'General Sans, sans-serif', fontWeight: 700,
+                  fontSize: '3rem', lineHeight: 1,
+                  color: step.color,
+                  opacity: 0.95,
+                  letterSpacing: '-0.04em',
+                  paddingTop: '4px',
+                  textShadow: `0 0 24px rgba(${c},0.4)`,
                 }}>
-                  {step.title}
-                </h2>
-                <p style={{
-                  fontFamily: 'General Sans, sans-serif', fontWeight: 400,
-                  fontSize: '0.95rem', lineHeight: 1.7,
-                  color: 'rgba(255,255,255,0.45)', maxWidth: '520px',
-                }}>
-                  {step.body}
-                </p>
-              </div>
-            </div>
-          ))}
+                  {step.num}
+                </div>
 
-          {/* Bottom border */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+                <div>
+                  <h2 style={{
+                    fontFamily: 'General Sans, sans-serif', fontWeight: 600,
+                    fontSize: 'clamp(1.1rem, 2vw, 1.35rem)', letterSpacing: '-0.02em',
+                    color: '#fff', marginBottom: '12px',
+                  }}>
+                    {step.title}
+                  </h2>
+                  <p style={{
+                    fontFamily: 'General Sans, sans-serif', fontWeight: 400,
+                    fontSize: '0.95rem', lineHeight: 1.7,
+                    color: 'rgba(255,255,255,0.5)', maxWidth: '520px',
+                  }}>
+                    {step.body}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Modes callout */}
@@ -107,7 +122,7 @@ export default function HowItWorks() {
             {
               label: 'Pro Mode',
               color: '#9945FF',
-              desc: 'Advanced. Swap residual tokens to SOL via Jupiter, and burn true junk. Burns are permanent — you\'ll confirm before signing.',
+              desc: 'Advanced. Swap residual tokens to SOL via Jupiter, and burn true junk. Burns are permanent. You\'ll confirm before signing.',
             },
           ].map(({ label, color, desc }) => (
             <div key={label} style={{
@@ -158,6 +173,7 @@ export default function HowItWorks() {
           </a>
         </div>
       </div>
+      <ScannerBot />
     </InnerLayout>
   );
 }

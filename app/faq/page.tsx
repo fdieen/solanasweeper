@@ -2,31 +2,33 @@
 
 import { useState } from 'react';
 import InnerLayout from '@/components/InnerLayout';
+import AuroraBackground from '@/components/AuroraBackground';
+import HelpBot from '@/components/HelpBot';
 
 const faqs = [
   {
     q: 'What is SolSweep?',
-    a: 'SolSweep is a non-custodial Solana dApp that helps you clean up your wallet. It closes empty token accounts, burns worthless tokens and NFTs, and swaps leftover tokens to SOL — all signed by you, nothing held by us.',
+    a: 'SolSweep is a non-custodial Solana dApp that helps you clean up your wallet. It closes empty token accounts, burns worthless tokens and NFTs, and swaps leftover tokens to SOL. All signed by you, nothing held by us.',
   },
   {
     q: 'What is rent reclaim?',
-    a: 'Every Solana token account holds a small SOL deposit (~0.002 SOL) called rent. This rent is refunded when the account is closed. If you\'ve traded dozens of tokens, that adds up — SolSweep closes those accounts and returns the rent directly to your wallet.',
+    a: 'Every Solana token account holds a small SOL deposit (~0.002 SOL) called rent. This rent is refunded when the account is closed. If you\'ve traded dozens of tokens, that adds up. SolSweep closes those accounts and returns the rent directly to your wallet.',
   },
   {
     q: 'Is it safe?',
-    a: 'SolSweep is non-custodial — we never hold your keys or submit transactions without your signature. Fun Mode (closing empty accounts) is fully safe and reversible in the sense that nothing is destroyed. Pro Mode adds burns (irreversible) and swaps, which require explicit confirmation.',
+    a: 'SolSweep is non-custodial. We never hold your keys or submit transactions without your signature. Fun Mode (closing empty accounts) is fully safe and reversible in the sense that nothing is destroyed. Pro Mode adds burns (irreversible) and swaps, which require explicit confirmation.',
   },
   {
     q: 'What\'s the difference between Fun Mode and Pro Mode?',
-    a: 'Fun Mode only closes empty token accounts and reclaims rent — nothing is destroyed, lowest risk. Pro Mode adds the ability to swap residual tokens to SOL via Jupiter, and to permanently burn worthless tokens or NFTs. Burns cannot be undone; we make that unmissable before you sign.',
+    a: 'Fun Mode only closes empty token accounts and reclaims rent. Nothing is destroyed, lowest risk. Pro Mode adds the ability to swap residual tokens to SOL via Jupiter, and to permanently burn worthless tokens or NFTs. Burns cannot be undone; we make that unmissable before you sign.',
   },
   {
     q: 'What is the fee?',
-    a: 'SolSweep takes 5% of what you reclaim — rent recovered and swap proceeds. The fee is deducted from those proceeds, so you never pay out of pocket. If you reclaim nothing, there is no fee.',
+    a: 'SolSweep takes 5% of what you reclaim, rent recovered and swap proceeds. The fee is deducted from those proceeds, so you never pay out of pocket. If you reclaim nothing, there is no fee.',
   },
   {
     q: 'Can I lose tokens I actually want?',
-    a: 'Not by accident. SolSweep only presents accounts for you to select — nothing is touched until you explicitly choose it and sign the transaction. In Pro Mode, before any burn is executed, you will see a clear confirmation that the action is permanent.',
+    a: 'Not by accident. SolSweep only presents accounts for you to select. Nothing is touched until you explicitly choose it and sign the transaction. In Pro Mode, before any burn is executed, you will see a clear confirmation that the action is permanent.',
   },
   {
     q: 'Which wallets are supported?',
@@ -38,7 +40,7 @@ const faqs = [
   },
   {
     q: 'Which DEX does SolSweep use for swaps?',
-    a: 'Jupiter — Solana\'s largest DEX aggregator. We route through Jupiter for best execution on token → SOL swaps. We do not run our own liquidity.',
+    a: 'Jupiter, Solana\'s largest DEX aggregator. We route through Jupiter for best execution on token to SOL swaps. We do not run our own liquidity.',
   },
   {
     q: 'Is the code open source?',
@@ -93,7 +95,8 @@ export default function FAQ() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
-    <InnerLayout>
+    <InnerLayout bgNode={<AuroraBackground />}>
+      <HelpBot />
       <div style={{ maxWidth: '760px', margin: '0 auto', padding: 'clamp(100px, 14vw, 160px) clamp(24px, 6vw, 80px) 80px' }}>
 
         <p style={{

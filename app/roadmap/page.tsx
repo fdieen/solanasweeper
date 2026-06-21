@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import InnerLayout from '@/components/InnerLayout';
+import MapPin from '@/components/MapPin';
+import RoadmapBackground from '@/components/RoadmapBackground';
 
 export const metadata: Metadata = {
-  title: 'Roadmap — SolSweep',
-  description: 'Where SolSweep is headed.',
+  title: 'Roadmap',
+  description: 'Where SolSweep is headed: Fun Mode rent reclaim, Pro Mode swap & burn, a public reclaim counter, and a security audit.',
+  alternates: { canonical: '/roadmap' },
 };
 
 type Status = 'done' | 'live' | 'building' | 'planned';
@@ -13,18 +16,18 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
     status: 'done',
     label: 'Shipped',
     title: 'Hero & landing page',
-    body: 'Brand identity, hero animation, and the foundation of the site — fully live.',
+    body: 'Brand identity, hero animation, and the foundation of the site, fully live.',
   },
   {
     status: 'live',
     label: 'In progress',
-    title: 'Fun Mode — rent reclaim',
-    body: 'Connect wallet → scan empty token accounts → close them all → SOL lands in your wallet. The safe core of SolSweep.',
+    title: 'Fun Mode, rent reclaim',
+    body: 'Connect wallet, scan empty token accounts, close them all, and SOL lands in your wallet. The safe core of SolSweep.',
   },
   {
     status: 'building',
     label: 'Next up',
-    title: 'Pro Mode — swap & burn',
+    title: 'Pro Mode, swap & burn',
     body: 'Swap residual tokens to SOL via Jupiter. Permanently burn worthless SPL tokens and junk NFTs. Full irreversible-action confirmation before signing.',
   },
   {
@@ -43,7 +46,7 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
     status: 'planned',
     label: 'Planned',
     title: 'Live stats',
-    body: 'A real-time counter of SOL reclaimed across all SolSweep users — once there is real data to show.',
+    body: 'A real-time counter of SOL reclaimed across all SolSweep users, once there is real data to show.',
   },
 ];
 
@@ -56,7 +59,8 @@ const statusStyle: Record<Status, { color: string; bg: string; dot: string }> = 
 
 export default function Roadmap() {
   return (
-    <InnerLayout>
+    <InnerLayout bg="#06040d" bgNode={<RoadmapBackground />}>
+      <MapPin />
       <div style={{ maxWidth: '760px', margin: '0 auto', padding: 'clamp(100px, 14vw, 160px) clamp(24px, 6vw, 80px) 80px' }}>
 
         <p style={{

@@ -1,49 +1,55 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import CircuitBackground from '@/components/CircuitBackground';
+import GemClient from '@/components/GemClient';
+import ConnectWalletButton from '@/components/ConnectWalletButton';
+import WalletScan from '@/components/WalletScan';
 
 export default function Home() {
   return (
-    <main style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main style={{ minHeight: '100vh', background: '#04040a', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Atmospheric glows — fixed, achter alles */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none',
-        background: `
-          radial-gradient(ellipse 60% 55% at -5% 110%, rgba(130,25,255,0.85) 0%, transparent 55%),
-          radial-gradient(ellipse 55% 50% at 100% 110%, rgba(20,241,149,0.65) 0%, transparent 52%),
-          radial-gradient(ellipse 90% 30% at 50% 108%, rgba(90,10,180,0.45) 0%, transparent 48%)
-        `,
-      }} />
-
-      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <Header />
 
-        {/* Hero — volledig scherm, content links uitgelijnd, verticaal gecentreerd */}
         <section style={{
           flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 clamp(32px, 7vw, 100px)',
+          position: 'relative',
           minHeight: '100vh',
+          overflow: 'hidden',
+          background: '#04040a',
         }}>
-          <div style={{ maxWidth: '480px', width: '100%' }}>
+          {/* Foto-achtergrond */}
+          <img src="/hero-bg.jpg" alt="" aria-hidden="true" className="hero-bg-img" />
 
-            <p style={{
-              fontFamily: 'General Sans, sans-serif',
-              fontWeight: 400,
-              fontSize: '0.78rem',
-              letterSpacing: '0.08em',
-              color: 'rgba(255,255,255,0.38)',
-              marginBottom: '28px',
-              textTransform: 'uppercase',
-            }}>
-              Non-custodial · built on Solana
-            </p>
+          {/* Circuit-draden transparant over de foto */}
+          <CircuitBackground showLogo={false} background="transparent" />
 
+          {/* Donkere gradient links voor leesbare tekst, rechts foto zichtbaar */}
+          <div className="hero-overlay" aria-hidden="true" />
+
+          {/* Echte 3D edelsteen, centraal */}
+          <div className="hero-gem-glow" aria-hidden="true" />
+          <div className="hero-gem-3d">
+            <GemClient />
+          </div>
+
+          {/* Tekst links — absoluut, verticaal gecentreerd */}
+          <div className="hero-text" style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 10,
+            padding: 'clamp(80px, 10vw, 120px) clamp(32px, 6vw, 100px)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}>
             <h1 style={{
               fontFamily: 'General Sans, sans-serif',
               fontWeight: 700,
-              fontSize: 'clamp(2.8rem, 5vw, 5rem)',
+              fontSize: 'clamp(2.6rem, 4.2vw, 5rem)',
               lineHeight: 1.0,
               letterSpacing: '-0.035em',
               color: '#fff',
@@ -64,46 +70,36 @@ export default function Home() {
               Close empty token accounts, reclaim locked SOL, and clean your wallet in one click.
             </p>
 
-            <button style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontFamily: 'General Sans, sans-serif',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              background: '#fff',
-              color: '#05050a',
-              border: 'none',
-              borderRadius: '999px',
-              padding: '13px 18px 13px 26px',
-              cursor: 'pointer',
-              width: 'fit-content',
-              marginBottom: '36px',
-            }}>
-              Connect Wallet
-              <span style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: '30px', height: '30px',
-                background: '#05050a', borderRadius: '50%',
-              }}>
-                <svg width="14" height="12" viewBox="0 0 14 12" fill="none">
-                  <path d="M2 6H12M12 6L8 2M12 6L8 10" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </span>
-            </button>
+            <div style={{ marginBottom: '36px' }}>
+              <ConnectWalletButton />
+              <WalletScan />
+            </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {['You sign every transaction', 'Powered by Jupiter', 'Keys never leave your wallet'].map((t) => (
+            <div className="hero-badges" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+              {[
+                { t: 'You sign every transaction', size: 0.95, pad: '11px 18px', icon: 16 },
+                { t: 'Powered by Jupiter',         size: 0.8,  pad: '9px 15px',  icon: 14 },
+                { t: 'Keys never leave your wallet', size: 0.68, pad: '7px 13px',  icon: 12 },
+              ].map(({ t, size, pad, icon }) => (
                 <span key={t} style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
                   fontFamily: 'General Sans, sans-serif',
-                  fontWeight: 400,
-                  fontSize: '0.72rem',
-                  color: 'rgba(255,255,255,0.3)',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: '999px',
-                  padding: '5px 12px',
+                  fontWeight: 500,
+                  fontSize: `${size}rem`,
+                  color: 'rgba(255,255,255,0.6)',
+                  background: 'linear-gradient(135deg, rgba(20,241,149,0.08) 0%, rgba(153,69,255,0.08) 100%)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '10px',
+                  padding: pad,
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
                 }}>
+                  <svg width={icon} height={icon} viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                    <path d="M2 7.5L5.5 11L12 3.5" stroke="#14F195" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                   {t}
                 </span>
               ))}
