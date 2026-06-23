@@ -42,7 +42,7 @@ export default function Footer() {
         gap: '16px',
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          <img src="/logo.svg" alt="SolSweeper" style={{ height: '28px', width: 'auto' }} />
+          <img src="/logo.svg" alt="SolanaSweeper" style={{ height: '28px', width: 'auto' }} />
         </a>
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           {[
@@ -67,7 +67,7 @@ export default function Footer() {
           ))}
         </div>
         <span style={{ fontFamily: 'General Sans, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)' }}>
-          © 2026 SolSweeper · Non-custodial
+          © 2026 SolanaSweeper · Non-custodial
         </span>
       </div>
     </footer>

@@ -15,6 +15,8 @@ export type TokenHolding = {
   frozen: boolean;
   isNft: boolean;
   compressed: boolean;
+  name?: string;     // metadata (DAS) — voor de burn-UI (naam herkennen)
+  image?: string;    // logo/afbeelding (DAS)
 };
 
 export type Valuation = {

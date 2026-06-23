@@ -26,13 +26,16 @@ const ALLOWED_METHODS = new Set<string>([
   'getEpochInfo',
   'getVersion',
   'getGenesisHash',
+  // Helius DAS — alleen wat Pro Mode nodig heeft (inventaris + metadata)
+  'getAssetsByOwner',
+  'getAsset',
 ]);
 
 function allowedOrigins(): string[] {
   return [
     process.env.NEXT_PUBLIC_SITE_URL,
-    'https://solsweeper.com',
-    'https://www.solsweeper.com',
+    'https://solanasweeper.com',
+    'https://www.solanasweeper.com',
     'http://localhost:3000',
     'http://localhost:3999',
   ].filter(Boolean) as string[];

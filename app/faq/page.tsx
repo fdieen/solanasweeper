@@ -7,16 +7,16 @@ import HelpBot from '@/components/HelpBot';
 
 const faqs = [
   {
-    q: 'What is SolSweeper?',
-    a: 'SolSweeper is a non-custodial Solana dApp that helps you clean up your wallet. It closes empty token accounts, burns worthless tokens and NFTs, and swaps leftover tokens to SOL. All signed by you, nothing held by us.',
+    q: 'What is SolanaSweeper?',
+    a: 'SolanaSweeper is a non-custodial Solana dApp that helps you clean up your wallet. It closes empty token accounts, burns worthless tokens and NFTs, and swaps leftover tokens to SOL. All signed by you, nothing held by us.',
   },
   {
     q: 'What is rent reclaim?',
-    a: 'Every Solana token account holds a small SOL deposit (~0.002 SOL) called rent. This rent is refunded when the account is closed. If you\'ve traded dozens of tokens, that adds up. SolSweeper closes those accounts and returns the rent directly to your wallet.',
+    a: 'Every Solana token account holds a small SOL deposit (~0.002 SOL) called rent. This rent is refunded when the account is closed. If you\'ve traded dozens of tokens, that adds up. SolanaSweeper closes those accounts and returns the rent directly to your wallet.',
   },
   {
     q: 'Is it safe?',
-    a: 'SolSweeper is non-custodial. We never hold your keys or submit transactions without your signature. Fun Mode (closing empty accounts) is fully safe and reversible in the sense that nothing is destroyed. Pro Mode adds burns (irreversible) and swaps, which require explicit confirmation.',
+    a: 'SolanaSweeper is non-custodial. We never hold your keys or submit transactions without your signature. Fun Mode (closing empty accounts) is fully safe and reversible in the sense that nothing is destroyed. Pro Mode adds burns (irreversible) and swaps, which require explicit confirmation.',
   },
   {
     q: 'What\'s the difference between Fun Mode and Pro Mode?',
@@ -24,22 +24,22 @@ const faqs = [
   },
   {
     q: 'What is the fee?',
-    a: 'SolSweeper takes 10% of what you reclaim, rent recovered and swap proceeds. The fee is deducted from those proceeds, so you never pay out of pocket. If you reclaim nothing, there is no fee.',
+    a: 'SolanaSweeper takes 10% of what you reclaim, rent recovered and swap proceeds. The fee is deducted from those proceeds, so you never pay out of pocket. If you reclaim nothing, there is no fee.',
   },
   {
     q: 'Can I lose tokens I actually want?',
-    a: 'Not by accident. SolSweeper only presents accounts for you to select. Nothing is touched until you explicitly choose it and sign the transaction. In Pro Mode, before any burn is executed, you will see a clear confirmation that the action is permanent.',
+    a: 'Not by accident. SolanaSweeper only presents accounts for you to select. Nothing is touched until you explicitly choose it and sign the transaction. In Pro Mode, before any burn is executed, you will see a clear confirmation that the action is permanent.',
   },
   {
     q: 'Which wallets are supported?',
     a: 'Phantom, Solflare, and Backpack at launch, via the standard Solana wallet-adapter. More wallets will be added on the roadmap.',
   },
   {
-    q: 'Does SolSweeper support Token-2022?',
-    a: 'Yes. SolSweeper scans both the original SPL Token program and the newer Token-2022 program accounts.',
+    q: 'Does SolanaSweeper support Token-2022?',
+    a: 'Yes. SolanaSweeper scans both the original SPL Token program and the newer Token-2022 program accounts.',
   },
   {
-    q: 'Which DEX does SolSweeper use for swaps?',
+    q: 'Which DEX does SolanaSweeper use for swaps?',
     a: 'Jupiter, Solana\'s largest DEX aggregator. We route through Jupiter for best execution on token to SOL swaps. We do not run our own liquidity.',
   },
   {

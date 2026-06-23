@@ -4,13 +4,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { PublicKey } from '@solana/web3.js';
 import FunMode from './FunMode';
+import ProMode from './ProMode';
 import { getProxyConnection, scanClosable } from '@/lib/solanaProxy';
 import { summarize, lamportsToSol } from '@/lib/funMode';
 
 type Status = 'idle' | 'scanning' | 'done' | 'error';
+type Mode = 'fun' | 'pro';
 
 export default function WalletScan() {
   const { address, isConnected } = useAppKitAccount();
+  const [mode, setMode] = useState<Mode>('fun');
   const [status, setStatus] = useState<Status>('idle');
   const [emptyCount, setEmptyCount] = useState(0);
   const [reclaimSol, setReclaimSol] = useState(0);
@@ -54,6 +57,38 @@ export default function WalletScan() {
 
   return (
     <div style={card}>
+      {/* Fun / Pro toggle */}
+      <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.25)', borderRadius: '999px', padding: '3px', marginBottom: '16px', width: 'fit-content' }}>
+        {(['fun', 'pro'] as Mode[]).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            style={{
+              fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.78rem',
+              border: 'none', borderRadius: '999px', padding: '6px 16px', cursor: 'pointer',
+              background: mode === m ? '#14F195' : 'transparent',
+              color: mode === m ? '#05140d' : 'rgba(255,255,255,0.6)',
+            }}
+          >
+            {m === 'fun' ? 'Fun Mode' : 'Pro Mode'}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'pro' ? (
+        <ProMode />
+      ) : (
+        <FunModeView status={status} emptyCount={emptyCount} reclaimSol={reclaimSol} scan={scan} />
+      )}
+    </div>
+  );
+}
+
+function FunModeView({
+  status, emptyCount, reclaimSol, scan,
+}: { status: Status; emptyCount: number; reclaimSol: number; scan: () => void }) {
+  return (
+    <>
       {(status === 'scanning' || status === 'idle') && (
         <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
           Scanning your wallet…
@@ -86,7 +121,7 @@ export default function WalletScan() {
           {emptyCount > 0 && <FunMode />}
         </>
       )}
-    </div>
+    </>
   );
 }
 

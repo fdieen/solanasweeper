@@ -18,7 +18,7 @@ const steps = [
   {
     num: '02',
     title: 'Scan your accounts',
-    body: 'SolSweeper reads your on-chain token accounts and classifies them: empty accounts (junk, holding locked rent), tokens with residual value, and worthless SPL/NFT dust.',
+    body: 'SolanaSweeper reads your on-chain token accounts and classifies them: empty accounts (junk, holding locked rent), tokens with residual value, and worthless SPL/NFT dust.',
     color: '#9945FF',
   },
   {

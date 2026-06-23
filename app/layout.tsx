@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import "./globals.css";
 import WalletProviders from "@/components/WalletProviders";
 
-const SITE_URL = "https://solsweeper.com";
+const SITE_URL = "https://solanasweeper.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "SolSweeper · Reclaim Your SOL",
-    template: "%s · SolSweeper",
+    default: "SolanaSweeper · Reclaim Your SOL",
+    template: "%s · SolanaSweeper",
   },
   description:
-    "SolSweeper is a non-custodial Solana dApp that cleans your wallet. Close empty token accounts, burn junk tokens and NFTs, and reclaim locked SOL in one click.",
-  applicationName: "SolSweeper",
+    "SolanaSweeper is a non-custodial Solana dApp that cleans your wallet. Close empty token accounts, burn junk tokens and NFTs, and reclaim locked SOL in one click.",
+  applicationName: "SolanaSweeper",
   keywords: [
     "Solana",
     "SOL",
@@ -26,24 +26,24 @@ export const metadata: Metadata = {
     "non-custodial dApp",
     "crypto wallet cleaner",
   ],
-  authors: [{ name: "SolSweeper" }],
-  creator: "SolSweeper",
-  publisher: "SolSweeper",
+  authors: [{ name: "SolanaSweeper" }],
+  creator: "SolanaSweeper",
+  publisher: "SolanaSweeper",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     url: SITE_URL,
-    siteName: "SolSweeper",
-    title: "SolSweeper · Reclaim Your SOL",
+    siteName: "SolanaSweeper",
+    title: "SolanaSweeper · Reclaim Your SOL",
     description:
       "Clean your Solana wallet. Close empty token accounts, burn junk, and reclaim locked SOL in one click. Non-custodial — you sign every transaction.",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SolSweeper · Reclaim Your SOL",
+    title: "SolanaSweeper · Reclaim Your SOL",
     description:
       "Clean your Solana wallet. Close empty token accounts, burn junk, and reclaim locked SOL in one click.",
   },
@@ -68,20 +68,20 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: "SolSweeper",
+      name: "SolanaSweeper",
       description:
         "Non-custodial Solana wallet cleaner. Reclaim locked SOL from empty token accounts.",
     },
     {
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
-      name: "SolSweeper",
+      name: "SolanaSweeper",
       url: SITE_URL,
       logo: `${SITE_URL}/logo.svg`,
     },
     {
       "@type": "SoftwareApplication",
-      name: "SolSweeper",
+      name: "SolanaSweeper",
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",
       url: SITE_URL,

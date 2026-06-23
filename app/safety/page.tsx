@@ -26,7 +26,7 @@ const trustItems = [
   {
     label: 'Non-custodial',
     color: '#14F195',
-    body: 'SolSweeper never holds your funds or keys. Every action is a transaction you sign in your own wallet. We build the instruction; you approve it in Phantom, Solflare, or Backpack.',
+    body: 'SolanaSweeper never holds your funds or keys. Every action is a transaction you sign in your own wallet. We build the instruction; you approve it in Phantom, Solflare, or Backpack.',
   },
   {
     label: 'You sign everything',
@@ -95,7 +95,7 @@ export default function Safety() {
           fontSize: '1rem', lineHeight: 1.7,
           color: 'rgba(255,255,255,0.45)', maxWidth: '480px', marginBottom: '64px',
         }}>
-          SolSweeper is non-custodial. We never touch your keys, and no transaction moves without your signature.
+          SolanaSweeper is non-custodial. We never touch your keys, and no transaction moves without your signature.
         </p>
 
         {/* Trust grid */}

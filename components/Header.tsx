@@ -26,7 +26,7 @@ export default function Header() {
         }}
       >
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          <img src="/logo.svg" alt="SolSweeper" style={{ height: '32px', width: 'auto' }} />
+          <img src="/logo.svg" alt="SolanaSweeper" style={{ height: '32px', width: 'auto' }} />
         </a>
         <button
           onClick={() => setOpen(true)}
