@@ -31,8 +31,8 @@ const ALLOWED_METHODS = new Set<string>([
 function allowedOrigins(): string[] {
   return [
     process.env.NEXT_PUBLIC_SITE_URL,
-    'https://solsweep.io',
-    'https://www.solsweep.io',
+    'https://solsweeper.com',
+    'https://www.solsweeper.com',
     'http://localhost:3000',
     'http://localhost:3999',
   ].filter(Boolean) as string[];

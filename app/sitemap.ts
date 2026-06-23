@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = "https://solsweep.io";
+const SITE_URL = "https://solsweeper.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

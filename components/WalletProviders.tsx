@@ -22,10 +22,10 @@ createAppKit({
   networks: [solana],
   projectId,
   metadata: {
-    name: 'SolSweep',
+    name: 'SolSweeper',
     description: 'Clean your Solana wallet and reclaim locked SOL.',
-    url: 'https://solsweep.io',
-    icons: ['https://solsweep.io/logo.svg'],
+    url: 'https://solsweeper.com',
+    icons: ['https://solsweeper.com/logo.svg'],
   },
   // Degen-modus: directe wallet-keuze, geen email/socials
   features: {

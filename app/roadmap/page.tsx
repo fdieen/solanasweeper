@@ -5,7 +5,7 @@ import RoadmapBackground from '@/components/RoadmapBackground';
 
 export const metadata: Metadata = {
   title: 'Roadmap',
-  description: 'Where SolSweep is headed: Fun Mode rent reclaim, Pro Mode swap & burn, a public reclaim counter, and a security audit.',
+  description: 'Where SolSweeper is headed: Fun Mode rent reclaim, Pro Mode swap & burn, a public reclaim counter, and a security audit.',
   alternates: { canonical: '/roadmap' },
 };
 
@@ -22,7 +22,7 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
     status: 'live',
     label: 'In progress',
     title: 'Fun Mode, rent reclaim',
-    body: 'Connect wallet, scan empty token accounts, close them all, and SOL lands in your wallet. The safe core of SolSweep.',
+    body: 'Connect wallet, scan empty token accounts, close them all, and SOL lands in your wallet. The safe core of SolSweeper.',
   },
   {
     status: 'building',
@@ -46,7 +46,7 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
     status: 'planned',
     label: 'Planned',
     title: 'Live stats',
-    body: 'A real-time counter of SOL reclaimed across all SolSweep users, once there is real data to show.',
+    body: 'A real-time counter of SOL reclaimed across all SolSweeper users, once there is real data to show.',
   },
 ];
 
