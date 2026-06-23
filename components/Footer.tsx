@@ -42,7 +42,7 @@ export default function Footer() {
         gap: '16px',
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          <img src="/logo.svg" alt="SolanaSweeper" style={{ height: '28px', width: 'auto' }} />
+          <img src="/logo.svg?v=2" alt="SolanaSweeper" style={{ height: '28px', width: 'auto' }} />
         </a>
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           {[
