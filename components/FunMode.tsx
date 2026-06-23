@@ -7,6 +7,7 @@ import {
   buildBatches,
   summarize,
   lamportsToSol,
+  FEE_BPS,
   type ClosableAccount,
   type Summary,
 } from '@/lib/funMode';
@@ -127,7 +128,7 @@ export default function FunMode() {
         }
       }
 
-      const netLamports = reclaimed - Math.floor(reclaimed * 0.05);
+      const netLamports = reclaimed - Math.floor((reclaimed * FEE_BPS) / 10_000);
       setResult({ closed, netSol: lamportsToSol(netLamports), skipped });
       setPhase('done');
     } catch (e) {
@@ -174,7 +175,7 @@ export default function FunMode() {
 
             <Row label={`Closing ${summary.count} empty account${summary.count === 1 ? '' : 's'}`} />
             <Row label="Gross reclaim" value={`${lamportsToSol(summary.grossLamports).toFixed(4)} SOL`} />
-            <Row label="Fee (5%)" value={`− ${lamportsToSol(summary.feeLamports).toFixed(4)} SOL`} dim />
+            <Row label={`Fee (${FEE_BPS / 100}%)`} value={`− ${lamportsToSol(summary.feeLamports).toFixed(4)} SOL`} dim />
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '12px 0' }} />
             <Row label="You receive" value={`${lamportsToSol(summary.netLamports).toFixed(4)} SOL`} highlight />
 

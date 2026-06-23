@@ -48,7 +48,7 @@ export function chunk<T>(arr: T[], size: number): T[][] {
 
 /**
  * Eén burn-batch: per account burnChecked(volledige balance) → closeAccount (rent → owner),
- * plus 5%-fee over de teruggewonnen rent (zelfde model als Fun Mode).
+ * plus 10%-fee over de teruggewonnen rent (zelfde model als Fun Mode).
  */
 export function buildBurnBatchTransaction(params: {
   owner: PublicKey;

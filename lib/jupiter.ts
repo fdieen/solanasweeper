@@ -3,9 +3,9 @@ import type { Valuation } from './classify';
 
 export const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
-// 5% — Jupiter-docs noemen geen harde cap (uint16). LIVE bevestigen met een quote-test
+// 10% — Jupiter-docs noemen geen harde cap (uint16). LIVE bevestigen met een quote-test
 // vóór we erop vertrouwen; anders verlagen we deze constante.
-export const PLATFORM_FEE_BPS = 500;
+export const PLATFORM_FEE_BPS = 1000;
 
 const QUOTE_URL = 'https://quote-api.jup.ag/v6/quote';
 const SWAP_URL = 'https://quote-api.jup.ag/v6/swap';
@@ -60,7 +60,7 @@ export async function valuateMint(mint: string, amountRaw: string): Promise<Valu
 
 /**
  * Bouw de swap-transactie uit een quote.
- * feeAccount = vooraf geïnitialiseerd wSOL fee-token-account (voor de 5% platform-fee).
+ * feeAccount = vooraf geïnitialiseerd wSOL fee-token-account (voor de 10% platform-fee).
  */
 export async function buildSwapTransaction(
   quote: Quote,

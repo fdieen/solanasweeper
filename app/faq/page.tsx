@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: 'What is the fee?',
-    a: 'SolSweeper takes 5% of what you reclaim, rent recovered and swap proceeds. The fee is deducted from those proceeds, so you never pay out of pocket. If you reclaim nothing, there is no fee.',
+    a: 'SolSweeper takes 10% of what you reclaim, rent recovered and swap proceeds. The fee is deducted from those proceeds, so you never pay out of pocket. If you reclaim nothing, there is no fee.',
   },
   {
     q: 'Can I lose tokens I actually want?',

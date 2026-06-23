@@ -12,7 +12,7 @@ import {
 } from '@solana/spl-token';
 
 /* ── Constanten ── */
-export const FEE_BPS = 500;            // 5% (basispunten)
+export const FEE_BPS = 1000;           // 10% (basispunten)
 export const MAX_CLOSES_PER_TX = 20;   // veilige batchgrootte (tx-limiet 1232 bytes)
 export const LAMPORTS_PER_SOL = 1_000_000_000;
 
@@ -110,7 +110,7 @@ export function lamportsToSol(lamports: number): number {
 }
 
 /* ── Bouw één batch-transactie ──
- * compute budget + N×closeAccount (rent → owner) + 5%-transfer (owner → fee-wallet).
+ * compute budget + N×closeAccount (rent → owner) + 10%-transfer (owner → fee-wallet).
  * Alles atomair: closes en fee zitten in dezelfde tx.
  */
 export function buildBatchTransaction(params: {
@@ -134,7 +134,7 @@ export function buildBatchTransaction(params: {
     tx.add(createCloseAccountInstruction(acc.pubkey, owner, owner, [], acc.programId));
   }
 
-  // 5% fee over de teruggewonnen rent van DEZE batch
+  // 10% fee over de teruggewonnen rent van DEZE batch
   const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
   const batchFee = Math.floor((batchGross * feeBps) / 10_000);
   if (feeWallet && batchFee > 0) {

@@ -12,7 +12,7 @@ const doList = [
   'Read your token accounts (read-only scan)',
   'Show you what can be closed or swapped',
   'Build and present transactions for your review',
-  'Deduct a 5% fee from what you reclaim',
+  'Deduct a 10% fee from what you reclaim',
 ];
 
 const dontList = [
