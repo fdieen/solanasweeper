@@ -55,7 +55,7 @@ export default function Home() {
               color: '#fff',
               marginBottom: '28px',
             }}>
-              Sweep Your<br />Dust Into SOL
+              Sweep your<br />dust into SOL
             </h1>
 
             <p style={{
@@ -77,9 +77,9 @@ export default function Home() {
 
             <div className="hero-badges" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
               {[
-                { t: 'You sign every transaction', size: 0.95, pad: '11px 18px', icon: 16 },
-                { t: 'Powered by Jupiter',         size: 0.8,  pad: '9px 15px',  icon: 14 },
-                { t: 'Keys never leave your wallet', size: 0.68, pad: '7px 13px',  icon: 12 },
+                { t: 'You sign every transaction', size: 0.85, pad: '9px 16px', icon: 15 },
+                { t: 'Powered by Jupiter',         size: 0.85, pad: '9px 16px', icon: 15 },
+                { t: 'Keys never leave your wallet', size: 0.85, pad: '9px 16px', icon: 15 },
               ].map(({ t, size, pad, icon }) => (
                 <span key={t} style={{
                   display: 'inline-flex',
