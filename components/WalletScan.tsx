@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { PublicKey } from '@solana/web3.js';
 import FunMode from './FunMode';
 import ProMode from './ProMode';
 import { getProxyConnection, scanClosable } from '@/lib/solanaProxy';
-import { summarize, lamportsToSol } from '@/lib/funMode';
+import { summarize, lamportsToSol, type ClosableAccount } from '@/lib/funMode';
 
 type Status = 'idle' | 'scanning' | 'done' | 'error';
 type Mode = 'fun' | 'pro';
@@ -17,6 +17,11 @@ export default function WalletScan() {
   const [status, setStatus] = useState<Status>('idle');
   const [emptyCount, setEmptyCount] = useState(0);
   const [reclaimSol, setReclaimSol] = useState(0);
+  const [closable, setClosable] = useState<ClosableAccount[]>([]);
+
+  // Onthoudt voor welk adres we al gescand hebben, zodat een reconnect/re-render
+  // (Reown pingt de sessie → re-render) NIET opnieuw scant. Dít was de credit-drain.
+  const scannedFor = useRef<string | null>(null);
 
   const scan = useCallback(async () => {
     if (!address) return;
@@ -25,8 +30,9 @@ export default function WalletScan() {
       // Eén consistent RPC-pad: Helius via onze /api/rpc proxy
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
-      const closable = await scanClosable(conn, owner);
-      const sum = summarize(closable);
+      const found = await scanClosable(conn, owner);
+      const sum = summarize(found);
+      setClosable(found);
       setEmptyCount(sum.count);
       setReclaimSol(lamportsToSol(sum.grossLamports));
       setStatus('done');
@@ -36,9 +42,23 @@ export default function WalletScan() {
     }
   }, [address]);
 
+  // Handmatige (re)scan vanuit de UI: bypass de guard zodat een Retry/Rescan altijd werkt.
+  const rescan = useCallback(() => {
+    if (address) scannedFor.current = address;
+    scan();
+  }, [address, scan]);
+
   useEffect(() => {
-    if (isConnected && address) scan();
-    else setStatus('idle');
+    // Geen verbinding → ref resetten zodat een volgende connect vers scant.
+    // (UI rendert niets als !isConnected, dus status hoeft hier niet gezet.)
+    if (!isConnected || !address) {
+      scannedFor.current = null;
+      return;
+    }
+    // Al gescand voor dit adres → niets doen (voorkomt re-scan bij reconnect/re-render).
+    if (scannedFor.current === address) return;
+    scannedFor.current = address;
+    scan();
   }, [isConnected, address, scan]);
 
   if (!isConnected) return null;
@@ -78,15 +98,15 @@ export default function WalletScan() {
       {mode === 'pro' ? (
         <ProMode />
       ) : (
-        <FunModeView status={status} emptyCount={emptyCount} reclaimSol={reclaimSol} scan={scan} />
+        <FunModeView status={status} emptyCount={emptyCount} reclaimSol={reclaimSol} closable={closable} rescan={rescan} />
       )}
     </div>
   );
 }
 
 function FunModeView({
-  status, emptyCount, reclaimSol, scan,
-}: { status: Status; emptyCount: number; reclaimSol: number; scan: () => void }) {
+  status, emptyCount, reclaimSol, closable, rescan,
+}: { status: Status; emptyCount: number; reclaimSol: number; closable: ClosableAccount[]; rescan: () => void }) {
   return (
     <>
       {(status === 'scanning' || status === 'idle') && (
@@ -100,7 +120,7 @@ function FunModeView({
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)' }}>
             Scan failed (RPC limit). Try again.
           </p>
-          <button onClick={scan} style={retryBtn}>Retry</button>
+          <button onClick={rescan} style={retryBtn}>Retry</button>
         </div>
       )}
 
@@ -118,7 +138,7 @@ function FunModeView({
               ? 'No empty token accounts found — your wallet is clean!'
               : `${emptyCount} empty token account${emptyCount === 1 ? '' : 's'} can be closed.`}
           </p>
-          {emptyCount > 0 && <FunMode />}
+          {emptyCount > 0 && <FunMode initialAccounts={closable} />}
         </>
       )}
     </>

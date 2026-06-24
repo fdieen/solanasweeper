@@ -30,7 +30,7 @@ function parseFeeWallet(): PublicKey | null {
   }
 }
 
-export default function FunMode() {
+export default function FunMode({ initialAccounts }: { initialAccounts?: ClosableAccount[] }) {
   const { address, isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider('solana');
 
@@ -42,15 +42,21 @@ export default function FunMode() {
 
   if (!isConnected) return null;
 
-  // Stap 1: verse herverificatie → bevestigingsscherm
+  // Stap 1: bevestigingsscherm. Hergebruik het scan-resultaat van WalletScan
+  // (initialAccounts) i.p.v. opnieuw te scannen — bespaart een dure RPC-ronde.
+  // De échte verse her-verificatie gebeurt in execute() vlak vóór tekenen.
   async function prepare() {
     if (!address) return;
     setPhase('preparing');
     setErrorMsg('');
     try {
-      const conn = getProxyConnection();
-      const owner = new PublicKey(address);
-      const closable = await scanClosable(conn, owner);
+      let closable = initialAccounts ?? [];
+      if (closable.length === 0) {
+        // Geen doorgegeven resultaat (of leeg) → zelf scannen als fallback.
+        const conn = getProxyConnection();
+        const owner = new PublicKey(address);
+        closable = await scanClosable(conn, owner);
+      }
       if (closable.length === 0) {
         setErrorMsg('No empty accounts to close right now.');
         setPhase('error');

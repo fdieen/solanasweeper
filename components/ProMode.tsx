@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
@@ -70,9 +70,20 @@ export default function ProMode() {
     }
   }, [address]);
 
+  // Onthoudt voor welk adres we al gescand hebben. Voorkomt dat een reconnect/
+  // re-render (Reown pingt de sessie) telkens een dure DAS/program-account-scan afvuurt.
+  const scannedFor = useRef<string | null>(null);
+
   useEffect(() => {
-    if (isConnected && address) scan();
-    else setPhase('idle');
+    // UI rendert niets als !isConnected; alleen de ref resetten zodat een
+    // volgende connect vers scant.
+    if (!isConnected || !address) {
+      scannedFor.current = null;
+      return;
+    }
+    if (scannedFor.current === address) return;
+    scannedFor.current = address;
+    scan();
   }, [isConnected, address, scan]);
 
   const toggle = (set: Set<string>, k: string, setter: (s: Set<string>) => void) => {
