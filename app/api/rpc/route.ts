@@ -69,6 +69,18 @@ function getIp(req: NextRequest): string {
   return req.headers.get('x-real-ip') ?? 'unknown';
 }
 
+/* ── Lichtgewicht logging ──
+ * Eén regel per request met vaste prefix zodat je in de Vercel-logs kunt
+ * greppen/tellen: `[rpc]`. We loggen ALLEEN methode + aantal + IP + tijd —
+ * nooit body-params (adressen/keys). Bedoeld voor before/after credit-bewijs.
+ */
+function logRpc(kind: 'fwd' | 'reject' | 'ratelimit', ip: string, methods: string[]) {
+  // count per methode, compact: "getAssetsByOwner x2,getLatestBlockhash x1"
+  const tally = methods.reduce<Record<string, number>>((m, x) => ((m[x] = (m[x] ?? 0) + 1), m), {});
+  const summary = Object.entries(tally).map(([m, c]) => `${m} x${c}`).join(',');
+  console.log(`[rpc] ${kind} ip=${ip} calls=${methods.length} ${summary}`);
+}
+
 function jsonRpcError(message: string, status: number, id: unknown = null) {
   return new Response(
     JSON.stringify({ jsonrpc: '2.0', id, error: { code: -32600, message } }),
@@ -82,6 +94,8 @@ export async function POST(req: NextRequest) {
     return jsonRpcError('RPC not configured (HELIUS_RPC_URL missing)', 500);
   }
 
+  const ip = getIp(req);
+
   // Origin-check (extra laag)
   const origin = req.headers.get('origin');
   if (origin && !allowedOrigins().includes(origin)) {
@@ -89,8 +103,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Rate-limit
-  const ok = await checkRateLimit(getIp(req));
+  const ok = await checkRateLimit(ip);
   if (!ok) {
+    logRpc('ratelimit', ip, []);
     return jsonRpcError('Rate limit exceeded', 429);
   }
 
@@ -104,12 +119,16 @@ export async function POST(req: NextRequest) {
 
   // Methode-allowlist (ondersteunt single + batch)
   const calls = Array.isArray(body) ? body : [body];
-  for (const call of calls) {
-    const method = (call as { method?: string })?.method;
-    if (!method || !ALLOWED_METHODS.has(method)) {
-      return jsonRpcError(`Method not allowed: ${method ?? 'unknown'}`, 403);
+  const methods = calls.map((c) => (c as { method?: string })?.method ?? 'unknown');
+  for (const method of methods) {
+    if (method === 'unknown' || !ALLOWED_METHODS.has(method)) {
+      logRpc('reject', ip, methods);
+      return jsonRpcError(`Method not allowed: ${method}`, 403);
     }
   }
+
+  // Wat we daadwerkelijk naar Helius sturen = wat credits kost.
+  logRpc('fwd', ip, methods);
 
   // Doorsturen naar Helius
   try {
