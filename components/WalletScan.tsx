@@ -49,13 +49,10 @@ export default function WalletScan() {
   }, [address, scan]);
 
   useEffect(() => {
-    // Geen verbinding → ref resetten zodat een volgende connect vers scant.
-    // (UI rendert niets als !isConnected, dus status hoeft hier niet gezet.)
-    if (!isConnected || !address) {
-      scannedFor.current = null;
-      return;
-    }
-    // Al gescand voor dit adres → niets doen (voorkomt re-scan bij reconnect/re-render).
+    if (!isConnected || !address) return;
+    // Al gescand voor dit adres → niets doen. We resetten de ref bewust NIET op
+    // disconnect: zo scant een reconnect-flikker (isConnected false→true, zelfde
+    // wallet) niet opnieuw. Dít was de credit-drain. Handmatig verversen = rescan().
     if (scannedFor.current === address) return;
     scannedFor.current = address;
     scan();

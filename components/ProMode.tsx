@@ -75,12 +75,9 @@ export default function ProMode() {
   const scannedFor = useRef<string | null>(null);
 
   useEffect(() => {
-    // UI rendert niets als !isConnected; alleen de ref resetten zodat een
-    // volgende connect vers scant.
-    if (!isConnected || !address) {
-      scannedFor.current = null;
-      return;
-    }
+    if (!isConnected || !address) return;
+    // Ref bewust NIET resetten op disconnect: een reconnect-flikker (zelfde wallet)
+    // scant zo niet opnieuw — dat was de dure DAS/program-account-drain.
     if (scannedFor.current === address) return;
     scannedFor.current = address;
     scan();
