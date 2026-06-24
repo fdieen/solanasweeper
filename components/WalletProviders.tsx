@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { createAppKit } from '@reown/appkit/react';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
 import { solana } from '@reown/appkit/networks';
@@ -7,6 +8,10 @@ import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adap
 
 // Vul NEXT_PUBLIC_REOWN_PROJECT_ID in (.env.local) — fallback houdt build/SSR werkend
 const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 'b56e18d47c72ab683b10814fe9495694';
+
+// metadata.url moet matchen met de pagina-URL (anders WalletConnect-warning):
+// dev = de echte origin (localhost), prod = het productiedomein.
+const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://solanasweeper.com';
 
 const solanaAdapter = new SolanaAdapter({
   wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
@@ -24,8 +29,8 @@ createAppKit({
   metadata: {
     name: 'SolanaSweeper',
     description: 'Clean your Solana wallet and reclaim locked SOL.',
-    url: 'https://solanasweeper.com',
-    icons: ['https://solanasweeper.com/logo.svg'],
+    url: appUrl,
+    icons: [`${appUrl}/logo.svg`],
   },
   // Degen-modus: directe wallet-keuze, geen email/socials
   features: {
@@ -45,5 +50,19 @@ createAppKit({
 });
 
 export default function WalletProviders({ children }: { children: React.ReactNode }) {
+  // Vang ALLEEN de bekende, niet-fatale WalletConnect IndexedDB-rejectie af
+  // (treedt op bij dev/HMR-remounts) zodat hij niet als rode error in de console knalt.
+  useEffect(() => {
+    const onRejection = (e: PromiseRejectionEvent) => {
+      const reason = e?.reason;
+      const msg = (reason && (reason.message ?? String(reason))) || '';
+      if (/indexed database server lost|indexeddb/i.test(String(msg))) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => window.removeEventListener('unhandledrejection', onRejection);
+  }, []);
+
   return <>{children}</>;
 }
