@@ -78,7 +78,8 @@ function logRpc(kind: 'fwd' | 'reject' | 'ratelimit', ip: string, methods: strin
   // count per methode, compact: "getAssetsByOwner x2,getLatestBlockhash x1"
   const tally = methods.reduce<Record<string, number>>((m, x) => ((m[x] = (m[x] ?? 0) + 1), m), {});
   const summary = Object.entries(tally).map(([m, c]) => `${m} x${c}`).join(',');
-  console.log(`[rpc] ${kind} ip=${ip} calls=${methods.length} ${summary}`);
+  const ts = new Date().toISOString();
+  console.log(`[rpc] ${ts} ${kind} ip=${ip} calls=${methods.length} ${summary}`);
 }
 
 function jsonRpcError(message: string, status: number, id: unknown = null) {
