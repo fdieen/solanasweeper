@@ -12,7 +12,13 @@ export default function Header() {
 
   return (
     <>
-      {showRobot && <RobotMascot menuOpen={open} />}
+      {/* Robot alleen op desktop (>=md): op mobiel overlapte hij de Connect-knop.
+          Wrapper met display:none verbergt ook de position:fixed inhoud. */}
+      {showRobot && (
+        <div className="hidden md:block">
+          <RobotMascot menuOpen={open} />
+        </div>
+      )}
       <header
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
         style={{
