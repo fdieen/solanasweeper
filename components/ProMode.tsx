@@ -14,6 +14,7 @@ type AnyTx = Transaction | VersionedTransaction;
 type SolanaSigner = {
   signTransaction?: <T extends AnyTx>(tx: T) => Promise<T>;
   signAllTransactions?: <T extends AnyTx>(txs: T[]) => Promise<T[]>;
+  signAndSendTransaction?: (tx: AnyTx) => Promise<string>;
 };
 
 type Phase = 'idle' | 'scanning' | 'ready' | 'confirm' | 'working' | 'done' | 'error';
@@ -144,6 +145,32 @@ export default function ProMode() {
     return { ok, skipped };
   }
 
+  // Burn-send via de wallet-adapter's signAndSendTransaction: de wallet tekent
+  // én verstuurt zelf (de aanbevolen, "veilige" Phantom-route), i.p.v. onze
+  // eigen sendRawTransaction. Confirm-polling blijft via onze proxy-connection.
+  // signAndSendTransaction is per-tx (geen batch), dus burns tekenen los.
+  async function signAndSendGroup(conn: ReturnType<typeof getProxyConnection>, txs: AnyTx[], countPerTx: number[]) {
+    const signer = walletProvider as SolanaSigner;
+    let ok = 0;
+    let skipped = 0;
+    if (txs.length === 0) return { ok, skipped };
+    if (!signer.signAndSendTransaction) {
+      throw new Error('Wallet does not support signAndSendTransaction');
+    }
+    for (let i = 0; i < txs.length; i++) {
+      try {
+        const sig = await signer.signAndSendTransaction(txs[i]);
+        const confirmed = await pollConfirm(conn, sig);
+        if (confirmed) ok += countPerTx[i];
+        else skipped += countPerTx[i];
+      } catch (e) {
+        console.error('burn tx failed', e);
+        skipped += countPerTx[i];
+      }
+    }
+    return { ok, skipped };
+  }
+
   async function execute() {
     if (!address) return;
     setPhase('working');
@@ -172,11 +199,12 @@ export default function ProMode() {
         ? new PublicKey(process.env.NEXT_PUBLIC_FEE_WALLET)
         : null;
 
-      // Legacy txs: lege accounts sluiten + burn (alleen 'safe')
+      // Legacy txs: lege accounts sluiten (close) + burn (alleen 'safe') — apart gehouden:
+      // closes via onze sendRaw-route, burns via de wallet-adapter (signAndSendTransaction).
       const closeBuilt = buildBatches({ owner, accounts: freshEmpty.map((h) => ({ pubkey: h.tokenAccount, programId: h.programId, lamports: h.lamports })), feeWallet, blockhash });
       const burnBuilt = buildBurnBatches({ owner, accounts: burnSafe, feeWallet, blockhash });
-      const legacyTxs = [...closeBuilt.transactions, ...burnBuilt.transactions];
-      const legacyCounts = [...closeBuilt.batches.map((b) => b.length), ...burnBuilt.batches.map((b) => b.length)];
+      const closeCounts = closeBuilt.batches.map((b) => b.length);
+      const burnCounts = burnBuilt.batches.map((b) => b.length);
 
       // Versioned txs: Jupiter swaps (één per token)
       const versionedTxs: VersionedTransaction[] = [];
@@ -189,24 +217,27 @@ export default function ProMode() {
         swapCounts.push(1);
       }
 
-      // Tekenen: legacy en versioned APART (gemengde types niet altijd ondersteund)
-      const signedLegacy = await signGroup(legacyTxs);
+      // Closes + swaps: vooraf tekenen (sign-all), daarna versturen via sendRaw.
+      const signedCloses = await signGroup(closeBuilt.transactions);
       const signedVersioned = await signGroup(versionedTxs);
 
-      const legacyRes = await sendAndCount(conn, signedLegacy, legacyCounts);
+      const closeRes = await sendAndCount(conn, signedCloses, closeCounts);
+
+      // Burns: wallet tekent én verstuurt zelf (veilige Phantom-route).
+      const burnRes = await signAndSendGroup(conn, burnBuilt.transactions, burnCounts);
+
       const swapRes = await sendAndCount(conn, signedVersioned, swapCounts);
 
-      const closedAndBurned = legacyRes.ok;
-      const closedCount = freshEmpty.length; // benadering voor weergave
-      const burnedCount = Math.max(0, closedAndBurned - closedCount);
+      const closedCount = closeRes.ok;
+      const burnedCount = burnRes.ok;
       const reclaimedLamports = [...freshEmpty, ...burnSafe].reduce((s, a) => s + a.lamports, 0);
       const netLamports = reclaimedLamports - Math.floor((reclaimedLamports * FEE_BPS) / 10_000);
 
       setResult({
-        closed: Math.min(closedCount, closedAndBurned),
+        closed: closedCount,
         burned: burnedCount,
         swapped: swapRes.ok,
-        skipped: legacyRes.skipped + swapRes.skipped + burnRejected.length,
+        skipped: closeRes.skipped + burnRes.skipped + swapRes.skipped + burnRejected.length,
         sol: lamportsToSol(netLamports),
       });
       setPhase('done');
