@@ -13,16 +13,13 @@ import { FEE_BPS } from './funMode';
 export const MAX_BURNS_PER_TX = 8;
 
 /**
- * ⚠ TIJDELIJKE TEST-FLAG — NA DE TEST TERUGZETTEN OP `true`.
+ * Burn-fee schakelaar. De burn-tx int 10% van de teruggewonnen rent naar de
+ * fee-wallet via een SystemProgram.transfer (zelfde model als Fun Mode).
  *
- * Op `false` bevat de burn-tx GEEN SystemProgram.transfer naar de fee-wallet meer,
- * alleen burnChecked + closeAccount → owner. Doel: isoleren of Phantom/Blowfish
- * flagt op de fee-transfer (value-out naar third-party) of op de burn zelf.
- *
- * TERUGZETTEN = deze waarde weer op `true` zetten (één regel). De fee-logica
- * eronder blijft intact, dus de netto 10% komt direct terug.
+ * Stond tijdelijk op `false` (test, commit 2599453) om te isoleren of de
+ * fee-transfer de Blowfish-trigger was — dat bleek NIET de oorzaak. Weer aan.
  */
-export const BURN_FEE_ENABLED: boolean = false;
+export const BURN_FEE_ENABLED: boolean = true;
 
 /**
  * BUILDER-SIDE HARD GUARD.
