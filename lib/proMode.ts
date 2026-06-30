@@ -13,6 +13,18 @@ import { FEE_BPS } from './funMode';
 export const MAX_BURNS_PER_TX = 8;
 
 /**
+ * ⚠ TIJDELIJKE TEST-FLAG — NA DE TEST TERUGZETTEN OP `true`.
+ *
+ * Op `false` bevat de burn-tx GEEN SystemProgram.transfer naar de fee-wallet meer,
+ * alleen burnChecked + closeAccount → owner. Doel: isoleren of Phantom/Blowfish
+ * flagt op de fee-transfer (value-out naar third-party) of op de burn zelf.
+ *
+ * TERUGZETTEN = deze waarde weer op `true` zetten (één regel). De fee-logica
+ * eronder blijft intact, dus de netto 10% komt direct terug.
+ */
+export const BURN_FEE_ENABLED: boolean = false;
+
+/**
  * BUILDER-SIDE HARD GUARD.
  * Weigert elk fungible token met route/prijs uit de burn-set — ongeacht wat de UI doorgeeft.
  * Ook compressed / frozen / al-lege accounts worden geweigerd.
@@ -85,7 +97,8 @@ export function buildBurnBatchTransaction(params: {
 
   const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
   const batchFee = Math.floor((batchGross * feeBps) / 10_000);
-  if (feeWallet && batchFee > 0) {
+  // BURN_FEE_ENABLED tijdelijk false (test): geen value-out naar de fee-wallet in de burn-tx.
+  if (BURN_FEE_ENABLED && feeWallet && batchFee > 0) {
     tx.add(SystemProgram.transfer({ fromPubkey: owner, toPubkey: feeWallet, lamports: batchFee }));
   }
 
