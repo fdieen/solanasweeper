@@ -16,6 +16,13 @@ export const FEE_BPS = 1000;           // 10% (basispunten)
 export const MAX_CLOSES_PER_TX = 20;   // veilige batchgrootte (tx-limiet 1232 bytes)
 export const LAMPORTS_PER_SOL = 1_000_000_000;
 
+// Minimale SOL-balance (lamports) die de wallet moet hebben om de tx te kunnen
+// laten simuleren/betalen. Onder deze drempel bestaat de fee-payer feitelijk
+// niet → Phantom's simulatie faalt met "AccountNotFound" en toont een rode
+// warning. We vangen dat vóór de tx af met een eigen vriendelijke melding.
+// Tunebaar: verhoog/verlaag indien nodig.
+export const MIN_SOL_FOR_GAS = 5_000_000; // 0.005 SOL
+
 export { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID };
 
 /* ── Types ── */

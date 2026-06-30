@@ -6,7 +6,7 @@ import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
-import { buildBatches, summarize, lamportsToSol, FEE_BPS } from '@/lib/funMode';
+import { buildBatches, summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_GAS } from '@/lib/funMode';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
 
@@ -41,12 +41,14 @@ export default function ProMode() {
 
   const [ackPermanent, setAckPermanent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [noticeMsg, setNoticeMsg] = useState(''); // rustige melding (bv. te weinig gas), geen error
   const [result, setResult] = useState<{ closed: number; swapped: number; burned: number; skipped: number; sol: number } | null>(null);
 
   const scan = useCallback(async () => {
     if (!address) return;
     setPhase('scanning');
     setErrorMsg('');
+    setNoticeMsg('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
@@ -175,9 +177,20 @@ export default function ProMode() {
     if (!address) return;
     setPhase('working');
     setErrorMsg('');
+    setNoticeMsg('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
+
+      // Gas-poort: te weinig SOL → de fee-payer kan de tx niet laten simuleren,
+      // wat in Phantom een rode warning geeft. Vang dat hier rustig af i.p.v.
+      // de wallet te openen. Stuurt NIETS naar Phantom als de balance te laag is.
+      const balance = await conn.getBalance(owner);
+      if (balance < MIN_SOL_FOR_GAS) {
+        setNoticeMsg('Je wallet heeft een klein beetje SOL nodig voor netwerkkosten (±0,01 SOL). Stuur wat SOL naar je wallet en probeer het opnieuw.');
+        setPhase('ready');
+        return;
+      }
 
       // ── Verse herclassificatie net vóór bouwen ──
       const freshHoldings = await scanHoldings(conn, owner);
@@ -314,6 +327,8 @@ export default function ProMode() {
 
       {phase === 'working' && <p style={{ ...muted, marginTop: '8px' }}>Working — approve in your wallet…</p>}
       {phase === 'error' && errorMsg && <p style={{ ...muted, marginTop: '8px', color: 'rgba(255,140,140,0.85)' }}>{errorMsg}</p>}
+      {/* Rustige gas-melding (geen error-stijl) */}
+      {noticeMsg && <p style={{ ...muted, marginTop: '8px' }}>{noticeMsg}</p>}
       {phase === 'done' && result && (
         <p style={{ ...muted, marginTop: '8px', color: '#14F195' }}>
           {result.closed} closed · {result.swapped} swapped · {result.burned} burned · {result.sol.toFixed(4)} SOL{result.skipped ? ` · ${result.skipped} skipped` : ''}
