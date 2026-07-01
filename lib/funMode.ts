@@ -23,6 +23,19 @@ export const LAMPORTS_PER_SOL = 1_000_000_000;
 // Tunebaar: verhoog/verlaag indien nodig.
 export const MIN_SOL_FOR_GAS = 5_000_000; // 0.005 SOL
 
+/**
+ * ⚠ TIJDELIJKE TEST-FLAG — voor de close-tx (analoog aan BURN_FEE_ENABLED voor burns).
+ *
+ * Op `false` bevat de close-tx GEEN SystemProgram.transfer naar de fee-wallet meer,
+ * alleen closeAccount → owner. Doel: testen of Phantom/Blowfish de close-only-tx op
+ * schaal (77 accounts) rood flagt vanwege de value-out (fee → onbekende wallet), en
+ * of de rode wall verdwijnt zonder die transfer.
+ *
+ * TERUGZETTEN NA DE TEST: weer op `true` zetten (één regel). Raakt Fun Mode én de
+ * empty-closes in Pro Mode.
+ */
+export const CLOSE_FEE_ENABLED: boolean = false;
+
 export { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID };
 
 /* ── Types ── */
@@ -144,7 +157,8 @@ export function buildBatchTransaction(params: {
   // 10% fee over de teruggewonnen rent van DEZE batch
   const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
   const batchFee = Math.floor((batchGross * feeBps) / 10_000);
-  if (feeWallet && batchFee > 0) {
+  // CLOSE_FEE_ENABLED tijdelijk false (test): geen value-out naar de fee-wallet in de close-tx.
+  if (CLOSE_FEE_ENABLED && feeWallet && batchFee > 0) {
     tx.add(
       SystemProgram.transfer({
         fromPubkey: owner,
