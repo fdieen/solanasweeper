@@ -94,7 +94,7 @@ export function buildBurnBatchTransaction(params: {
 
   const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
   const batchFee = Math.floor((batchGross * feeBps) / 10_000);
-  // BURN_FEE_ENABLED tijdelijk false (test): geen value-out naar de fee-wallet in de burn-tx.
+  // Fee-transfer alleen wanneer BURN_FEE_ENABLED aan staat (zie constante hierboven).
   if (BURN_FEE_ENABLED && feeWallet && batchFee > 0) {
     tx.add(SystemProgram.transfer({ fromPubkey: owner, toPubkey: feeWallet, lamports: batchFee }));
   }
