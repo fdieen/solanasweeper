@@ -13,6 +13,15 @@ import { FEE_BPS } from './funMode';
 export const MAX_BURNS_PER_TX = 8;
 
 /**
+ * Burn-fee schakelaar. De burn-tx int 10% van de teruggewonnen rent naar de
+ * fee-wallet via een SystemProgram.transfer (zelfde model als Fun Mode).
+ *
+ * Stond tijdelijk op `false` (test, commit 2599453) om te isoleren of de
+ * fee-transfer de Blowfish-trigger was — dat bleek NIET de oorzaak. Weer aan.
+ */
+export const BURN_FEE_ENABLED: boolean = true;
+
+/**
  * BUILDER-SIDE HARD GUARD.
  * Weigert elk fungible token met route/prijs uit de burn-set — ongeacht wat de UI doorgeeft.
  * Ook compressed / frozen / al-lege accounts worden geweigerd.
@@ -85,7 +94,8 @@ export function buildBurnBatchTransaction(params: {
 
   const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
   const batchFee = Math.floor((batchGross * feeBps) / 10_000);
-  if (feeWallet && batchFee > 0) {
+  // Fee-transfer alleen wanneer BURN_FEE_ENABLED aan staat (zie constante hierboven).
+  if (BURN_FEE_ENABLED && feeWallet && batchFee > 0) {
     tx.add(SystemProgram.transfer({ fromPubkey: owner, toPubkey: feeWallet, lamports: batchFee }));
   }
 

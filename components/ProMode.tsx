@@ -6,7 +6,7 @@ import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
-import { buildBatches, summarize, lamportsToSol, FEE_BPS } from '@/lib/funMode';
+import { buildBatches, summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_GAS } from '@/lib/funMode';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
 
@@ -14,6 +14,7 @@ type AnyTx = Transaction | VersionedTransaction;
 type SolanaSigner = {
   signTransaction?: <T extends AnyTx>(tx: T) => Promise<T>;
   signAllTransactions?: <T extends AnyTx>(txs: T[]) => Promise<T[]>;
+  signAndSendTransaction?: (tx: AnyTx) => Promise<string>;
 };
 
 type Phase = 'idle' | 'scanning' | 'ready' | 'confirm' | 'working' | 'done' | 'error';
@@ -40,12 +41,14 @@ export default function ProMode() {
 
   const [ackPermanent, setAckPermanent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [noticeMsg, setNoticeMsg] = useState(''); // rustige melding (bv. te weinig gas), geen error
   const [result, setResult] = useState<{ closed: number; swapped: number; burned: number; skipped: number; sol: number } | null>(null);
 
   const scan = useCallback(async () => {
     if (!address) return;
     setPhase('scanning');
     setErrorMsg('');
+    setNoticeMsg('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
@@ -144,13 +147,50 @@ export default function ProMode() {
     return { ok, skipped };
   }
 
+  // Burn-send via de wallet-adapter's signAndSendTransaction: de wallet tekent
+  // én verstuurt zelf (de aanbevolen, "veilige" Phantom-route), i.p.v. onze
+  // eigen sendRawTransaction. Confirm-polling blijft via onze proxy-connection.
+  // signAndSendTransaction is per-tx (geen batch), dus burns tekenen los.
+  async function signAndSendGroup(conn: ReturnType<typeof getProxyConnection>, txs: AnyTx[], countPerTx: number[]) {
+    const signer = walletProvider as SolanaSigner;
+    let ok = 0;
+    let skipped = 0;
+    if (txs.length === 0) return { ok, skipped };
+    if (!signer.signAndSendTransaction) {
+      throw new Error('Wallet does not support signAndSendTransaction');
+    }
+    for (let i = 0; i < txs.length; i++) {
+      try {
+        const sig = await signer.signAndSendTransaction(txs[i]);
+        const confirmed = await pollConfirm(conn, sig);
+        if (confirmed) ok += countPerTx[i];
+        else skipped += countPerTx[i];
+      } catch (e) {
+        console.error('burn tx failed', e);
+        skipped += countPerTx[i];
+      }
+    }
+    return { ok, skipped };
+  }
+
   async function execute() {
     if (!address) return;
     setPhase('working');
     setErrorMsg('');
+    setNoticeMsg('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
+
+      // Gas-poort: te weinig SOL → de fee-payer kan de tx niet laten simuleren,
+      // wat in Phantom een rode warning geeft. Vang dat hier rustig af i.p.v.
+      // de wallet te openen. Stuurt NIETS naar Phantom als de balance te laag is.
+      const balance = await conn.getBalance(owner);
+      if (balance < MIN_SOL_FOR_GAS) {
+        setNoticeMsg('Je wallet heeft een klein beetje SOL nodig voor netwerkkosten (±0,01 SOL). Stuur wat SOL naar je wallet en probeer het opnieuw.');
+        setPhase('ready');
+        return;
+      }
 
       // ── Verse herclassificatie net vóór bouwen ──
       const freshHoldings = await scanHoldings(conn, owner);
@@ -172,11 +212,12 @@ export default function ProMode() {
         ? new PublicKey(process.env.NEXT_PUBLIC_FEE_WALLET)
         : null;
 
-      // Legacy txs: lege accounts sluiten + burn (alleen 'safe')
+      // Legacy txs: lege accounts sluiten (close) + burn (alleen 'safe') — apart gehouden:
+      // closes via onze sendRaw-route, burns via de wallet-adapter (signAndSendTransaction).
       const closeBuilt = buildBatches({ owner, accounts: freshEmpty.map((h) => ({ pubkey: h.tokenAccount, programId: h.programId, lamports: h.lamports })), feeWallet, blockhash });
       const burnBuilt = buildBurnBatches({ owner, accounts: burnSafe, feeWallet, blockhash });
-      const legacyTxs = [...closeBuilt.transactions, ...burnBuilt.transactions];
-      const legacyCounts = [...closeBuilt.batches.map((b) => b.length), ...burnBuilt.batches.map((b) => b.length)];
+      const closeCounts = closeBuilt.batches.map((b) => b.length);
+      const burnCounts = burnBuilt.batches.map((b) => b.length);
 
       // Versioned txs: Jupiter swaps (één per token)
       const versionedTxs: VersionedTransaction[] = [];
@@ -189,24 +230,27 @@ export default function ProMode() {
         swapCounts.push(1);
       }
 
-      // Tekenen: legacy en versioned APART (gemengde types niet altijd ondersteund)
-      const signedLegacy = await signGroup(legacyTxs);
+      // Closes + swaps: vooraf tekenen (sign-all), daarna versturen via sendRaw.
+      const signedCloses = await signGroup(closeBuilt.transactions);
       const signedVersioned = await signGroup(versionedTxs);
 
-      const legacyRes = await sendAndCount(conn, signedLegacy, legacyCounts);
+      const closeRes = await sendAndCount(conn, signedCloses, closeCounts);
+
+      // Burns: wallet tekent én verstuurt zelf (veilige Phantom-route).
+      const burnRes = await signAndSendGroup(conn, burnBuilt.transactions, burnCounts);
+
       const swapRes = await sendAndCount(conn, signedVersioned, swapCounts);
 
-      const closedAndBurned = legacyRes.ok;
-      const closedCount = freshEmpty.length; // benadering voor weergave
-      const burnedCount = Math.max(0, closedAndBurned - closedCount);
+      const closedCount = closeRes.ok;
+      const burnedCount = burnRes.ok;
       const reclaimedLamports = [...freshEmpty, ...burnSafe].reduce((s, a) => s + a.lamports, 0);
       const netLamports = reclaimedLamports - Math.floor((reclaimedLamports * FEE_BPS) / 10_000);
 
       setResult({
-        closed: Math.min(closedCount, closedAndBurned),
+        closed: closedCount,
         burned: burnedCount,
         swapped: swapRes.ok,
-        skipped: legacyRes.skipped + swapRes.skipped + burnRejected.length,
+        skipped: closeRes.skipped + burnRes.skipped + swapRes.skipped + burnRejected.length,
         sol: lamportsToSol(netLamports),
       });
       setPhase('done');
@@ -241,7 +285,12 @@ export default function ProMode() {
           title={`Burn junk · ${burn.length}`}
           sub="Permanently destroyed. Off by default — select what you want gone."
           danger
-          action={<button style={smallBtn} onClick={() => setBurnSel(new Set(burn.map(key)))}>Select all junk</button>}
+          action={
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button style={smallBtn} onClick={() => setBurnSel(new Set(burn.map(key)))}>Select all junk</button>
+              <button style={{ ...smallBtn, opacity: burnSel.size === 0 ? 0.4 : 1, cursor: burnSel.size === 0 ? 'not-allowed' : 'pointer' }} onClick={() => setBurnSel(new Set())} disabled={burnSel.size === 0}>Deselect all</button>
+            </div>
+          }
         >
           {burn.map((h) => (
             <BurnRow key={key(h)} h={h} checked={burnSel.has(key(h))} onToggle={() => toggle(burnSel, key(h), setBurnSel)} />
@@ -255,7 +304,12 @@ export default function ProMode() {
           title={`Burn NFTs · ${nft.length}`}
           sub="Permanently destroyed. Off by default."
           danger
-          action={<button style={smallBtn} onClick={() => setNftSel(new Set(nft.map(key)))}>Select all</button>}
+          action={
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button style={smallBtn} onClick={() => setNftSel(new Set(nft.map(key)))}>Select all</button>
+              <button style={{ ...smallBtn, opacity: nftSel.size === 0 ? 0.4 : 1, cursor: nftSel.size === 0 ? 'not-allowed' : 'pointer' }} onClick={() => setNftSel(new Set())} disabled={nftSel.size === 0}>Deselect all</button>
+            </div>
+          }
         >
           {nft.map((h) => (
             <BurnRow key={key(h)} h={h} checked={nftSel.has(key(h))} onToggle={() => toggle(nftSel, key(h), setNftSel)} />
@@ -273,6 +327,8 @@ export default function ProMode() {
 
       {phase === 'working' && <p style={{ ...muted, marginTop: '8px' }}>Working — approve in your wallet…</p>}
       {phase === 'error' && errorMsg && <p style={{ ...muted, marginTop: '8px', color: 'rgba(255,140,140,0.85)' }}>{errorMsg}</p>}
+      {/* Rustige gas-melding (geen error-stijl) */}
+      {noticeMsg && <p style={{ ...muted, marginTop: '8px' }}>{noticeMsg}</p>}
       {phase === 'done' && result && (
         <p style={{ ...muted, marginTop: '8px', color: '#14F195' }}>
           {result.closed} closed · {result.swapped} swapped · {result.burned} burned · {result.sol.toFixed(4)} SOL{result.skipped ? ` · ${result.skipped} skipped` : ''}
@@ -299,10 +355,17 @@ export default function ProMode() {
                 <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)' }}>
                   Burning cannot be undone. The tokens/NFTs are gone forever.
                 </p>
-                <label style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', fontSize: '0.82rem', color: '#fff' }}>
-                  <input type="checkbox" checked={ackPermanent} onChange={(e) => setAckPermanent(e.target.checked)} />
+                <div
+                  role="checkbox"
+                  aria-checked={ackPermanent}
+                  tabIndex={0}
+                  onClick={() => setAckPermanent((v) => !v)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAckPermanent((v) => !v); } }}
+                  style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', fontSize: '0.82rem', color: '#fff' }}
+                >
+                  <input type="checkbox" checked={ackPermanent} readOnly tabIndex={-1} aria-hidden="true" style={{ pointerEvents: 'none', flexShrink: 0 }} />
                   I understand burning is permanent
-                </label>
+                </div>
               </div>
             )}
 
@@ -332,31 +395,62 @@ function Section({ title, sub, danger, action, children }: { title: string; sub:
         {action}
       </div>
       <p style={{ margin: '0 0 10px', fontSize: '0.74rem', color: 'rgba(255,255,255,0.45)' }}>{sub}</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>{children}</div>
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: '6px',
+        maxHeight: 'min(50vh, 280px)',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch', // iOS momentum-scroll
+        overscrollBehavior: 'contain',    // scroll lekt niet naar de pagina
+      }}>{children}</div>
+    </div>
+  );
+}
+
+// Klikbare rij: één expliciet klik-doel (div) i.p.v. label-geneste checkbox.
+// Op iOS Safari vuurde de oude <label><input onChange> soms dubbel → selectie
+// kwam als 0 binnen. De checkbox is nu presentationeel (readOnly, pointer-events
+// uit) en de hele rij toggelt via één onClick. Toetsenbord via Enter/Spatie.
+function ToggleRow({ checked, onToggle, children }: { checked: boolean; onToggle: () => void; children: React.ReactNode }) {
+  return (
+    <div
+      role="checkbox"
+      aria-checked={checked}
+      tabIndex={0}
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
+      style={rowStyle}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        readOnly
+        tabIndex={-1}
+        aria-hidden="true"
+        style={{ pointerEvents: 'none', flexShrink: 0 }}
+      />
+      {children}
     </div>
   );
 }
 
 function Row({ h, checked, onToggle, right }: { h: TokenHolding; checked: boolean; onToggle: () => void; right?: string }) {
   return (
-    <label style={rowStyle}>
-      <input type="checkbox" checked={checked} onChange={onToggle} />
+    <ToggleRow checked={checked} onToggle={onToggle}>
       {h.image ? <img src={h.image} alt="" width={20} height={20} style={{ borderRadius: '50%' }} /> : <span style={dot} />}
       <span style={{ flex: 1, fontSize: '0.82rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.name || shortMint(h.mint)}</span>
       {right && <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)' }}>{right}</span>}
-    </label>
+    </ToggleRow>
   );
 }
 
 // Burn-rij: checkbox staat standaard UIT (checked komt uit lege selectie-set)
 function BurnRow({ h, checked, onToggle }: { h: TokenHolding; checked: boolean; onToggle: () => void }) {
   return (
-    <label style={rowStyle}>
-      <input type="checkbox" checked={checked} onChange={onToggle} />
+    <ToggleRow checked={checked} onToggle={onToggle}>
       {h.image ? <img src={h.image} alt="" width={20} height={20} style={{ borderRadius: '4px' }} /> : <span style={dot} />}
       <span style={{ flex: 1, fontSize: '0.82rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.name || shortMint(h.mint)}</span>
       <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>{lamportsToSol(h.lamports).toFixed(4)} SOL</span>
-    </label>
+    </ToggleRow>
   );
 }
 

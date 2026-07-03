@@ -8,6 +8,7 @@ import {
   summarize,
   lamportsToSol,
   FEE_BPS,
+  MIN_SOL_FOR_GAS,
   type ClosableAccount,
   type Summary,
 } from '@/lib/funMode';
@@ -39,6 +40,7 @@ export default function FunMode({ initialAccounts }: { initialAccounts?: Closabl
   const [summary, setSummary] = useState<Summary | null>(null);
   const [result, setResult] = useState<{ closed: number; netSol: number; skipped: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [noticeMsg, setNoticeMsg] = useState(''); // rustige melding (bv. te weinig gas), geen error
 
   if (!isConnected) return null;
 
@@ -49,6 +51,7 @@ export default function FunMode({ initialAccounts }: { initialAccounts?: Closabl
     if (!address) return;
     setPhase('preparing');
     setErrorMsg('');
+    setNoticeMsg('');
     try {
       let closable = initialAccounts ?? [];
       if (closable.length === 0) {
@@ -77,9 +80,20 @@ export default function FunMode({ initialAccounts }: { initialAccounts?: Closabl
     if (!address) return;
     setPhase('working');
     setErrorMsg('');
+    setNoticeMsg('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
+
+      // Gas-poort: te weinig SOL → de fee-payer kan de tx niet laten simuleren,
+      // wat in Phantom een rode warning geeft. Vang dat hier rustig af i.p.v.
+      // de wallet te openen. Stuurt NIETS naar Phantom als de balance te laag is.
+      const balance = await conn.getBalance(owner);
+      if (balance < MIN_SOL_FOR_GAS) {
+        setNoticeMsg('Je wallet heeft een klein beetje SOL nodig voor netwerkkosten (±0,01 SOL). Stuur wat SOL naar je wallet en probeer het opnieuw.');
+        setPhase('idle');
+        return;
+      }
 
       // Verse herverificatie net vóór tekenen
       const fresh = await scanClosable(conn, owner);
@@ -159,6 +173,11 @@ export default function FunMode({ initialAccounts }: { initialAccounts?: Closabl
 
       {phase === 'error' && errorMsg && (
         <p style={{ ...muted, marginTop: '8px', color: 'rgba(255,140,140,0.8)' }}>{errorMsg}</p>
+      )}
+
+      {/* Rustige gas-melding (geen error-stijl) */}
+      {noticeMsg && (
+        <p style={{ ...muted, marginTop: '8px' }}>{noticeMsg}</p>
       )}
 
       {phase === 'done' && result && (
