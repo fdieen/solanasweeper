@@ -8,7 +8,8 @@ import type * as THREE_T from 'three';
  *
  * HD-pad (default op capabele devices): MeshPhysicalMaterial met echte transmissie
  * (glas), IOR 2.4 (diamant), dispersie (fire) en een PMREM-environment (RoomEnvironment)
- * voor realistische reflecties.
+ * voor realistische reflecties. De steen is KLEURLOOS/helder; het paars komt van buiten
+ * (gekleurde lampen + rim-halo + de .hero-gem-glow achter de steen).
  *
  * FALLBACK-pad: de oude MeshStandardMaterial + geschilderde canvas-env. Transmissie en
  * PMREM leunen op half-float render targets die op sommige iOS Safari-builds (o.a. de
@@ -49,13 +50,14 @@ export default function GemCanvas() {
       camera.position.set(0, 2.4, 5.4);
       camera.lookAt(0, -0.1, 0);
 
-      // Lights (brand-tint) — voor beide paden. Het HD-pad krijgt reflecties vooral
-      // uit de PMREM-env; deze lampen geven de paars/teal kleurzweem.
-      scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-      const lW = new THREE.DirectionalLight(0xffffff, 1.5); lW.position.set(3, 6, 5); scene.add(lW);
-      const lT = new THREE.PointLight(0x35ffc8, 30, 40); lT.position.set(-5, 2, 4); scene.add(lT);
-      const lP = new THREE.PointLight(0xc79bff, 40, 40); lP.position.set(4, 0, 5); scene.add(lP);
-      const lPink = new THREE.PointLight(0xff7be0, 24, 40); lPink.position.set(2, -3, 4); scene.add(lPink);
+      // Lights (brand-tint) — voor beide paden. De steen is kleurloos, dus ZIJN kleur
+      // komt vooral hiervandaan: gekleurde reflecties/sparkles op de facetten. Iets
+      // sterker dan voorheen zodat het paars/cyaan/roze duidelijk in de heldere steen speelt.
+      scene.add(new THREE.AmbientLight(0xffffff, 0.28));
+      const lW = new THREE.DirectionalLight(0xffffff, 1.6); lW.position.set(3, 6, 5); scene.add(lW);
+      const lT = new THREE.PointLight(0x35ffc8, 34, 40); lT.position.set(-5, 2, 4); scene.add(lT);
+      const lP = new THREE.PointLight(0xc79bff, 50, 40); lP.position.set(4, 0, 5); scene.add(lP);
+      const lPink = new THREE.PointLight(0xff7be0, 30, 40); lPink.position.set(2, -3, 4); scene.add(lPink);
 
       // ── Geometry: brilliant-cut, fijnere facetten (24 mobiel / 32 desktop) ──
       const SEG = isMobile ? 24 : 32;
@@ -106,19 +108,17 @@ export default function GemCanvas() {
           roomEnv.dispose?.();
           scene.environment = envRT.texture; // achtergrond voor de transmissie
           mat = new THREE.MeshPhysicalMaterial({
-            color: 0x7a4fd0,               // lichter → amethist-tint komt via transmissie
+            color: 0xffffff,               // KLEURLOOS/wit — de steen zelf blijft helder
             metalness: 0.0,
-            roughness: 0.02,
+            roughness: 0.0,                // spiegelglad → scherpe fonkeling
             transmission: 1,               // echt glas
             ior: 2.4,                      // diamant
-            thickness: 1.4,
-            dispersion: isMobile ? 1.0 : 2.4, // "fire" — op mobiel getemperd (extra samples = kost)
-            attenuationColor: new THREE.Color(0x8a3ff0),
-            attenuationDistance: 1.6,
+            thickness: 1.2,                // afgestemd op de schaal
+            dispersion: isMobile ? 1.2 : 3.0, // "fire" (regenboog) — mobiel getemperd (extra samples = kost)
+            // GEEN attenuationColor/emissive → geen kleur in het glas; het paars komt van
+            // de gekleurde lampen + rim-mesh + de .hero-gem-glow achter de steen.
             envMap: envRT.texture,
-            envMapIntensity: 1.25,
-            emissive: 0x140626,
-            emissiveIntensity: 0.06,
+            envMapIntensity: 1.4,
             side: THREE.DoubleSide,
             flatShading: true,             // scherpe facetten behouden
           });
@@ -144,9 +144,10 @@ export default function GemCanvas() {
       const gemMesh = new THREE.Mesh(gemGeo, mat!);
       gem.add(gemMesh);
 
-      // Gloeiende rand (fresnel-look) — beide paden.
+      // Gloeiende rand (fresnel-look) — beide paden. Subtiele paarse halo: het paars
+      // van buiten, niet in het glas.
       const rimMat = new THREE.MeshBasicMaterial({
-        color: 0xb98cff, transparent: true, opacity: 0.4, side: THREE.BackSide,
+        color: 0xb98cff, transparent: true, opacity: 0.46, side: THREE.BackSide,
         blending: THREE.AdditiveBlending, depthWrite: false,
       });
       const rim = new THREE.Mesh(gemGeo, rimMat);
