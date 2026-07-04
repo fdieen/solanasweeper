@@ -30,7 +30,11 @@ createAppKit({
     name: 'SolanaSweeper',
     description: 'Clean your Solana wallet and reclaim locked SOL.',
     url: appUrl,
-    icons: [`${appUrl}/logo.svg`],
+    // Wallets (Solflare/Phantom via WalletConnect) willen een VIERKANTE PNG (geen SVG,
+    // geen woordmerk) op een absolute HTTPS-URL. appUrl is een absolute origin, dus dit
+    // resolvet in productie naar https://solanasweeper.com/icon-512.png — en op een preview
+    // naar de preview-origin, zodat het verbind-scherm daar getest kan worden.
+    icons: [`${appUrl}/icon-512.png`],
   },
   // Degen-modus: directe wallet-keuze, geen email/socials
   features: {
