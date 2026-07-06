@@ -4,6 +4,7 @@ import CircuitBackground from '@/components/CircuitBackground';
 import GemClient from '@/components/GemClient';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import WalletScan from '@/components/WalletScan';
+import WalletPreview from '@/components/WalletPreview';
 
 export default function Home() {
   return (
@@ -73,6 +74,7 @@ export default function Home() {
             <div style={{ marginBottom: '36px' }}>
               <ConnectWalletButton />
               <WalletScan />
+              <WalletPreview />
             </div>
 
             <div className="hero-badges" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
