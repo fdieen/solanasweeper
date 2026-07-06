@@ -77,14 +77,14 @@ export default function Home() {
               <WalletPreview />
             </div>
 
-            <div className="hero-badges" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+            <div className="hero-badges" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px', width: '100%', maxWidth: '360px' }}>
               {[
                 { t: 'You sign every transaction', size: 0.85, pad: '9px 16px', icon: 15 },
                 { t: 'Powered by Jupiter',         size: 0.85, pad: '9px 16px', icon: 15 },
                 { t: 'Keys never leave your wallet', size: 0.85, pad: '9px 16px', icon: 15 },
               ].map(({ t, size, pad, icon }) => (
                 <span key={t} style={{
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
                   fontFamily: 'General Sans, sans-serif',
@@ -106,29 +106,29 @@ export default function Home() {
                 </span>
               ))}
 
-              {/* Reclaim-hint — zelfde ingetogen chip-stijl als de vinkjes, één teal-accent */}
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: '8px',
-                fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.85rem',
+              {/* Reclaim-box — zelfde chip-stijl (gelijke breedte), met de oplopende rekensom erin */}
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: '10px',
+                fontFamily: 'General Sans, sans-serif', fontSize: '0.85rem',
                 color: 'rgba(255,255,255,0.6)',
                 background: 'linear-gradient(135deg, rgba(20,241,149,0.08) 0%, rgba(153,69,255,0.08) 100%)',
-                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '9px 16px',
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '11px 16px',
                 backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
               }}>
-                <svg width={15} height={15} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                <svg width={15} height={15} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
                   <path d="M8 2.5v6M5.2 6 8 8.8 10.8 6M3.5 13h9" stroke="#14F195" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span>Reclaim <b style={{ color: '#14F195', fontWeight: 700 }}>~0.002&nbsp;SOL</b> per account, token or NFT</span>
-              </span>
-
-              {/* Subtiele rekensom — één regel, gedempt */}
-              <span style={{
-                fontFamily: 'General Sans, sans-serif', fontSize: '0.76rem',
-                color: 'rgba(255,255,255,0.34)', paddingLeft: '2px', letterSpacing: '0.2px',
-              }}>
-                25 ≈ 0.05 · 50 ≈ 0.10 · 100 ≈ 0.20 SOL
-              </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  <span style={{ fontWeight: 500, lineHeight: 1.3 }}>
+                    Reclaim <b style={{ color: '#14F195', fontWeight: 700 }}>~0.002&nbsp;SOL</b> per account you close
+                  </span>
+                  <span style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.42)', letterSpacing: '0.2px', lineHeight: 1.45 }}>
+                    Adds up the more you sweep:<br />
+                    25 ≈ 0.05 · 50 ≈ 0.10 · 100 ≈ <b style={{ color: 'rgba(255,255,255,0.72)', fontWeight: 700 }}>0.20&nbsp;SOL</b>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
