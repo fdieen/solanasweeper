@@ -91,8 +91,11 @@ export default function WalletPreview() {
 
   return (
     <div style={card}>
-      <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', marginBottom: '4px' }}>
-        Check any wallet — no connect needed
+      <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.25 }}>
+        Check any wallet
+      </div>
+      <div style={{ fontSize: '0.74rem', fontStyle: 'italic', fontWeight: 400, color: 'rgba(255,255,255,0.4)', marginTop: '1px', marginBottom: '10px' }}>
+        no connect needed
       </div>
       <p style={{ margin: '0 0 12px', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)' }}>
         See how much SOL is locked in empty token accounts.
