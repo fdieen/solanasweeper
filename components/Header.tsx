@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
-import RobotMascot from './RobotMascot';
 import ConnectWalletButton from './ConnectWalletButton';
 
 /* Line-icons (huisstijl, stroke = currentColor → krijgt de teal-tint van de tegel) */
@@ -51,20 +49,11 @@ const MENU: { title: string; items: { label: string; href: string; icon: string 
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const showRobot = pathname === '/';
 
   return (
     <>
-      {/* Robot alleen op desktop (>=md): op mobiel overlapte hij de Connect-knop.
-          Wrapper met display:none verbergt ook de position:fixed inhoud. */}
-      {showRobot && (
-        <div className="hidden md:block">
-          <RobotMascot menuOpen={open} />
-        </div>
-      )}
       <header
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
+        className="fixed top-0 left-0 right-0 z-50 py-4"
         style={{
           background: 'linear-gradient(180deg, rgba(12,8,24,0.30) 0%, rgba(12,8,24,0.12) 100%)',
           backdropFilter: 'blur(22px) saturate(140%)',
@@ -75,9 +64,35 @@ export default function Header() {
           willChange: 'transform',
         }}
       >
+        <div className="hero-container flex items-center justify-between">
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
           <img src="/logo.svg?v=2" alt="SolanaSweeper" style={{ height: '32px', width: 'auto' }} />
         </a>
+
+        {/* Desktop-nav: links direct in de header; op mobiel via de Menu-knop */}
+        <nav className="hidden md:flex" style={{ alignItems: 'center', gap: '28px' }}>
+          {[
+            { label: 'How it works', href: '/how-it-works' },
+            { label: 'Safety', href: '/safety' },
+            { label: 'FAQ', href: '/faq' },
+            { label: 'Roadmap', href: '/roadmap' },
+          ].map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              style={{
+                fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.9rem',
+                color: 'rgba(255,255,255,0.62)', textDecoration: 'none', transition: 'color 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.62)')}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="md:hidden">
         <button
           onClick={() => setOpen(true)}
           style={{
@@ -103,6 +118,8 @@ export default function Header() {
           </svg>
           Menu
         </button>
+        </div>
+        </div>
       </header>
 
       {/* Overlay */}

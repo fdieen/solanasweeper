@@ -84,31 +84,47 @@ html, body {
   .hero-gem-glow { top: calc(50% + 50px); width: 280px; height: 280px; }
 }
 
-/* Hero-tekstkolom: halve breedte op desktop, vrijwel vol op mobiel */
-.hero-text { width: 50%; }
-@media (max-width: 767px) {
-  /* Op mobiel uit de absolute-gecentreerde-100vh-modus: de gestapelde inhoud
-     (h1 + preview + vinkjes + reclaim-chip) is hoger dan het scherm, waardoor
-     centreren de titel bovenaan én de reclaim-chip onderaan afkniptte. In normale
-     flow met padding onder de fixed header groeit de sectie mee en scrollt de
-     pagina — niets wordt meer afgeknipt. (!important overschrijft de inline-styles.) */
-  .hero-text {
-    width: 100%;
-    position: relative !important;
-    top: auto !important;
-    bottom: auto !important;
-    justify-content: flex-start !important;
-    padding-top: 96px !important;                       /* onder de fixed header (~64px) + lucht */
-    padding-bottom: 140px !important;                   /* trust-signals ruim vrij van de browser-onderbalk */
-    padding-left: 24px !important;                      /* lijn links uit met de header (px-6 = 24px) */
-    padding-right: 24px !important;
-  }
+/* ── Hero-layout ──
+ * Mobiel/tablet (<1024px): verticale flow-stack die meegroeit en scrollt, met padding
+ *   onder de fixed header en ruim onder de browser-onderbalk.
+ * Desktop (≥1024px): 3-koloms grid — links tekst + trust, midden leeg (de diamant staat
+ *   absoluut op schermmidden en schijnt door), rechts de actie-kolom. */
+.hero-grid {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 96px 24px 140px;
 }
+.hero-action { display: flex; flex-direction: column; align-items: flex-start; width: 100%; max-width: 360px; margin-top: 40px; }
+.hero-trust  { margin-top: 28px; }
 
-/* Trust-badges: standaard wat ruimte erboven, op mobiel iets minder (flow-layout) */
-.hero-badges { margin-top: 40px; }
-@media (max-width: 767px) {
-  .hero-badges { margin-top: 32px; }
+/* Gedeelde container: header én hero delen dezelfde max-width + padding →
+   logo lijnt links uit met de hero-tekst, en de nav-rechterkant met de actie-kolom. */
+.hero-container { max-width: 1320px; margin: 0 auto; padding: 0 clamp(24px, 4vw, 72px); }
+
+@media (min-width: 1024px) {
+  .hero-grid {
+    position: absolute; inset: 0;
+    max-width: 1320px;
+    padding: 0 clamp(24px, 4vw, 72px);
+    display: grid;
+    grid-template-columns: 1fr 1.15fr 1fr;
+    grid-template-areas:
+      "intro .  action"
+      "trust .  action";
+    align-content: center;
+    row-gap: 30px;
+    column-gap: 24px;
+  }
+  /* Toppen uitlijnen: h1 en Connect Wallet beginnen op dezelfde hoogte */
+  .hero-intro  { grid-area: intro; align-self: start; }
+  .hero-trust  { grid-area: trust; align-self: start; margin-top: 0; }
+  .hero-action { grid-area: action; align-self: start; justify-self: end; margin-top: 0; }
 }
 
 /* Wallet-preview adres-input: nette, leesbare placeholder */
