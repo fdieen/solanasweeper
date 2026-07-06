@@ -87,13 +87,26 @@ html, body {
 /* Hero-tekstkolom: halve breedte op desktop, vrijwel vol op mobiel */
 .hero-text { width: 50%; }
 @media (max-width: 767px) {
-  .hero-text { width: 88%; }
+  /* Op mobiel uit de absolute-gecentreerde-100vh-modus: de gestapelde inhoud
+     (h1 + preview + vinkjes + reclaim-chip) is hoger dan het scherm, waardoor
+     centreren de titel bovenaan én de reclaim-chip onderaan afkniptte. In normale
+     flow met padding onder de fixed header groeit de sectie mee en scrollt de
+     pagina — niets wordt meer afgeknipt. (!important overschrijft de inline-styles.) */
+  .hero-text {
+    width: 88%;
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    justify-content: flex-start !important;
+    padding-top: 96px !important;    /* onder de fixed header (~64px) + lucht */
+    padding-bottom: 56px !important;
+  }
 }
 
-/* Trust-badges: standaard wat ruimte erboven, op mobiel lager */
+/* Trust-badges: standaard wat ruimte erboven, op mobiel iets minder (flow-layout) */
 .hero-badges { margin-top: 40px; }
 @media (max-width: 767px) {
-  .hero-badges { margin-top: 80px; }
+  .hero-badges { margin-top: 32px; }
 }
 
 /* Safety-pagina cube-animatie: desktop linksboven, mobiel rechtsboven */
