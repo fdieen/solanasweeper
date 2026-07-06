@@ -105,6 +105,30 @@ export default function Home() {
                   {t}
                 </span>
               ))}
+
+              {/* Reclaim-hint — zelfde ingetogen chip-stijl als de vinkjes, één teal-accent */}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.85rem',
+                color: 'rgba(255,255,255,0.6)',
+                background: 'linear-gradient(135deg, rgba(20,241,149,0.08) 0%, rgba(153,69,255,0.08) 100%)',
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '9px 16px',
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+              }}>
+                <svg width={15} height={15} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M8 2.5v6M5.2 6 8 8.8 10.8 6M3.5 13h9" stroke="#14F195" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Reclaim <b style={{ color: '#14F195', fontWeight: 700 }}>~0.002&nbsp;SOL</b> per account, token or NFT</span>
+              </span>
+
+              {/* Subtiele rekensom — één regel, gedempt */}
+              <span style={{
+                fontFamily: 'General Sans, sans-serif', fontSize: '0.76rem',
+                color: 'rgba(255,255,255,0.34)', paddingLeft: '2px', letterSpacing: '0.2px',
+              }}>
+                25 ≈ 0.05 · 50 ≈ 0.10 · 100 ≈ 0.20 SOL
+              </span>
             </div>
           </div>
         </section>
