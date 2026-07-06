@@ -99,7 +99,7 @@ html, body {
     bottom: auto !important;
     justify-content: flex-start !important;
     padding-top: 96px !important;                       /* onder de fixed header (~64px) + lucht */
-    padding-bottom: 108px !important;                   /* trust-signals vrij van de browser-onderbalk */
+    padding-bottom: 140px !important;                   /* trust-signals ruim vrij van de browser-onderbalk */
     padding-left: 24px !important;                      /* lijn links uit met de header (px-6 = 24px) */
     padding-right: 24px !important;
   }
@@ -112,7 +112,7 @@ html, body {
 }
 
 /* Wallet-preview adres-input: nette, leesbare placeholder */
-.wp-addr::placeholder { color: rgba(255,255,255,0.42); }
+.wp-addr::placeholder { color: rgba(255,255,255,0.55); }
 
 /* Safety-pagina cube-animatie: desktop linksboven, mobiel rechtsboven */
 .safety-cube {
