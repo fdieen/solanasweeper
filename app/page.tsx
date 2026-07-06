@@ -74,6 +74,14 @@ export default function Home() {
             <div style={{ marginBottom: '36px' }}>
               <ConnectWalletButton />
               <WalletScan />
+
+              {/* Logische scheiding: primaire actie (Connect Wallet) vs. de gratis preview */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', maxWidth: '360px', margin: '18px 0 0' }}>
+                <span style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                <span style={{ fontFamily: 'General Sans, sans-serif', fontSize: '0.72rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>or</span>
+                <span style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+              </div>
+
               <WalletPreview />
             </div>
 

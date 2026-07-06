@@ -132,7 +132,7 @@ export default function WalletPreview() {
           style={{
             flexShrink: 0,
             fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.85rem',
-            background: '#14F195', color: '#05140d',
+            background: 'linear-gradient(135deg, #14F195 0%, #9945FF 150%)', color: '#05140d',
             border: 'none', borderRadius: '10px', padding: '10px 18px',
             cursor: scanning ? 'wait' : 'pointer',
             opacity: scanning ? 0.6 : 1,
