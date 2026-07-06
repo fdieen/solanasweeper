@@ -38,7 +38,7 @@ export default function ConnectWalletButton({ fullWidth = false, showArrow = tru
         color: '#05050a',
         border: 'none',
         borderRadius: '999px',
-        padding: showArrow ? '13px 18px 13px 26px' : '13px 24px',
+        padding: showArrow ? '13px 22px 13px 28px' : '13px 24px',
         cursor: 'pointer',
         width: fullWidth ? '100%' : 'fit-content',
       }}

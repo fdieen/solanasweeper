@@ -64,7 +64,7 @@ export default function Home() {
               fontWeight: 400,
               fontSize: '1rem',
               lineHeight: 1.65,
-              color: 'rgba(255,255,255,0.42)',
+              color: 'rgba(255,255,255,0.62)',
               marginBottom: '44px',
               maxWidth: '340px',
             }}>
