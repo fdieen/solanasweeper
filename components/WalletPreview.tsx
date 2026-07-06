@@ -94,7 +94,7 @@ export default function WalletPreview() {
       <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.25 }}>
         Check any wallet
       </div>
-      <div style={{ fontSize: '0.74rem', fontStyle: 'italic', fontWeight: 400, color: 'rgba(255,255,255,0.4)', marginTop: '1px', marginBottom: '10px' }}>
+      <div style={{ fontSize: '0.74rem', fontWeight: 400, color: 'rgba(255,255,255,0.4)', marginTop: '1px', marginBottom: '10px' }}>
         no connect needed
       </div>
       <p style={{ margin: '0 0 12px', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)' }}>
