@@ -103,23 +103,28 @@ html, body {
 .hero-action { display: flex; flex-direction: column; align-items: flex-start; width: 100%; max-width: 360px; margin-top: 40px; }
 .hero-trust  { margin-top: 28px; }
 
+/* Gedeelde container: header én hero delen dezelfde max-width + padding →
+   logo lijnt links uit met de hero-tekst, en de nav-rechterkant met de actie-kolom. */
+.hero-container { max-width: 1320px; margin: 0 auto; padding: 0 clamp(24px, 4vw, 72px); }
+
 @media (min-width: 1024px) {
   .hero-grid {
     position: absolute; inset: 0;
     max-width: 1320px;
-    padding: 0 clamp(32px, 4vw, 72px);
+    padding: 0 clamp(24px, 4vw, 72px);
     display: grid;
     grid-template-columns: 1fr 1.15fr 1fr;
     grid-template-areas:
       "intro .  action"
       "trust .  action";
     align-content: center;
-    row-gap: 34px;
+    row-gap: 30px;
     column-gap: 24px;
   }
-  .hero-intro  { grid-area: intro; align-self: end; }
+  /* Toppen uitlijnen: h1 en Connect Wallet beginnen op dezelfde hoogte */
+  .hero-intro  { grid-area: intro; align-self: start; }
   .hero-trust  { grid-area: trust; align-self: start; margin-top: 0; }
-  .hero-action { grid-area: action; align-self: center; justify-self: center; margin-top: 0; }
+  .hero-action { grid-area: action; align-self: start; justify-self: end; margin-top: 0; }
 }
 
 /* Wallet-preview adres-input: nette, leesbare placeholder */
