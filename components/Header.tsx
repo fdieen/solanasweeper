@@ -88,7 +88,7 @@ export default function Header() {
             border: '1px solid rgba(255,255,255,0.12)',
             color: '#fff',
             borderRadius: '999px',
-            padding: '8px 18px',
+            padding: '7px 15px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
