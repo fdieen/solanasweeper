@@ -42,3 +42,6 @@ next-env.d.ts
 
 # eenmalige admin-tooling (niet committen / niet deployen)
 tools/create-fee-ata.html
+
+# X/marketing-assets (banner, avatar) — geen site-code, niet meebouwen/committen
+/x-assets/
