@@ -150,6 +150,72 @@ export default function HowItWorks() {
           ))}
         </div>
 
+        {/* What you can reclaim — de diepere uitleg (vanaf de hero hierheen verplaatst) */}
+        <div style={{ marginTop: '64px' }}>
+          <h2 style={{
+            fontFamily: 'General Sans, sans-serif', fontWeight: 700,
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)', letterSpacing: '-0.02em',
+            color: '#fff', marginBottom: '16px',
+          }}>
+            What you can reclaim
+          </h2>
+          <p style={{
+            fontFamily: 'General Sans, sans-serif', fontWeight: 400,
+            fontSize: '0.98rem', lineHeight: 1.7, color: 'rgba(255,255,255,0.5)',
+            maxWidth: '620px', marginBottom: '24px',
+          }}>
+            Every token account on Solana holds a small rent deposit — about 0.002 SOL — to stay
+            open on-chain. Close an account and that deposit comes straight back to your wallet.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            {[
+              {
+                label: 'Empty token accounts',
+                color: '#14F195',
+                desc: 'Leftovers from airdrops you never claimed and tokens you\'ve sold. Closing them destroys nothing — it just returns the ~0.002 SOL rent. This is Fun Mode, safe by default.',
+              },
+              {
+                label: 'Unwanted tokens & NFTs',
+                color: '#9945FF',
+                desc: 'In Pro Mode you can burn junk tokens and NFTs you\'ll never use to reclaim their ~0.002 SOL account rent. Burning is permanent and opt-in — you pick each item and confirm before signing.',
+              },
+            ].map(({ label, color, desc }) => (
+              <div key={label} style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '12px', padding: '24px',
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  fontFamily: 'General Sans, sans-serif', fontWeight: 600,
+                  fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase',
+                  color, marginBottom: '12px',
+                }}>
+                  {label}
+                </span>
+                <p style={{
+                  fontFamily: 'General Sans, sans-serif', fontWeight: 400,
+                  fontSize: '0.88rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.45)',
+                }}>
+                  {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p style={{
+            fontFamily: 'General Sans, sans-serif', fontWeight: 400,
+            fontSize: '0.82rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.35)',
+            marginTop: '18px', maxWidth: '620px',
+          }}>
+            Every item returns the same ~0.002 SOL — we close the token account, not separate
+            metadata accounts. SolanaSweeper doesn&apos;t touch domains, LP positions, or compressed NFTs.
+            The more you&apos;ve piled up, the more adds up:{' '}
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>25 ≈ 0.05 · 50 ≈ 0.10 · 100 ≈ 0.20 SOL</span>.
+          </p>
+        </div>
+
         {/* CTA */}
         <div style={{ marginTop: '64px' }}>
           <a href="/" style={{
