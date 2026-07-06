@@ -40,12 +40,24 @@ export const metadata: Metadata = {
     description:
       "Clean your Solana wallet. Close empty token accounts, burn junk, and reclaim locked SOL in one click. Non-custodial — you sign every transaction.",
     locale: "en_US",
+    // Statische PNG in /public i.p.v. een dynamische edge-route: die gaf 0 bytes
+    // terug, waardoor de X/OG-card leeg bleef. Statisch is betrouwbaar voor crawlers.
+    images: [
+      {
+        url: `${SITE_URL}/og.png`,
+        width: 1200,
+        height: 630,
+        alt: "SolanaSweeper — Reclaim your SOL",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "SolanaSweeper · Reclaim Your SOL",
     description:
       "Clean your Solana wallet. Close empty token accounts, burn junk, and reclaim locked SOL in one click.",
+    images: [`${SITE_URL}/og.png`],
   },
   robots: {
     index: true,
