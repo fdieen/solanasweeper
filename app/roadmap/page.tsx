@@ -5,11 +5,11 @@ import RoadmapBackground from '@/components/RoadmapBackground';
 
 export const metadata: Metadata = {
   title: 'Roadmap',
-  description: 'Where SolanaSweeper is headed: Fun Mode rent reclaim, Pro Mode swap & burn, a public reclaim counter, and a security audit.',
+  description: 'Where SolanaSweeper is headed: Fun Mode, Pro Mode, and a read-only wallet preview are live — with a security audit, more wallet support, B2B partnerships, and live stats ahead.',
   alternates: { canonical: '/roadmap' },
 };
 
-type Status = 'done' | 'live' | 'building' | 'planned';
+type Status = 'done' | 'live' | 'building' | 'planned' | 'exploring';
 
 const items: { status: Status; label: string; title: string; body: string }[] = [
   {
@@ -19,16 +19,22 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
     body: 'Brand identity, hero animation, and the foundation of the site, fully live.',
   },
   {
-    status: 'live',
-    label: 'In progress',
+    status: 'done',
+    label: 'Shipped',
     title: 'Fun Mode, rent reclaim',
-    body: 'Connect wallet, scan empty token accounts, close them all, and SOL lands in your wallet. The safe core of SolanaSweeper.',
+    body: 'Connect your wallet, scan empty token accounts, close them, and reclaim the locked SOL. The safe core of SolanaSweeper — live and working.',
   },
   {
-    status: 'building',
-    label: 'Next up',
+    status: 'done',
+    label: 'Shipped',
     title: 'Pro Mode, swap & burn',
-    body: 'Swap residual tokens to SOL via Jupiter. Permanently burn worthless SPL tokens and junk NFTs. Full irreversible-action confirmation before signing.',
+    body: 'Swap residual tokens to SOL via Jupiter, and permanently burn worthless SPL tokens and junk NFTs — with full irreversible-action confirmation before signing. Live.',
+  },
+  {
+    status: 'done',
+    label: 'Shipped',
+    title: 'Read-only wallet preview',
+    body: 'Paste any Solana address and see how much SOL you can reclaim — no wallet connection needed.',
   },
   {
     status: 'planned',
@@ -43,6 +49,12 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
     body: 'Expanding beyond Phantom, Solflare, and Backpack as the ecosystem grows.',
   },
   {
+    status: 'exploring',
+    label: 'Exploring',
+    title: 'B2B partnerships',
+    body: "Partnering with Solana wallets and platforms to bring SolanaSweeper's cleanup directly to their users — reclaiming locked SOL without leaving the apps they already use.",
+  },
+  {
     status: 'planned',
     label: 'Planned',
     title: 'Live stats',
@@ -51,10 +63,12 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
 ];
 
 const statusStyle: Record<Status, { color: string; bg: string; dot: string }> = {
-  done:     { color: '#14F195', bg: 'rgba(20,241,149,0.08)',  dot: '#14F195' },
-  live:     { color: '#9945FF', bg: 'rgba(153,69,255,0.10)', dot: '#9945FF' },
-  building: { color: 'rgba(255,255,255,0.65)', bg: 'rgba(255,255,255,0.05)', dot: 'rgba(255,255,255,0.4)' },
-  planned:  { color: 'rgba(255,255,255,0.3)',  bg: 'rgba(255,255,255,0.03)', dot: 'rgba(255,255,255,0.15)' },
+  done:      { color: '#14F195', bg: 'rgba(20,241,149,0.08)',  dot: '#14F195' },
+  live:      { color: '#9945FF', bg: 'rgba(153,69,255,0.10)', dot: '#9945FF' },
+  building:  { color: 'rgba(255,255,255,0.65)', bg: 'rgba(255,255,255,0.05)', dot: 'rgba(255,255,255,0.4)' },
+  planned:   { color: 'rgba(255,255,255,0.3)',  bg: 'rgba(255,255,255,0.03)', dot: 'rgba(255,255,255,0.15)' },
+  // Nieuw: nog vroeger/tentatiever dan 'planned' — gedempt lavendel (huisstijl-paars).
+  exploring: { color: 'rgba(180,130,255,0.55)', bg: 'rgba(153,69,255,0.06)', dot: 'rgba(153,69,255,0.35)' },
 };
 
 export default function Roadmap() {
@@ -95,7 +109,7 @@ export default function Roadmap() {
                   <div style={{
                     width: '15px', height: '15px', borderRadius: '50%',
                     background: s.dot,
-                    border: `2px solid ${status === 'planned' ? 'rgba(255,255,255,0.08)' : s.dot}`,
+                    border: `2px solid ${status === 'planned' || status === 'exploring' ? 'rgba(255,255,255,0.08)' : s.dot}`,
                     flexShrink: 0, marginTop: '3px',
                     boxShadow: status === 'done' || status === 'live' ? `0 0 8px ${s.dot}` : 'none',
                   }} />
@@ -116,7 +130,7 @@ export default function Roadmap() {
                     <h2 style={{
                       fontFamily: 'General Sans, sans-serif', fontWeight: 600,
                       fontSize: '1.05rem', letterSpacing: '-0.01em',
-                      color: status === 'planned' ? 'rgba(255,255,255,0.4)' : '#fff',
+                      color: status === 'planned' || status === 'exploring' ? 'rgba(255,255,255,0.4)' : '#fff',
                       marginBottom: '8px',
                     }}>
                       {title}
