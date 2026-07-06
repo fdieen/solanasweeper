@@ -29,49 +29,44 @@ export default function Home() {
           {/* Donkere gradient links voor leesbare tekst, rechts foto zichtbaar */}
           <div className="hero-overlay" aria-hidden="true" />
 
-          {/* Echte 3D edelsteen, centraal */}
+          {/* Echte 3D edelsteen — blijft op schermmidden (interactie + CircuitBackground intact) */}
           <div className="hero-gem-glow" aria-hidden="true" />
           <div className="hero-gem-3d">
             <GemClient />
           </div>
 
-          {/* Tekst links — absoluut, verticaal gecentreerd */}
-          <div className="hero-text" style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            zIndex: 10,
-            padding: 'clamp(80px, 10vw, 120px) clamp(32px, 6vw, 100px)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}>
-            <h1 style={{
-              fontFamily: 'General Sans, sans-serif',
-              fontWeight: 700,
-              fontSize: 'clamp(2.6rem, 4.2vw, 5rem)',
-              lineHeight: 1.0,
-              letterSpacing: '-0.035em',
-              color: '#fff',
-              marginBottom: '28px',
-            }}>
-              Sweep your<br />dust into SOL
-            </h1>
+          {/* Hero-grid: mobiel verticale stack; desktop 3 kolommen —
+              links tekst + trust-cards, midden de diamant (leeg), rechts de actie-kolom. */}
+          <div className="hero-grid">
 
-            <p style={{
-              fontFamily: 'General Sans, sans-serif',
-              fontWeight: 400,
-              fontSize: '1rem',
-              lineHeight: 1.65,
-              color: 'rgba(255,255,255,0.62)',
-              marginBottom: '44px',
-              maxWidth: '340px',
-            }}>
-              Close empty token accounts, reclaim locked SOL, and clean your wallet in one click.
-            </p>
+            {/* Links: hero-tekst */}
+            <div className="hero-intro">
+              <h1 style={{
+                fontFamily: 'General Sans, sans-serif',
+                fontWeight: 700,
+                fontSize: 'clamp(2.4rem, 3.6vw, 3.6rem)',
+                lineHeight: 1.02,
+                letterSpacing: '-0.035em',
+                color: '#fff',
+                margin: '0 0 22px',
+              }}>
+                Sweep your<br />dust into SOL
+              </h1>
+              <p style={{
+                fontFamily: 'General Sans, sans-serif',
+                fontWeight: 400,
+                fontSize: '1rem',
+                lineHeight: 1.65,
+                color: 'rgba(255,255,255,0.62)',
+                margin: 0,
+                maxWidth: '340px',
+              }}>
+                Close empty token accounts, reclaim locked SOL, and clean your wallet in one click.
+              </p>
+            </div>
 
-            <div style={{ marginBottom: '36px' }}>
+            {/* Rechts: actie-kolom */}
+            <div className="hero-action">
               <ConnectWalletButton />
               <WalletScan />
 
@@ -85,7 +80,8 @@ export default function Home() {
               <WalletPreview />
             </div>
 
-            <div className="hero-badges" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px', width: '100%', maxWidth: '360px' }}>
+            {/* Links-onder (desktop) / onderaan (mobiel): trust-cards */}
+            <div className="hero-trust" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px', width: '100%', maxWidth: '360px' }}>
               {[
                 { t: 'You sign every transaction', size: 0.85, pad: '9px 16px', icon: 15 },
                 { t: 'Powered by Jupiter',         size: 0.85, pad: '9px 16px', icon: 15 },
@@ -138,6 +134,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
           </div>
         </section>
 

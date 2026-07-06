@@ -122,7 +122,7 @@ export default function WalletPreview() {
             color: '#fff',
             background: 'rgba(0,0,0,0.28)',
             border: `1px solid ${focused ? 'rgba(20,241,149,0.55)' : 'rgba(255,255,255,0.14)'}`,
-            borderRadius: '10px', padding: '10px 12px', outline: 'none',
+            borderRadius: '12px', padding: '11px 14px', outline: 'none',
             transition: 'border-color 0.15s ease',
           }}
         />
@@ -133,7 +133,7 @@ export default function WalletPreview() {
             flexShrink: 0,
             fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.85rem',
             background: 'linear-gradient(135deg, #14F195 0%, #9945FF 150%)', color: '#05140d',
-            border: 'none', borderRadius: '10px', padding: '10px 18px',
+            border: 'none', borderRadius: '12px', padding: '11px 18px',
             cursor: scanning ? 'wait' : 'pointer',
             opacity: scanning ? 0.6 : 1,
             transition: 'opacity 0.15s ease',

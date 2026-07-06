@@ -78,6 +78,31 @@ export default function Header() {
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
           <img src="/logo.svg?v=2" alt="SolanaSweeper" style={{ height: '32px', width: 'auto' }} />
         </a>
+
+        {/* Desktop-nav: links direct in de header; op mobiel via de Menu-knop */}
+        <nav className="hidden md:flex" style={{ alignItems: 'center', gap: '28px' }}>
+          {[
+            { label: 'How it works', href: '/how-it-works' },
+            { label: 'Safety', href: '/safety' },
+            { label: 'FAQ', href: '/faq' },
+            { label: 'Roadmap', href: '/roadmap' },
+          ].map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              style={{
+                fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.9rem',
+                color: 'rgba(255,255,255,0.62)', textDecoration: 'none', transition: 'color 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.62)')}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="md:hidden">
         <button
           onClick={() => setOpen(true)}
           style={{
@@ -103,6 +128,7 @@ export default function Header() {
           </svg>
           Menu
         </button>
+        </div>
       </header>
 
       {/* Overlay */}
