@@ -65,6 +65,26 @@ export default function Footer() {
               {label}
             </a>
           ))}
+
+          {/* X / Twitter — let op de underscore aan het eind (essentieel voor het juiste account) */}
+          <a
+            href="https://x.com/solanasweeper_"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Follow SolanaSweeper on X"
+            title="Follow @solanasweeper_ on X"
+            style={{
+              display: 'inline-flex', alignItems: 'center',
+              color: 'rgba(255,255,255,0.35)', textDecoration: 'none',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
         </div>
         <span style={{ fontFamily: 'General Sans, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)' }}>
           © 2026 SolanaSweeper · Non-custodial
