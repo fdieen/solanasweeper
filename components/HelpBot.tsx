@@ -78,7 +78,7 @@ export default function HelpBot() {
         @keyframes helpbot-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         @keyframes sphere-a { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
         @keyframes sphere-b { 0%,100% { transform: translateY(0); } 50% { transform: translateY(12px); } }
-        @keyframes antenna-tip { 0%,100% { opacity: 1; box-shadow: 0 0 8px 2px #14F195; } 50% { opacity: 0.5; box-shadow: 0 0 3px 1px #14F195; } }
+        @keyframes antenna-tip { 0%,100% { opacity: 1; box-shadow: 0 0 9px 2px #9945FF, 0 0 18px 5px rgba(20,241,149,0.45); } 50% { opacity: 0.5; box-shadow: 0 0 4px 1px #9945FF, 0 0 9px 2px rgba(20,241,149,0.3); } }
 
         .help-bot {
           position: absolute;
@@ -105,7 +105,7 @@ export default function HelpBot() {
       >
         {/* Antenne */}
         <div style={{ width: '3px', height: '16px', background: 'rgba(255,255,255,0.5)', borderRadius: '2px', margin: '0 auto' }} />
-        <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#14F195', margin: '-2px auto 0', animation: 'antenna-tip 1.8s ease-in-out infinite' }} />
+        <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#9945FF', margin: '-2px auto 0', animation: 'antenna-tip 1.8s ease-in-out infinite' }} />
 
         {/* Oortjes */}
         <div style={{ position: 'absolute', top: '70px', left: '-6px', width: '18px', height: '38px', background: 'linear-gradient(180deg, #2a2a32, #15151b)', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.4)' }} />
@@ -119,7 +119,7 @@ export default function HelpBot() {
           height: '124px',
           borderRadius: '34px',
           background: 'linear-gradient(160deg, #ffffff 0%, #eef0f5 60%, #dfe2ea 100%)',
-          boxShadow: '0 20px 45px rgba(0,0,0,0.45), inset 0 3px 6px rgba(255,255,255,0.9), inset 0 -8px 14px rgba(160,165,180,0.5)',
+          boxShadow: '0 20px 45px rgba(0,0,0,0.45), 0 0 42px rgba(153,69,255,0.16), inset 0 3px 6px rgba(255,255,255,0.9), inset 0 -8px 14px rgba(160,165,180,0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
