@@ -78,9 +78,10 @@ export default function GuideIndex() {
             <li key={a.slug} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <a
                 href={`/guide/${a.slug}`}
+                className="guide-row"
                 style={{
                   display: 'flex', gap: 'clamp(16px, 3vw, 26px)', alignItems: 'baseline',
-                  padding: '24px 4px', textDecoration: 'none',
+                  padding: '24px 14px', margin: '0 -14px', textDecoration: 'none',
                 }}
               >
                 <span style={{

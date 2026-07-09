@@ -135,9 +135,9 @@ html, body {
   font-family: 'General Sans', sans-serif;
   color: rgba(255,255,255,0.68);
   font-size: 1.06rem;
-  line-height: 1.85;
+  line-height: 1.7;
 }
-.guide-prose > p { margin: 0 0 22px; }
+.guide-prose > p { margin: 0 0 28px; }
 .guide-prose h2 {
   font-size: clamp(1.4rem, 2.4vw, 1.7rem); font-weight: 600; letter-spacing: -0.02em;
   color: #fff; line-height: 1.3; margin: 54px 0 16px;
@@ -161,6 +161,23 @@ html, body {
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09);
   border-radius: 6px; padding: 1px 6px; color: #d7c6ff;
 }
+/* Neutrale callout voor kerncijfers: dunne linkerrand, geen icoon of mascotte */
+.guide-prose .note {
+  border-left: 2px solid rgba(153,69,255,0.5);
+  padding: 6px 0 6px 20px; margin: 30px 0;
+  color: rgba(255,255,255,0.82);
+}
+
+/* /guide-overzicht: subtiele hover op de hoofdstuk-rijen */
+.guide-row { border-radius: 12px; transition: background 0.15s ease; }
+.guide-row:hover { background: rgba(255,255,255,0.035); }
+
+/* Breadcrumb + "terug naar het overzicht": duidelijk klikbaar */
+.guide-crumb {
+  color: #14F195; text-decoration: none;
+  border-bottom: 1px solid rgba(20,241,149,0.3); transition: border-color 0.15s;
+}
+.guide-crumb:hover { border-color: #14F195; }
 
 /* Safety-pagina cube-animatie: desktop linksboven, mobiel rechtsboven */
 .safety-cube {

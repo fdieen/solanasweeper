@@ -33,7 +33,9 @@ export default function Page() {
         pay a one-time deposit, and the account stays on-chain indefinitely. Think of it like a
         security deposit on an apartment: money held in escrow, returned when you move out.
       </p>
-      <p>The current deposit for a standard token account is about 0.00204 SOL.</p>
+      <p className="note">
+        The current deposit for a standard token account is about <strong>0.00204 SOL</strong>.
+      </p>
 
       <h2>Where your SOL gets stuck</h2>
       <p>

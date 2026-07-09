@@ -53,7 +53,8 @@ export default function GuideArticle({
 
       <article
         style={{
-          maxWidth: '680px',
+          maxWidth: '70ch',
+          fontSize: '1.06rem',
           margin: '0 auto',
           padding: 'clamp(96px, 13vw, 148px) clamp(24px, 6vw, 32px) 72px',
         }}
@@ -67,7 +68,7 @@ export default function GuideArticle({
             display: 'flex', alignItems: 'center', gap: '8px',
           }}
         >
-          <a href="/guide" style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Guide</a>
+          <a href="/guide" className="guide-crumb">Guide</a>
           <span style={{ color: 'rgba(255,255,255,0.25)' }}>/</span>
           <span>{article.h1}</span>
         </nav>
@@ -134,6 +135,13 @@ export default function GuideArticle({
             ) : <span />}
           </nav>
         )}
+
+        {/* Terug naar het overzicht */}
+        <p style={{ textAlign: 'center', margin: '18px 0 0' }}>
+          <a href="/guide" className="guide-crumb" style={{ fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.9rem' }}>
+            ← Back to the guide overview
+          </a>
+        </p>
 
         {/* CTA terug naar de app */}
         <aside
