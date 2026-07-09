@@ -46,7 +46,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     title: 'How to Reclaim Your SOL: 3 Ways to Close Token Accounts',
     h1: 'How to reclaim your SOL',
     description:
-      "Three ways to get your locked SOL back on Solana — the CLI, your wallet, or a wallet cleaner — with the trade-offs of each and what to check before you use any tool.",
+      "Three ways to get your locked SOL back on Solana: the CLI, your wallet, or a wallet cleaner. The trade-offs of each, and what to check before you use any tool.",
     keywords: [
       'how to reclaim SOL', 'close token accounts Solana', 'spl-token close',
       'Solana wallet cleaner', 'reclaim rent Solana',
@@ -67,7 +67,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       'non-custodial Solana', 'reclaim rent safe', 'Solana drainer',
     ],
     excerpt:
-      'Closing empty token accounts is one of the safest operations on Solana — but the tool you use is a different question.',
+      'Closing empty token accounts is one of the safest operations on Solana. The tool you use is a different question.',
     datePublished: '2026-07-09',
     dateModified: '2026-07-09',
     readingTime: '4 min read',
@@ -77,7 +77,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     title: "What You Can't Reclaim on Solana (Dust, cNFTs, Metadata)",
     h1: "What you can't reclaim",
     description:
-      'Not every account gives SOL back. Dust balances, delegated close authority, compressed NFTs, in-use accounts, and metadata rent — what stays locked, and why.',
+      'Not every account gives SOL back. Dust balances, delegated close authority, compressed NFTs, in-use accounts, and metadata rent. What stays locked, and why.',
     keywords: [
       "what you can't reclaim Solana", 'compressed NFT rent', 'metadata account rent',
       'token dust Solana', 'close authority delegated',
@@ -93,12 +93,12 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     title: 'Common Mistakes When Cleaning a Solana Wallet',
     h1: 'Common mistakes',
     description:
-      'The mistakes that cost people SOL — or their whole wallet — when reclaiming rent: rushing a large selection, burning before verifying, fake URLs, and skipping the safe mode.',
+      'The mistakes that cost people SOL, or their whole wallet, when reclaiming rent: rushing a large selection, burning before verifying, fake URLs, and skipping the safe mode.',
     keywords: [
       'Solana wallet cleaning mistakes', 'reclaim SOL mistakes',
       'fake Solana cleaner', 'burn tokens mistake', 'Solscan verify mint',
     ],
-    excerpt: 'The small mistakes that cost people SOL — or their whole wallet. Avoid these five.',
+    excerpt: 'The small mistakes that cost people SOL, or their whole wallet. Avoid these five.',
     datePublished: '2026-07-09',
     dateModified: '2026-07-09',
     readingTime: '2 min read',

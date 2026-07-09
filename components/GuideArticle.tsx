@@ -149,7 +149,7 @@ export default function GuideArticle({
               See how much SOL you can reclaim
             </p>
             <p style={{ fontFamily: 'General Sans, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
-              Paste any address on solanasweeper.com — no connection needed.
+              Paste any address on solanasweeper.com. No connection needed.
             </p>
           </div>
           <a

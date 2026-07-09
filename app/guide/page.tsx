@@ -65,8 +65,8 @@ export default function GuideIndex() {
             margin: '0 0 8px', maxWidth: '600px',
           }}>
             Solana quietly locks small amounts of SOL in the token accounts your wallet creates. This
-            guide explains what that is, how to get it back, and how to do it without getting burned —
-            in plain English, no hype.
+            guide explains what that is, how to get it back, and how to do it without getting burned.
+            In plain English, no hype.
           </p>
         </header>
 
@@ -110,7 +110,7 @@ export default function GuideIndex() {
           fontSize: '0.9rem', lineHeight: 1.7, color: 'rgba(255,255,255,0.4)', marginTop: '40px',
         }}>
           Prefer to just try it? <a href="/" style={{ color: 'rgba(20,241,149,0.85)', textDecoration: 'none' }}>Check any wallet</a>{' '}
-          to see how much SOL is reclaimable — no connection needed.
+          to see how much SOL is reclaimable, no connection needed.
         </p>
       </article>
     </InnerLayout>

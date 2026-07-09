@@ -64,8 +64,8 @@ export default function Page() {
       <h2>Reclaiming it</h2>
       <p>
         Closing an empty token account returns the deposit to your wallet. Two conditions apply: the
-        balance must be zero, and you must hold the close authority — normally you do, as the account
-        owner.
+        balance must be zero, and you must hold the close authority, which normally is you, as the
+        account owner.
       </p>
       <p>
         For the different ways to do it, see{' '}
