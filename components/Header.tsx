@@ -30,6 +30,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M9 4v14M15 6v14" />
     </svg>
   ),
+  guide: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 5.5h6A2.5 2.5 0 0111.5 8v11a2 2 0 00-2-2H3z" />
+      <path d="M21 5.5h-6A2.5 2.5 0 0012.5 8v11a2 2 0 012-2H21z" />
+    </svg>
+  ),
 };
 
 const MENU: { title: string; items: { label: string; href: string; icon: string }[] }[] = [
@@ -37,6 +43,7 @@ const MENU: { title: string; items: { label: string; href: string; icon: string 
     title: 'Learn',
     items: [
       { label: 'How it works', href: '/how-it-works', icon: 'book' },
+      { label: 'Guide', href: '/guide', icon: 'guide' },
       { label: 'Safety', href: '/safety', icon: 'shield' },
       { label: 'FAQ', href: '/faq', icon: 'faq' },
     ],
@@ -73,6 +80,7 @@ export default function Header() {
         <nav className="hidden md:flex" style={{ alignItems: 'center', gap: '28px' }}>
           {[
             { label: 'How it works', href: '/how-it-works' },
+            { label: 'Guide', href: '/guide' },
             { label: 'Safety', href: '/safety' },
             { label: 'FAQ', href: '/faq' },
             { label: 'Roadmap', href: '/roadmap' },
