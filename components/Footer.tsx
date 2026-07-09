@@ -47,6 +47,7 @@ export default function Footer() {
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           {[
             { label: 'How it works', href: '/how-it-works' },
+            { label: 'Guide', href: '/guide' },
             { label: 'Safety', href: '/safety' },
             { label: 'FAQ', href: '/faq' },
             { label: 'Roadmap', href: '/roadmap' },

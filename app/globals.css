@@ -130,6 +130,38 @@ html, body {
 /* Wallet-preview adres-input: nette, leesbare placeholder */
 .wp-addr::placeholder { color: rgba(255,255,255,0.55); }
 
+/* ── Guide-artikel prose — rustige, leesbare typografie voor lange leessessies ── */
+.guide-prose {
+  font-family: 'General Sans', sans-serif;
+  color: rgba(255,255,255,0.68);
+  font-size: 1.06rem;
+  line-height: 1.85;
+}
+.guide-prose > p { margin: 0 0 22px; }
+.guide-prose h2 {
+  font-size: clamp(1.4rem, 2.4vw, 1.7rem); font-weight: 600; letter-spacing: -0.02em;
+  color: #fff; line-height: 1.3; margin: 54px 0 16px;
+}
+.guide-prose h3 { font-size: 1.14rem; font-weight: 600; color: rgba(255,255,255,0.92); margin: 34px 0 10px; }
+.guide-prose a {
+  color: #14F195; text-decoration: none;
+  border-bottom: 1px solid rgba(20,241,149,0.3); transition: border-color 0.15s;
+}
+.guide-prose a:hover { border-color: #14F195; }
+.guide-prose strong { color: #fff; font-weight: 600; }
+.guide-prose ul { margin: 0 0 22px; padding: 0; list-style: none; }
+.guide-prose li { position: relative; padding-left: 24px; margin-bottom: 12px; line-height: 1.7; }
+.guide-prose li::before {
+  content: ''; position: absolute; left: 3px; top: 12px; width: 6px; height: 6px;
+  border-radius: 50%; background: linear-gradient(135deg, #14F195, #9945FF);
+}
+.guide-prose li strong { color: #fff; }
+.guide-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 6px; padding: 1px 6px; color: #d7c6ff;
+}
+
 /* Safety-pagina cube-animatie: desktop linksboven, mobiel rechtsboven */
 .safety-cube {
   position: absolute;
