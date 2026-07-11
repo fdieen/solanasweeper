@@ -18,6 +18,7 @@ type SolanaSigner = {
 };
 
 type Phase = 'idle' | 'scanning' | 'ready' | 'confirm' | 'working' | 'done' | 'error';
+type ProResult = { closed: number; swapped: number; burned: number; skipped: number; sol: number };
 
 const FEE_ACCOUNT = process.env.NEXT_PUBLIC_JUP_FEE_ACCOUNT || undefined;
 const key = (h: TokenHolding) => h.tokenAccount.toBase58();
@@ -42,7 +43,10 @@ export default function ProMode() {
   const [ackPermanent, setAckPermanent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [noticeMsg, setNoticeMsg] = useState(''); // rustige melding (bv. te weinig gas), geen error
-  const [result, setResult] = useState<{ closed: number; swapped: number; burned: number; skipped: number; sol: number } | null>(null);
+  const [result, setResult] = useState<ProResult | null>(null);
+  // Wat er zojuist is opgeschoond (na bevestiging). Zolang gezet: toon de success-banner
+  // en (na de herscan) de verse staat.
+  const [swept, setSwept] = useState<ProResult | null>(null);
 
   const scan = useCallback(async () => {
     if (!address) return;
@@ -85,6 +89,9 @@ export default function ProMode() {
     scannedFor.current = address;
     scan();
   }, [isConnected, address, scan]);
+
+  // Ander wallet-adres → een eventuele success-banner is niet meer relevant.
+  useEffect(() => { setSwept(null); }, [address]);
 
   const toggle = (set: Set<string>, k: string, setter: (s: Set<string>) => void) => {
     const next = new Set(set);
@@ -178,6 +185,7 @@ export default function ProMode() {
     setPhase('working');
     setErrorMsg('');
     setNoticeMsg('');
+    setSwept(null);
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
@@ -246,14 +254,26 @@ export default function ProMode() {
       const reclaimedLamports = [...freshEmpty, ...burnSafe].reduce((s, a) => s + a.lamports, 0);
       const netLamports = reclaimedLamports - Math.floor((reclaimedLamports * FEE_BPS) / 10_000);
 
-      setResult({
+      const proResult: ProResult = {
         closed: closedCount,
         burned: burnedCount,
         swapped: swapRes.ok,
         skipped: closeRes.skipped + burnRes.skipped + swapRes.skipped + burnRejected.length,
         sol: lamportsToSol(netLamports),
-      });
-      setPhase('done');
+      };
+      setResult(proResult);
+
+      // Pas NA on-chain bevestiging: als er iets is opgeschoond, ververs de kaart naar de
+      // nieuwe staat (verse herscan) en seinsein de read-only preview — zelfde flow als Fun Mode.
+      if (closedCount + burnedCount + swapRes.ok > 0) {
+        setSwept(proResult);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('sweep-confirmed', { detail: { address } }));
+        }
+        scan(); // verse buckets ophalen → verwerkte items verdwijnen
+      } else {
+        setPhase('done'); // niets bevestigd → toon de (skip)samenvatting
+      }
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error && /reject|denied|user/i.test(e.message)
@@ -265,10 +285,22 @@ export default function ProMode() {
   }
 
   if (!isConnected) return null;
-  if (phase === 'scanning' || phase === 'idle') return <p style={muted}>Scanning your wallet…</p>;
+  if ((phase === 'scanning' || phase === 'idle') && !swept) return <p style={muted}>Scanning your wallet…</p>;
+
+  const hasContent = swap.length > 0 || burn.length > 0 || nft.length > 0 || empty.length > 0;
 
   return (
     <div style={{ marginTop: '8px' }}>
+      {swept && <SweptBanner swept={swept} />}
+      {swept && phase === 'scanning' && (
+        <p style={{ ...muted, marginTop: '12px' }}>Refreshing your wallet…</p>
+      )}
+      {swept && phase === 'ready' && !hasContent && (
+        <p style={{ ...muted, marginTop: '12px' }}>Nothing left to clean.</p>
+      )}
+
+      {(!swept || (phase === 'ready' && hasContent)) && (
+      <>
       {/* SWAP */}
       {swap.length > 0 && (
         <Section title={`Swap to SOL · ${swap.length}`} sub="Sold via Jupiter — value preserved.">
@@ -382,6 +414,35 @@ export default function ProMode() {
           </div>
         </div>
       )}
+      </>
+      )}
+    </div>
+  );
+}
+
+// Success-banner na een bevestigde Pro-clean.
+function SweptBanner({ swept }: { swept: ProResult }) {
+  const parts: string[] = [];
+  if (swept.closed) parts.push(`${swept.closed} closed`);
+  if (swept.swapped) parts.push(`${swept.swapped} swapped`);
+  if (swept.burned) parts.push(`${swept.burned} burned`);
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'flex-start', gap: '10px',
+      padding: '12px 14px', borderRadius: '12px',
+      background: 'rgba(20,241,149,0.1)', border: '1px solid rgba(20,241,149,0.3)',
+    }}>
+      <svg width="16" height="16" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
+        <path d="M2 7.5L5.5 11L12 3.5" stroke="#14F195" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#14F195' }}>Wallet cleaned ✓</div>
+        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>
+          {parts.join(' · ')}{parts.length ? ' · ' : ''}
+          <b style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{swept.sol.toFixed(4)} SOL</b> reclaimed
+          {swept.skipped ? ` · ${swept.skipped} skipped` : ''}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppKit } from '@reown/appkit/react';
 import { PublicKey } from '@solana/web3.js';
 import { getProxyConnection, scanClosable } from '@/lib/solanaProxy';
@@ -30,8 +30,53 @@ export default function WalletPreview() {
 
   const scanningRef = useRef(false);
   const cacheRef = useRef<Map<string, Result>>(new Map());
+  // Adres waarvoor het huidige resultaat geldt (voor gerichte invalidatie na een sweep).
+  const currentAddrRef = useRef<string | null>(null);
 
-  async function handleCheck() {
+  // Kernscan voor één adres. force=true slaat de cache over (verse RPC-state).
+  const runScan = useCallback(async (owner: PublicKey, force = false) => {
+    const key = owner.toBase58();
+    if (!force) {
+      const cached = cacheRef.current.get(key);
+      if (cached) {
+        setResult(cached);
+        currentAddrRef.current = key;
+        setStatus('done');
+        return; // cache-hit → geen RPC-call
+      }
+    }
+    if (scanningRef.current) return; // debounce: negeer overlappende scans
+    scanningRef.current = true;
+    setStatus('scanning');
+    setErrorMsg('');
+    try {
+      const conn = getProxyConnection();
+      const found = await scanClosable(conn, owner);
+      const sum = summarize(found);
+      const res: Result = {
+        emptyCount: sum.count,
+        grossSol: lamportsToSol(sum.grossLamports),
+        netSol: lamportsToSol(sum.netLamports),
+      };
+      cacheRef.current.set(key, res);
+      setResult(res);
+      currentAddrRef.current = key;
+      setStatus('done');
+    } catch (e) {
+      const msg = String((e as { message?: string })?.message ?? e);
+      // 429 / rate limit (nu of straks via Upstash) → rustige, aparte melding.
+      setErrorMsg(
+        /429|rate.?limit/i.test(msg)
+          ? 'Busy right now — try again in a few seconds.'
+          : 'Could not scan that address (network). Try again.'
+      );
+      setStatus('error');
+    } finally {
+      scanningRef.current = false;
+    }
+  }, []);
+
+  function handleCheck() {
     const raw = input.trim();
     if (!raw) {
       setStatus('error');
@@ -47,45 +92,23 @@ export default function WalletPreview() {
       setErrorMsg("That doesn't look like a valid Solana address.");
       return;
     }
-
-    if (scanningRef.current) return; // debounce: negeer klikken tijdens een lopende scan
-
-    const key = owner.toBase58();
-    const cached = cacheRef.current.get(key);
-    if (cached) {
-      setResult(cached);
-      setStatus('done');
-      return; // cache-hit → geen RPC-call
-    }
-
-    scanningRef.current = true;
-    setStatus('scanning');
-    setErrorMsg('');
-    try {
-      const conn = getProxyConnection();
-      const found = await scanClosable(conn, owner);
-      const sum = summarize(found);
-      const res: Result = {
-        emptyCount: sum.count,
-        grossSol: lamportsToSol(sum.grossLamports),
-        netSol: lamportsToSol(sum.netLamports),
-      };
-      cacheRef.current.set(key, res);
-      setResult(res);
-      setStatus('done');
-    } catch (e) {
-      const msg = String((e as { message?: string })?.message ?? e);
-      // 429 / rate limit (nu of straks via Upstash) → rustige, aparte melding.
-      setErrorMsg(
-        /429|rate.?limit/i.test(msg)
-          ? 'Busy right now — try again in a few seconds.'
-          : 'Could not scan that address (network). Try again.'
-      );
-      setStatus('error');
-    } finally {
-      scanningRef.current = false;
-    }
+    runScan(owner);
   }
+
+  // Na een bevestigde sweep (event uit FunMode): de cache voor dat adres invalideren,
+  // en als deze kaart datzelfde adres toont → verse scan zodat 't naar 0 gaat.
+  useEffect(() => {
+    function onSwept(e: Event) {
+      const addr = (e as CustomEvent<{ address?: string }>).detail?.address;
+      if (!addr) return;
+      cacheRef.current.delete(addr);
+      if (currentAddrRef.current === addr) {
+        try { runScan(new PublicKey(addr), true); } catch { /* ongeldig adres — negeren */ }
+      }
+    }
+    window.addEventListener('sweep-confirmed', onSwept);
+    return () => window.removeEventListener('sweep-confirmed', onSwept);
+  }, [runScan]);
 
   const scanning = status === 'scanning';
 

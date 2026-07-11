@@ -31,7 +31,13 @@ function parseFeeWallet(): PublicKey | null {
   }
 }
 
-export default function FunMode({ initialAccounts }: { initialAccounts?: ClosableAccount[] }) {
+export default function FunMode({
+  initialAccounts,
+  onSwept,
+}: {
+  initialAccounts?: ClosableAccount[];
+  onSwept?: (r: { closed: number; netSol: number; skipped: number }) => void;
+}) {
   const { address, isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider('solana');
 
@@ -149,8 +155,19 @@ export default function FunMode({ initialAccounts }: { initialAccounts?: Closabl
       }
 
       const netLamports = reclaimed - Math.floor((reclaimed * FEE_BPS) / 10_000);
-      setResult({ closed, netSol: lamportsToSol(netLamports), skipped });
+      const sweptResult = { closed, netSol: lamportsToSol(netLamports), skipped };
+      setResult(sweptResult);
       setPhase('done');
+
+      // Pas NA on-chain bevestiging (de pollConfirm hierboven is al gelopen): laat
+      // WalletScan de reclaimable-kaart naar 0 verversen én seinsein de read-only
+      // "Check any wallet"-preview zodat die hetzelfde adres opnieuw scant.
+      if (closed > 0) {
+        onSwept?.(sweptResult);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('sweep-confirmed', { detail: { address } }));
+        }
+      }
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error && /reject|denied|user/i.test(e.message)
