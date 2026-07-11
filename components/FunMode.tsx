@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import {
@@ -204,8 +205,10 @@ export default function FunMode({
         </p>
       )}
 
-      {/* Pre-sign bevestigingsscherm */}
-      {phase === 'confirm' && summary && (
+      {/* Pre-sign bevestigingsscherm — via portal naar <body>. De WalletScan-kaart eromheen
+          heeft backdrop-filter, wat 'm tot containing-block voor position:fixed maakt; zonder
+          portal wordt de overlay ingeklemd in de kaart i.p.v. de viewport (mobiel-bug). */}
+      {phase === 'confirm' && summary && typeof document !== 'undefined' && createPortal(
         <div style={overlay} onClick={() => setPhase('idle')}>
           <div style={modal} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 4px', fontFamily: 'General Sans, sans-serif', fontWeight: 700, fontSize: '1.15rem', color: '#fff' }}>
@@ -226,7 +229,8 @@ export default function FunMode({
               <button onClick={execute} style={{ ...primaryBtn, flex: 1 }}>Sign & reclaim</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -263,9 +267,10 @@ const muted: React.CSSProperties = {
   margin: 0, fontFamily: 'General Sans, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)',
 };
 const overlay: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(4,4,10,0.7)',
+  position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(4,4,10,0.7)',
   backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+  overflowY: 'auto',
 };
 const modal: React.CSSProperties = {
   width: '100%', maxWidth: '380px',

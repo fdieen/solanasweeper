@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
@@ -288,6 +289,8 @@ export default function ProMode() {
   if ((phase === 'scanning' || phase === 'idle') && !swept) return <p style={muted}>Scanning your wallet…</p>;
 
   const hasContent = swap.length > 0 || burn.length > 0 || nft.length > 0 || empty.length > 0;
+  // Iets te doen? Lege accounts sluiten altijd; swap/burn/nft alleen indien geselecteerd.
+  const canClean = totals.emptyCount + totals.swapCount + totals.burnCount > 0;
 
   return (
     <div style={{ marginTop: '8px' }}>
@@ -353,8 +356,12 @@ export default function ProMode() {
         <p style={{ ...muted, marginTop: '10px' }}>+ {empty.length} empty account{empty.length === 1 ? '' : 's'} will be closed for rent.</p>
       )}
 
-      <button style={{ ...primaryBtn, marginTop: '16px' }} onClick={() => { setAckPermanent(false); setPhase('confirm'); }}>
-        Review & sign
+      <button
+        style={{ ...primaryBtn, marginTop: '16px', opacity: canClean ? 1 : 0.4, cursor: canClean ? 'pointer' : 'not-allowed' }}
+        disabled={!canClean}
+        onClick={() => { setAckPermanent(false); setPhase('confirm'); }}
+      >
+        {canClean ? 'Review & sign' : 'Nothing to clean'}
       </button>
 
       {phase === 'working' && <p style={{ ...muted, marginTop: '8px' }}>Working — approve in your wallet…</p>}
@@ -367,8 +374,9 @@ export default function ProMode() {
         </p>
       )}
 
-      {/* Bevestigingsscherm */}
-      {phase === 'confirm' && (
+      {/* Bevestigingsscherm — via portal naar <body> (parent-kaart heeft backdrop-filter,
+          wat een fixed-overlay anders inklemt i.p.v. viewport-breed te tonen). */}
+      {phase === 'confirm' && typeof document !== 'undefined' && createPortal(
         <div style={overlay} onClick={() => setPhase('ready')}>
           <div style={modal} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 14px', fontFamily: 'General Sans, sans-serif', fontWeight: 700, fontSize: '1.15rem', color: '#fff' }}>Confirm cleanup</h3>
@@ -412,7 +420,8 @@ export default function ProMode() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       </>
       )}
@@ -530,5 +539,5 @@ const muted: React.CSSProperties = { margin: 0, fontFamily: 'General Sans, sans-
 const primaryBtn: React.CSSProperties = { fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.9rem', background: '#14F195', color: '#05140d', border: 'none', borderRadius: '999px', padding: '11px 22px', cursor: 'pointer' };
 const ghostBtn: React.CSSProperties = { fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.9rem', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '999px', padding: '11px 22px', cursor: 'pointer' };
 const smallBtn: React.CSSProperties = { fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.72rem', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '999px', padding: '4px 10px', cursor: 'pointer' };
-const overlay: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(4,4,10,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' };
+const overlay: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(4,4,10,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' };
 const modal: React.CSSProperties = { width: '100%', maxWidth: '400px', maxHeight: '85vh', overflowY: 'auto', background: 'linear-gradient(160deg, #160c2b 0%, #0c0718 100%)', border: '1px solid rgba(153,69,255,0.3)', borderRadius: '18px', padding: '24px', boxShadow: '0 30px 80px rgba(0,0,0,0.6)' };
