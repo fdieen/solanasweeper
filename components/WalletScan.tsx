@@ -10,6 +10,7 @@ import { summarize, lamportsToSol, type ClosableAccount } from '@/lib/funMode';
 
 type Status = 'idle' | 'scanning' | 'done' | 'error';
 type Mode = 'fun' | 'pro';
+type SweptResult = { closed: number; netSol: number; skipped: number };
 
 export default function WalletScan() {
   const { address, isConnected } = useAppKitAccount();
@@ -18,6 +19,9 @@ export default function WalletScan() {
   const [emptyCount, setEmptyCount] = useState(0);
   const [reclaimSol, setReclaimSol] = useState(0);
   const [closable, setClosable] = useState<ClosableAccount[]>([]);
+  // Wat er zojuist is teruggewonnen (na bevestigde close-tx). Zolang gezet: toon de
+  // "Wallet is clean ✓"-success i.p.v. de oude reclaimable + CTA.
+  const [swept, setSwept] = useState<SweptResult | null>(null);
 
   // Onthoudt voor welk adres we al gescand hebben, zodat een reconnect/re-render
   // (Reown pingt de sessie → re-render) NIET opnieuw scant. Dít was de credit-drain.
@@ -58,6 +62,21 @@ export default function WalletScan() {
     scan();
   }, [isConnected, address, scan]);
 
+  // Ander wallet-adres → een eventuele "just swept"-success is niet meer relevant.
+  useEffect(() => { setSwept(null); }, [address]);
+
+  // Na een bevestigde sweep: herbevestig de on-chain state met een verse scan. Blijkt er
+  // (door skips) toch nog iets closable, dan valt de success weg en toont de kaart de rest.
+  useEffect(() => {
+    if (swept && status === 'done' && emptyCount > 0) setSwept(null);
+  }, [swept, status, emptyCount]);
+
+  // Aangeroepen door FunMode NA on-chain bevestiging (niet na versturen).
+  const onSwept = useCallback((r: SweptResult) => {
+    setSwept(r);
+    rescan(); // verse RPC-state ophalen zodat reclaimable/telling naar 0 gaan
+  }, [rescan]);
+
   if (!isConnected) return null;
 
   const card: React.CSSProperties = {
@@ -95,15 +114,30 @@ export default function WalletScan() {
       {mode === 'pro' ? (
         <ProMode />
       ) : (
-        <FunModeView status={status} emptyCount={emptyCount} reclaimSol={reclaimSol} closable={closable} rescan={rescan} />
+        <FunModeView
+          status={status}
+          emptyCount={emptyCount}
+          reclaimSol={reclaimSol}
+          closable={closable}
+          rescan={rescan}
+          swept={swept}
+          onSwept={onSwept}
+        />
       )}
     </div>
   );
 }
 
 function FunModeView({
-  status, emptyCount, reclaimSol, closable, rescan,
-}: { status: Status; emptyCount: number; reclaimSol: number; closable: ClosableAccount[]; rescan: () => void }) {
+  status, emptyCount, reclaimSol, closable, rescan, swept, onSwept,
+}: {
+  status: Status; emptyCount: number; reclaimSol: number; closable: ClosableAccount[];
+  rescan: () => void; swept: SweptResult | null; onSwept: (r: SweptResult) => void;
+}) {
+  // Na een geslaagde sweep: toon de clean-success (reclaimable 0.0000, telling 0),
+  // de CTA is vervangen door "Wallet is clean ✓" met wat er zojuist is teruggewonnen.
+  if (swept) return <CleanSuccess swept={swept} />;
+
   return (
     <>
       {(status === 'scanning' || status === 'idle') && (
@@ -135,9 +169,43 @@ function FunModeView({
               ? 'No empty token accounts found — your wallet is clean!'
               : `${emptyCount} empty token account${emptyCount === 1 ? '' : 's'} can be closed.`}
           </p>
-          {emptyCount > 0 && <FunMode initialAccounts={closable} />}
+          {emptyCount > 0 && <FunMode initialAccounts={closable} onSwept={onSwept} />}
         </>
       )}
+    </>
+  );
+}
+
+// Success-state na een bevestigde sweep.
+function CleanSuccess({ swept }: { swept: SweptResult }) {
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
+        <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#14F195', lineHeight: 1 }}>0.0000</span>
+        <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>SOL</span>
+        <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)' }}>reclaimable</span>
+      </div>
+      <p style={{ margin: '0 0 12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)' }}>
+        0 empty token accounts left.
+      </p>
+
+      <div style={{
+        display: 'flex', alignItems: 'flex-start', gap: '10px',
+        padding: '12px 14px', borderRadius: '12px',
+        background: 'rgba(20,241,149,0.1)', border: '1px solid rgba(20,241,149,0.3)',
+      }}>
+        <svg width="16" height="16" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
+          <path d="M2 7.5L5.5 11L12 3.5" stroke="#14F195" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#14F195' }}>Wallet is clean ✓</div>
+          <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>
+            Just reclaimed <b style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{swept.netSol.toFixed(4)} SOL</b>
+            {' '}from {swept.closed} account{swept.closed === 1 ? '' : 's'}
+            {swept.skipped > 0 ? ` · ${swept.skipped} skipped` : ''}.
+          </div>
+        </div>
+      </div>
     </>
   );
 }
