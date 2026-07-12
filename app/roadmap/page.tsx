@@ -39,6 +39,12 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
   {
     status: 'planned',
     label: 'Planned',
+    title: 'SOL-E Chat',
+    body: 'Talk to SOL-E on Telegram. Ask questions about rent reclaim, token accounts, or just say hi. Coming soon.',
+  },
+  {
+    status: 'planned',
+    label: 'Planned',
     title: 'Security audit',
     body: 'A full third-party audit of the on-chain logic and fee flow. We will not display an audit badge until this is complete.',
   },
