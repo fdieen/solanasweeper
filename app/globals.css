@@ -79,8 +79,13 @@ html, body {
   z-index: 6;
   pointer-events: auto;
 }
+/* SOL-E toont alleen op de desktop 3-koloms grid (>=1024px), waar 't een eigen
+   middenkolom heeft. Onder 1024px is de hero een verticale stack; SOL-E zou daar
+   achter de Connect/Check-content vallen — dus verbergen. De glow blijft als subtiel ambient. */
+@media (max-width: 1023px) {
+  .hero-gem-3d { display: none; }
+}
 @media (max-width: 767px) {
-  .hero-gem-3d { top: calc(50% + 50px); width: 220px; height: 220px; }
   .hero-gem-glow { top: calc(50% + 50px); width: 280px; height: 280px; }
 }
 

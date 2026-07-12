@@ -273,30 +273,40 @@ export default function CircuitBackground({
       raf = requestAnimationFrame(draw);
     }
 
-    // Hover over de diamant (midden) → lichtgolf + gem-spin, max 1x per 5s
-    function onMove(e: PointerEvent) {
+    // Tik/klik nabij SOL-E (midden) → seinsein 'sol-e-tap'. SOL-E reageert (oog-flash) én
+    // de circuit-flits gaat af (via de listener hieronder). Werkt op alle breakpoints, ook
+    // als SOL-E achter de content ligt (window-level pointerdown, z-index maakt niet uit).
+    function onTap(e: PointerEvent) {
+      if (W < 1024) return; // SOL-E is onder 1024px verborgen → geen tap-flits
       const r = cv.getBoundingClientRect();
       const gx = cx;
       const gy = cy + (W < 768 ? 50 : 0);
       const dist = Math.hypot(e.clientX - r.left - gx, e.clientY - r.top - gy);
-      const radius = W < 768 ? 120 : 160;
+      const radius = W < 768 ? 130 : 170;
       if (dist > radius) return;
+      window.dispatchEvent(new CustomEvent("sol-e-tap"));
+    }
+
+    // De circuit-flits: lichtgolf vanuit het midden, max 1x per 5s. Getriggerd door
+    // 'sol-e-tap' (van onTap hierboven óf van SOL-E's eigen klik).
+    function triggerWave() {
       const now = performance.now() / 1000;
       if (now - lastGem < 5) return;
       lastGem = now;
       waveT = 0;
       setShowHint(false);
-      window.dispatchEvent(new CustomEvent("gem-spin"));
     }
 
     resize();
     draw();
     window.addEventListener("resize", resize);
-    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerdown", onTap);
+    window.addEventListener("sol-e-tap", triggerWave);
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onTap);
+      window.removeEventListener("sol-e-tap", triggerWave);
       window.removeEventListener("resize", resize);
     };
   }, [purple, green, showLogo, logoScale, hoverRadius, background]);
@@ -347,11 +357,11 @@ export default function CircuitBackground({
               white-space: nowrap;
               animation: gem-hint-glow 2.4s ease-in-out infinite;
             }
-            @media (max-width: 767px) {
+            @media (max-width: 1023px) {
               .gem-hint { display: none; }
             }
           `}</style>
-          <span>✦ Tap the gem</span>
+          <span>✦ Tap SOL-E</span>
         </div>
       )}
     </>
