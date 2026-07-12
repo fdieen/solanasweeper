@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CircuitBackground from '@/components/CircuitBackground';
-import GemClient from '@/components/GemClient';
+import HelpBot from '@/components/HelpBot';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import WalletScan from '@/components/WalletScan';
 import WalletPreview from '@/components/WalletPreview';
@@ -29,10 +29,11 @@ export default function Home() {
           {/* Donkere gradient links voor leesbare tekst, rechts foto zichtbaar */}
           <div className="hero-overlay" aria-hidden="true" />
 
-          {/* Echte 3D edelsteen — blijft op schermmidden (interactie + CircuitBackground intact) */}
+          {/* SOL-E (mascotte) op schermmidden — met de paarse glow eronder; klik/tap triggert
+              de circuit-flits via CircuitBackground ('sol-e-tap'). */}
           <div className="hero-gem-glow" aria-hidden="true" />
           <div className="hero-gem-3d">
-            <GemClient />
+            <HelpBot variant="hero" />
           </div>
 
           {/* Hero-grid: mobiel verticale stack; desktop 3 kolommen —
