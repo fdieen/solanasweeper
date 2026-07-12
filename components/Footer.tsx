@@ -1,9 +1,5 @@
 'use client';
 
-// Cube-effect in de footer is tijdelijk uitgezet — kan later terug.
-// import dynamic from 'next/dynamic';
-// const HeroCanvas = dynamic(() => import('./HeroCanvas'), { ssr: false });
-
 export default function Footer() {
   return (
     <footer style={{
@@ -17,20 +13,6 @@ export default function Footer() {
       display: 'flex',
       alignItems: 'center',
     }}>
-      {/* Cube-effect tijdelijk uitgezet — kan later terug:
-      <div style={{
-        position: 'absolute',
-        bottom: '0',
-        left: 'clamp(120px, 16vw, 240px)',
-        width: '200px',
-        height: '150px',
-        opacity: 0.8,
-        pointerEvents: 'none',
-      }}>
-        <HeroCanvas transparent lookAt={[0, 0, 0]} />
-      </div>
-      */}
-
       {/* Content */}
       <div style={{
         position: 'relative', zIndex: 1,
