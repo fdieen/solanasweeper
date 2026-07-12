@@ -18,6 +18,8 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [blink, setBlink] = useState(false);
   const [happy, setHappy] = useState(false);
+  const [bubble, setBubble] = useState(false);
+  const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const track = (e: MouseEvent) => {
@@ -52,11 +54,19 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
       setHappy(true);
       if (tapTimer.current) clearTimeout(tapTimer.current);
       tapTimer.current = setTimeout(() => setHappy(false), 750);
+      // Speech bubble: toggle bij tap; verdwijnt automatisch na ~4s of bij een volgende tap.
+      setBubble((prev) => {
+        const next = !prev;
+        if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
+        if (next) bubbleTimer.current = setTimeout(() => setBubble(false), 4000);
+        return next;
+      });
     };
     window.addEventListener('sol-e-tap', onTap);
     return () => {
       window.removeEventListener('sol-e-tap', onTap);
       if (tapTimer.current) clearTimeout(tapTimer.current);
+      if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
     };
   }, [isHero]);
 
@@ -191,13 +201,59 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
         @media (max-width: 1023px) { .help-bot-hero .hb-scale { transform: scale(1.6); } }
         @media (max-width: 767px)  { .help-bot-hero .hb-scale { transform: scale(1.2); } }
 
-        /* Toegankelijkheid: minder beweging → animaties uit */
+        /* Speech bubble (alleen hero) — donker paneel, subtiele paarse rand, pijl naar SOL-E.
+           Zit boven SOL-E's kop; verschijnt met een zachte fade/scale (uit bij reduced-motion). */
+        .sol-e-bubble {
+          position: absolute;
+          bottom: calc(100% - 46px);
+          left: 50%;
+          width: max-content; max-width: 250px;
+          transform: translateX(-50%) translateY(6px) scale(0.96);
+          opacity: 0; visibility: hidden;
+          transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+          background: linear-gradient(160deg, #170d2c 0%, #0c0718 100%);
+          border: 1px solid rgba(153,69,255,0.32);
+          border-radius: 14px;
+          padding: 12px 15px;
+          font-family: 'General Sans', sans-serif;
+          font-size: 0.84rem; font-weight: 500; line-height: 1.45;
+          color: rgba(255,255,255,0.9);
+          box-shadow: 0 16px 44px rgba(0,0,0,0.5);
+          z-index: 12; pointer-events: none;
+        }
+        .sol-e-bubble.is-visible {
+          opacity: 1; visibility: visible;
+          transform: translateX(-50%) translateY(0) scale(1);
+        }
+        /* Pijl naar SOL-E (naar beneden): rand-driehoek + iets kleinere vulling-driehoek */
+        .sol-e-bubble::before, .sol-e-bubble::after {
+          content: ''; position: absolute; top: 100%; left: 50%; width: 0; height: 0; border-style: solid;
+        }
+        .sol-e-bubble::before {
+          transform: translateX(-50%);
+          border-width: 8px 8px 0 8px;
+          border-color: rgba(153,69,255,0.32) transparent transparent transparent;
+        }
+        .sol-e-bubble::after {
+          transform: translateX(-50%); margin-top: -1.5px;
+          border-width: 7px 7px 0 7px;
+          border-color: #0c0718 transparent transparent transparent;
+        }
+
+        /* Toegankelijkheid: minder beweging → animaties uit, bubble zonder in/uit-animatie */
         @media (prefers-reduced-motion: reduce) {
           .hb-robot, .hb-sphere, .hb-antenna { animation: none !important; }
+          .sol-e-bubble { transition: none !important; transform: translateX(-50%); }
+          .sol-e-bubble.is-visible { transform: translateX(-50%); }
         }
       `}</style>
 
       {isHero ? <div className="hb-scale">{robot}</div> : robot}
+      {isHero && (
+        <div className={`sol-e-bubble${bubble ? ' is-visible' : ''}`} aria-hidden="true">
+          Hi, I&apos;m SOL-E! 🧹 I find the SOL hiding in your empty token accounts.
+        </div>
+      )}
     </div>
   );
 }
