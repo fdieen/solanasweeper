@@ -1,7 +1,6 @@
 import {
   PublicKey,
   Transaction,
-  SystemProgram,
   ComputeBudgetProgram,
   type Blockhash,
 } from '@solana/web3.js';
@@ -10,6 +9,7 @@ import {
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token';
+import { addFeeInstructions } from './fees';
 
 /* ── Constanten ── */
 export const FEE_BPS = 1000;           // 10% (basispunten)
@@ -136,8 +136,9 @@ export function buildBatchTransaction(params: {
   blockhash: Blockhash;
   feeBps?: number;
   computeUnitPrice?: number; // microLamports priority fee (optioneel)
+  referrer?: PublicKey | null; // gevalideerde referrer (base58 + bestaat + niet self)
 }): Transaction {
-  const { owner, accounts, feeWallet, blockhash, feeBps = FEE_BPS, computeUnitPrice = 0 } = params;
+  const { owner, accounts, feeWallet, blockhash, feeBps = FEE_BPS, computeUnitPrice = 0, referrer = null } = params;
 
   const tx = new Transaction();
   tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }));
@@ -154,14 +155,9 @@ export function buildBatchTransaction(params: {
   const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
   const batchFee = Math.floor((batchGross * feeBps) / 10_000);
   // Fee-transfer alleen wanneer CLOSE_FEE_ENABLED aan staat (zie constante hierboven).
+  // Bij een geldige referrer splitst addFeeInstructions 25%/75% (referrer/fee-wallet).
   if (CLOSE_FEE_ENABLED && feeWallet && batchFee > 0) {
-    tx.add(
-      SystemProgram.transfer({
-        fromPubkey: owner,
-        toPubkey: feeWallet,
-        lamports: batchFee,
-      })
-    );
+    addFeeInstructions(tx, owner, feeWallet, batchFee, referrer);
   }
 
   tx.feePayer = owner;
@@ -178,11 +174,12 @@ export function buildBatches(params: {
   maxPerTx?: number;
   feeBps?: number;
   computeUnitPrice?: number;
+  referrer?: PublicKey | null;
 }): { transactions: Transaction[]; batches: ClosableAccount[][] } {
-  const { owner, accounts, feeWallet, blockhash, maxPerTx = MAX_CLOSES_PER_TX, feeBps, computeUnitPrice } = params;
+  const { owner, accounts, feeWallet, blockhash, maxPerTx = MAX_CLOSES_PER_TX, feeBps, computeUnitPrice, referrer = null } = params;
   const batches = chunk(accounts, maxPerTx);
   const transactions = batches.map((batch) =>
-    buildBatchTransaction({ owner, accounts: batch, feeWallet, blockhash, feeBps, computeUnitPrice })
+    buildBatchTransaction({ owner, accounts: batch, feeWallet, blockhash, feeBps, computeUnitPrice, referrer })
   );
   return { transactions, batches };
 }
