@@ -148,7 +148,7 @@ export default function ReferralPage() {
               </div>
               <div style={{ flex: 1, minWidth: '160px', padding: '18px 20px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>{stats.sweeps}</div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', marginTop: '6px' }}>Referred sweeps</div>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', marginTop: '6px' }}>Payouts</div>
               </div>
             </div>
 
