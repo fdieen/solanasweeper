@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import WalletProviders from "@/components/WalletProviders";
+import ReferralCapture from "@/components/ReferralCapture";
 
 const SITE_URL = "https://solanasweeper.com";
 
@@ -116,6 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <ReferralCapture />
         <WalletProviders>{children}</WalletProviders>
       </body>
     </html>

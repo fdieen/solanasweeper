@@ -10,6 +10,8 @@ import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/class
 import { buildBatches, summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_GAS } from '@/lib/funMode';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
+import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
+import { splitFee } from '@/lib/fees';
 
 type AnyTx = Transaction | VersionedTransaction;
 type SolanaSigner = {
@@ -48,6 +50,7 @@ export default function ProMode() {
   // Wat er zojuist is opgeschoond (na bevestiging). Zolang gezet: toon de success-banner
   // en (na de herscan) de verse staat.
   const [swept, setSwept] = useState<ProResult | null>(null);
+  const [referrer, setReferrer] = useState<PublicKey | null>(null); // gevalideerde referrer of null
 
   const scan = useCallback(async () => {
     if (!address) return;
@@ -136,6 +139,7 @@ export default function ProMode() {
   async function sendAndCount(conn: ReturnType<typeof getProxyConnection>, signed: AnyTx[], countPerTx: number[]) {
     let ok = 0;
     let skipped = 0;
+    const confirmedTxs: { i: number; sig: string }[] = [];
     for (let i = 0; i < signed.length; i++) {
       try {
         const tx = signed[i];
@@ -145,14 +149,14 @@ export default function ProMode() {
         if (sim.value.err) { skipped += countPerTx[i]; continue; }
         const sig = await conn.sendRawTransaction(signed[i].serialize(), { skipPreflight: false, maxRetries: 3 });
         const confirmed = await pollConfirm(conn, sig);
-        if (confirmed) ok += countPerTx[i];
+        if (confirmed) { ok += countPerTx[i]; confirmedTxs.push({ i, sig }); }
         else skipped += countPerTx[i];
       } catch (e) {
         console.error('tx failed', e);
         skipped += countPerTx[i];
       }
     }
-    return { ok, skipped };
+    return { ok, skipped, confirmed: confirmedTxs };
   }
 
   // Burn-send via de wallet-adapter's signAndSendTransaction: de wallet tekent
@@ -163,7 +167,8 @@ export default function ProMode() {
     const signer = walletProvider as SolanaSigner;
     let ok = 0;
     let skipped = 0;
-    if (txs.length === 0) return { ok, skipped };
+    const confirmedTxs: { i: number; sig: string }[] = [];
+    if (txs.length === 0) return { ok, skipped, confirmed: confirmedTxs };
     if (!signer.signAndSendTransaction) {
       throw new Error('Wallet does not support signAndSendTransaction');
     }
@@ -171,14 +176,14 @@ export default function ProMode() {
       try {
         const sig = await signer.signAndSendTransaction(txs[i]);
         const confirmed = await pollConfirm(conn, sig);
-        if (confirmed) ok += countPerTx[i];
+        if (confirmed) { ok += countPerTx[i]; confirmedTxs.push({ i, sig }); }
         else skipped += countPerTx[i];
       } catch (e) {
         console.error('burn tx failed', e);
         skipped += countPerTx[i];
       }
     }
-    return { ok, skipped };
+    return { ok, skipped, confirmed: confirmedTxs };
   }
 
   async function execute() {
@@ -223,8 +228,8 @@ export default function ProMode() {
 
       // Legacy txs: lege accounts sluiten (close) + burn (alleen 'safe') — apart gehouden:
       // closes via onze sendRaw-route, burns via de wallet-adapter (signAndSendTransaction).
-      const closeBuilt = buildBatches({ owner, accounts: freshEmpty.map((h) => ({ pubkey: h.tokenAccount, programId: h.programId, lamports: h.lamports })), feeWallet, blockhash });
-      const burnBuilt = buildBurnBatches({ owner, accounts: burnSafe, feeWallet, blockhash });
+      const closeBuilt = buildBatches({ owner, accounts: freshEmpty.map((h) => ({ pubkey: h.tokenAccount, programId: h.programId, lamports: h.lamports })), feeWallet, blockhash, referrer });
+      const burnBuilt = buildBurnBatches({ owner, accounts: burnSafe, feeWallet, blockhash, referrer });
       const closeCounts = closeBuilt.batches.map((b) => b.length);
       const burnCounts = burnBuilt.batches.map((b) => b.length);
 
@@ -249,6 +254,20 @@ export default function ProMode() {
       const burnRes = await signAndSendGroup(conn, burnBuilt.transactions, burnCounts);
 
       const swapRes = await sendAndCount(conn, signedVersioned, swapCounts);
+
+      // Referral-payouts registreren voor bevestigde close- en burn-batches. De fee-split
+      // zit alleen op de rent-fee (SystemProgram-transfer), niet op de Jupiter-swap-fee.
+      if (referrer && feeWallet) {
+        const rec = (accts: { lamports: number }[], sig: string) => {
+          const gross = accts.reduce((s, a) => s + a.lamports, 0);
+          const fee = Math.floor((gross * FEE_BPS) / 10_000);
+          const { referrerLamports } = splitFee(fee, referrer);
+          // Alleen de signature melden; de server verifieert + leidt de rest af.
+          if (referrerLamports > 0) recordReferralPayout(sig);
+        };
+        for (const c of closeRes.confirmed) rec(closeBuilt.batches[c.i], c.sig);
+        for (const c of burnRes.confirmed) rec(burnBuilt.batches[c.i], c.sig);
+      }
 
       const closedCount = closeRes.ok;
       const burnedCount = burnRes.ok;
@@ -283,6 +302,15 @@ export default function ProMode() {
       setErrorMsg(msg);
       setPhase('error');
     }
+  }
+
+  // Confirm openen: resolve eerst de referrer (voor de fee-split + weergave), dan het scherm.
+  async function openConfirm() {
+    if (!address) return;
+    setAckPermanent(false);
+    try { setReferrer(await resolveReferrer(getProxyConnection(), new PublicKey(address))); }
+    catch { setReferrer(null); }
+    setPhase('confirm');
   }
 
   if (!isConnected) return null;
@@ -359,7 +387,7 @@ export default function ProMode() {
       <button
         style={{ ...primaryBtn, marginTop: '16px', opacity: canClean ? 1 : 0.4, cursor: canClean ? 'pointer' : 'not-allowed' }}
         disabled={!canClean}
-        onClick={() => { setAckPermanent(false); setPhase('confirm'); }}
+        onClick={openConfirm}
       >
         {canClean ? 'Review & sign' : 'Nothing to clean'}
       </button>
@@ -384,6 +412,11 @@ export default function ProMode() {
             <KV label={`Close ${totals.emptyCount} empty + swap ${totals.swapCount}`} />
             <KV label="Gross" value={`${totals.grossSol.toFixed(4)} SOL`} />
             <KV label={`Fee (${FEE_BPS / 100}%)`} value={`− ${totals.feeSol.toFixed(4)} SOL`} dim />
+            {referrer && (
+              <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'rgba(20,241,149,0.85)', lineHeight: 1.4 }}>
+                Referral active — 25% of the fee on closed/burned accounts goes to your referrer, paid in the transaction.
+              </p>
+            )}
             <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '10px 0' }} />
             <KV label="You receive" value={`${totals.netSol.toFixed(4)} SOL`} highlight />
 

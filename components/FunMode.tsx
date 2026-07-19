@@ -14,6 +14,8 @@ import {
   type Summary,
 } from '@/lib/funMode';
 import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy';
+import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
+import { splitFee } from '@/lib/fees';
 
 type SolanaSigner = {
   signTransaction?: (tx: Transaction) => Promise<Transaction>;
@@ -48,6 +50,7 @@ export default function FunMode({
   const [result, setResult] = useState<{ closed: number; netSol: number; skipped: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [noticeMsg, setNoticeMsg] = useState(''); // rustige melding (bv. te weinig gas), geen error
+  const [referrer, setReferrer] = useState<PublicKey | null>(null); // gevalideerde referrer of null
 
   if (!isConnected) return null;
 
@@ -74,6 +77,11 @@ export default function FunMode({
       }
       setAccounts(closable);
       setSummary(summarize(closable));
+      // Referrer resolven voor de fee-split + confirm-weergave (binding > localStorage,
+      // niet self, account bestaat). Faalt dit → null (100% naar de fee-wallet).
+      try {
+        setReferrer(await resolveReferrer(getProxyConnection(), new PublicKey(address)));
+      } catch { setReferrer(null); }
       setPhase('confirm');
     } catch (e) {
       console.error(e);
@@ -112,7 +120,7 @@ export default function FunMode({
 
       const { blockhash } = await conn.getLatestBlockhash('confirmed');
       const feeWallet = parseFeeWallet();
-      const { transactions, batches } = buildBatches({ owner, accounts: fresh, feeWallet, blockhash });
+      const { transactions, batches } = buildBatches({ owner, accounts: fresh, feeWallet, blockhash, referrer });
 
       // Tekenen (1 approval indien mogelijk, anders per tx)
       const signer = walletProvider as SolanaSigner;
@@ -145,7 +153,15 @@ export default function FunMode({
           const ok = await pollConfirm(conn, sig);
           if (ok) {
             closed += batches[i].length;
-            reclaimed += batches[i].reduce((s, a) => s + a.lamports, 0);
+            const batchGross = batches[i].reduce((s, a) => s + a.lamports, 0);
+            reclaimed += batchGross;
+            // Referral-payout registreren (fire-and-forget) voor deze bevestigde batch.
+            if (referrer && feeWallet) {
+              const batchFee = Math.floor((batchGross * FEE_BPS) / 10_000);
+              const { referrerLamports } = splitFee(batchFee, referrer);
+              // Alleen de signature melden; de server verifieert + leidt de rest af.
+              if (referrerLamports > 0) recordReferralPayout(sig);
+            }
           } else {
             skipped += batches[i].length;
           }
@@ -221,6 +237,11 @@ export default function FunMode({
             <Row label={`Closing ${summary.count} empty account${summary.count === 1 ? '' : 's'}`} />
             <Row label="Gross reclaim" value={`${lamportsToSol(summary.grossLamports).toFixed(4)} SOL`} />
             <Row label={`Fee (${FEE_BPS / 100}%)`} value={`− ${lamportsToSol(summary.feeLamports).toFixed(4)} SOL`} dim />
+            {referrer && splitFee(summary.feeLamports, referrer).referrerLamports > 0 && (
+              <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: 'rgba(20,241,149,0.85)', lineHeight: 1.4 }}>
+                Referral active — 25% of the fee ({lamportsToSol(splitFee(summary.feeLamports, referrer).referrerLamports).toFixed(4)} SOL) goes to your referrer, paid in this transaction.
+              </p>
+            )}
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '12px 0' }} />
             <Row label="You receive" value={`${lamportsToSol(summary.netLamports).toFixed(4)} SOL`} highlight />
 

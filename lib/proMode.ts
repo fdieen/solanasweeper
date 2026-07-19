@@ -1,13 +1,13 @@
 import {
   PublicKey,
   Transaction,
-  SystemProgram,
   ComputeBudgetProgram,
   type Blockhash,
 } from '@solana/web3.js';
 import { createBurnCheckedInstruction, createCloseAccountInstruction } from '@solana/spl-token';
 import { hasValue, type TokenHolding, type Valuation } from './classify';
 import { FEE_BPS } from './funMode';
+import { addFeeInstructions } from './fees';
 
 // burn + close = 2 instructies per account → kleinere batch dan bij Fun Mode
 export const MAX_BURNS_PER_TX = 8;
@@ -66,8 +66,9 @@ export function buildBurnBatchTransaction(params: {
   blockhash: Blockhash;
   feeBps?: number;
   computeUnitPrice?: number;
+  referrer?: PublicKey | null;
 }): Transaction {
-  const { owner, accounts, feeWallet, blockhash, feeBps = FEE_BPS, computeUnitPrice = 0 } = params;
+  const { owner, accounts, feeWallet, blockhash, feeBps = FEE_BPS, computeUnitPrice = 0, referrer = null } = params;
 
   const tx = new Transaction();
   tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }));
@@ -94,9 +95,10 @@ export function buildBurnBatchTransaction(params: {
 
   const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
   const batchFee = Math.floor((batchGross * feeBps) / 10_000);
-  // Fee-transfer alleen wanneer BURN_FEE_ENABLED aan staat (zie constante hierboven).
+  // Fee-transfer alleen wanneer BURN_FEE_ENABLED aan staat. Bij een geldige referrer
+  // splitst addFeeInstructions 25%/75% (referrer/fee-wallet).
   if (BURN_FEE_ENABLED && feeWallet && batchFee > 0) {
-    tx.add(SystemProgram.transfer({ fromPubkey: owner, toPubkey: feeWallet, lamports: batchFee }));
+    addFeeInstructions(tx, owner, feeWallet, batchFee, referrer);
   }
 
   tx.feePayer = owner;
@@ -113,11 +115,12 @@ export function buildBurnBatches(params: {
   maxPerTx?: number;
   feeBps?: number;
   computeUnitPrice?: number;
+  referrer?: PublicKey | null;
 }): { transactions: Transaction[]; batches: TokenHolding[][] } {
-  const { owner, accounts, feeWallet, blockhash, maxPerTx = MAX_BURNS_PER_TX, feeBps, computeUnitPrice } = params;
+  const { owner, accounts, feeWallet, blockhash, maxPerTx = MAX_BURNS_PER_TX, feeBps, computeUnitPrice, referrer = null } = params;
   const batches = chunk(accounts, maxPerTx);
   const transactions = batches.map((batch) =>
-    buildBurnBatchTransaction({ owner, accounts: batch, feeWallet, blockhash, feeBps, computeUnitPrice })
+    buildBurnBatchTransaction({ owner, accounts: batch, feeWallet, blockhash, feeBps, computeUnitPrice, referrer })
   );
   return { transactions, batches };
 }
