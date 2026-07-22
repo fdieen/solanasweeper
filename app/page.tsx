@@ -139,6 +139,47 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Aankondigingsbanner — subtiel, groen accent, direct onder de hero */}
+        <a href="/referral" className="ref-banner">
+          <span className="ref-banner-tag">New</span>
+          <span>earn 25% of fees by referring sweeps</span>
+          <span className="ref-banner-arrow" aria-hidden="true">→</span>
+        </a>
+
+        {/* Referral-sectie — na de hero, drie kernpunten + CTA */}
+        <section className="ref-section" aria-labelledby="ref-heading">
+          <div className="ref-section-inner">
+            <p className="ref-eyebrow">Referral program</p>
+            <h2 id="ref-heading" className="ref-title">
+              Share your link, earn <b>25%</b> of every sweep
+            </h2>
+            <p className="ref-lead">
+              Refer wallets to SolanaSweeper and your cut is paid straight to you — inside the sweep
+              transaction itself, on-chain, forever.
+            </p>
+
+            <div className="ref-points">
+              {[
+                '25% of platform fees, lifetime',
+                'Paid inside the sweep transaction itself, verifiable on-chain',
+                'No connect needed to get your link',
+              ].map((point) => (
+                <div key={point} className="ref-point">
+                  <svg className="ref-point-check" width="18" height="18" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M2 7.5L5.5 11L12 3.5" stroke="#14F195" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="ref-point-text">{point}</span>
+                </div>
+              ))}
+            </div>
+
+            <a href="/referral" className="ref-cta">
+              Get your link
+              <span className="ref-cta-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+
         <Footer />
       </div>
     </main>

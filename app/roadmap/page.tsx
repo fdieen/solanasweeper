@@ -37,6 +37,24 @@ const items: { status: Status; label: string; title: string; body: string }[] = 
     body: 'Paste any Solana address and see how much SOL you can reclaim — no wallet connection needed.',
   },
   {
+    status: 'done',
+    label: 'Shipped',
+    title: 'Referral program',
+    body: 'Earn 25% of platform fees, lifetime, paid inside the sweep transaction itself. No connect needed to get your link.',
+  },
+  {
+    status: 'planned',
+    label: 'Coming soon',
+    title: 'Telegram community',
+    body: 'A home for SolanaSweeper users on Telegram — updates, support, and a place to talk rent reclaim.',
+  },
+  {
+    status: 'planned',
+    label: 'Coming soon',
+    title: 'Referral leaderboard',
+    body: 'A live ranking of top referrers by SOL earned, so the biggest sweepers get the recognition.',
+  },
+  {
     status: 'planned',
     label: 'Planned',
     title: 'SOL-E Chat',
