@@ -36,6 +36,14 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M21 5.5h-6A2.5 2.5 0 0012.5 8v11a2 2 0 012-2H21z" />
     </svg>
   ),
+  gift: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 12v8a1 1 0 01-1 1H5a1 1 0 01-1-1v-8" />
+      <path d="M3 8.5h18V12H3z" />
+      <path d="M12 8.5V21" />
+      <path d="M12 8.5S10.5 3.5 8 4.2C6.3 4.7 6.4 7 8 8c1.2.7 4 .5 4 .5zM12 8.5s1.5-5 4-4.3C21.7 4.7 17.6 7 16 8c-1.2.7-4 .5-4 .5z" />
+    </svg>
+  ),
 };
 
 const MENU: { title: string; items: { label: string; href: string; icon: string }[] }[] = [
@@ -50,7 +58,10 @@ const MENU: { title: string; items: { label: string; href: string; icon: string 
   },
   {
     title: 'Project',
-    items: [{ label: 'Roadmap', href: '/roadmap', icon: 'map' }],
+    items: [
+      { label: 'Earn 25%', href: '/referral', icon: 'gift' },
+      { label: 'Roadmap', href: '/roadmap', icon: 'map' },
+    ],
   },
 ];
 
@@ -98,6 +109,18 @@ export default function Header() {
               {label}
             </a>
           ))}
+          {/* Referral — subtiel groen accent zodat het als promo opvalt, niet schreeuwerig */}
+          <a
+            href="/referral"
+            style={{
+              fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.9rem',
+              color: '#14F195', textDecoration: 'none', transition: 'color 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#5cffbf')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#14F195')}
+          >
+            Earn 25%
+          </a>
         </nav>
 
         <div className="md:hidden">

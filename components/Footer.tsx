@@ -49,6 +49,21 @@ export default function Footer() {
             </a>
           ))}
 
+          {/* Referral — subtiel groen accent */}
+          <a href="/referral" style={{
+            fontFamily: 'General Sans, sans-serif',
+            fontWeight: 500,
+            fontSize: '0.82rem',
+            color: 'rgba(20,241,149,0.72)',
+            textDecoration: 'none',
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#14F195')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(20,241,149,0.72)')}
+          >
+            Earn 25%
+          </a>
+
           {/* X / Twitter — let op de underscore aan het eind (essentieel voor het juiste account) */}
           <a
             href="https://x.com/solanasweeper_"
