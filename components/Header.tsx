@@ -292,6 +292,25 @@ export default function Header() {
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
               </svg>
             </a>
+            <a
+              href="https://www.tiktok.com/@solanasweeperofficial"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow SolanaSweeper on TikTok"
+              title="SolanaSweeper on TikTok"
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: '40px', height: '40px', borderRadius: '10px',
+                color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)', transition: 'color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.09)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.329 6.329 0 0 0-5.394 10.692 6.33 6.33 0 0 0 10.857-4.424V8.687a8.182 8.182 0 0 0 4.773 1.526V6.79a4.831 4.831 0 0 1-1.003-.104z"/>
+              </svg>
+            </a>
           </div>
         </div>
       </nav>
