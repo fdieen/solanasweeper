@@ -37,6 +37,11 @@ const LINKS = [
     sub: "@solanasweeperofficial",
   },
   {
+    href: "https://instagram.com/solanasweeperofficial",
+    label: "Instagram",
+    sub: "@solanasweeperofficial",
+  },
+  {
     href: "https://solanasweeper.com/guide",
     label: "Guides",
     sub: "How Solana rent works",
