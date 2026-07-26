@@ -45,3 +45,13 @@ tools/create-fee-ata.html
 
 # X/marketing-assets (banner, avatar) — geen site-code, niet meebouwen/committen
 /x-assets/
+/youtube banner/
+
+# losse werk-/asset-bestanden in de repo-root (screenshots, avatars, zips) — niet committen.
+# Root-geankerd (/) zodat echte site-assets in public/ wél getrackt blijven.
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+/*.zip
