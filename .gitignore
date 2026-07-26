@@ -47,8 +47,17 @@ tools/create-fee-ata.html
 /x-assets/
 /youtube banner/
 
+# ── Persoonlijke assets buiten git — TWEE bewust overlappende lagen, niet "opschonen" ──
+# De overlap ís het vangnet: mist er één laag, dan kost dat een ongewenste commit;
+# beide laten staan kost niets.
+#   laag 1 — /_local/     : de vaste scratch-map; zet hier al je losse persoonlijke assets.
+#   laag 2 — /*.png etc.  : de root-globs hieronder; vangen losse root-drops op als je
+#                           een bestand tóch buiten _local/ laat vallen.
+/_local/*
+!/_local/README.md
+
 # losse werk-/asset-bestanden in de repo-root (screenshots, avatars, zips) — niet committen.
-# Root-geankerd (/) zodat echte site-assets in public/ wél getrackt blijven.
+# Root-geankerd (/) zodat echte site-assets in public/ wél getrackt blijven. (= laag 2, zie boven)
 /*.png
 /*.jpg
 /*.jpeg
