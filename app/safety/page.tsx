@@ -168,6 +168,22 @@ export default function Safety() {
           </div>
         </div>
 
+        {/* Official domain note — anti-phishing */}
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '12px', padding: '24px 28px',
+          marginBottom: '20px',
+        }}>
+          <p style={{
+            fontFamily: 'General Sans, sans-serif', fontWeight: 400,
+            fontSize: '0.88rem', lineHeight: 1.7,
+            color: 'rgba(255,255,255,0.4)',
+          }}>
+            <strong style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>Official domain.</strong> The only official SolanaSweeper site is <strong style={{ color: '#14F195', fontWeight: 600 }}>solanasweeper.com</strong>. We run no other app, mirror, or &ldquo;support&rdquo; site, we will never DM you first, and we will never ask for your seed phrase. If a URL isn&rsquo;t solanasweeper.com, treat it as a scam. Our code is open source, which means anyone can copy it. A copy running on a different domain is not us and we cannot vouch for what it does.
+          </p>
+        </div>
+
         {/* Audit note */}
         <div style={{
           background: 'rgba(255,255,255,0.03)',

@@ -7,6 +7,14 @@ signed by the user; nothing is ever held by us.**
 
 Live: https://solanasweeper.com
 
+## Official domain
+
+solanasweeper.com is the only official domain for this project.
+
+This code is MIT licensed and may be forked. Forks are not operated by us and
+are not affiliated with SolanaSweeper. If you are about to connect a wallet,
+check the address bar first.
+
 > This README is written for people **reviewing the code for safety**. It
 > focuses on the trust boundaries: what gets signed by whom, what runs
 > server-side, and where funds move.
