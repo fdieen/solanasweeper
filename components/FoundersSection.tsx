@@ -31,7 +31,7 @@ export default function FoundersSection() {
         </h2>
         <p className="founders-lede">
           SolanaSweeper is built by two people who have been in this space since before it had
-          one — <b>Paul since 2016, Frank since 2017.</b>
+          one. <b>Paul since 2016, Frank since 2017.</b>
         </p>
 
         <div className="founders-cards">
@@ -86,7 +86,7 @@ export default function FoundersSection() {
           </p>
           <p>
             But we didn’t come here to stay behind a screen. We came to build real infrastructure.
-            Solana is the only chain where all of it collides at once — the engineers, the degens,
+            Solana is the only chain where all of it collides at once: the engineers, the degens,
             the artists, and the people shipping code at 3 AM simply because it needs to exist.
           </p>
           <p>
@@ -98,7 +98,7 @@ export default function FoundersSection() {
             and polished compliance decks, the edges got sanded off. We aren’t interested in the
             sanitized version.{' '}
             <strong>
-              We’ve been here through the crashes, the hacks, and the winters — and we’re still
+              We’ve been here through the crashes, the hacks, and the winters. We’re still
               here, shipping code every single day.
             </strong>
           </p>
@@ -106,9 +106,9 @@ export default function FoundersSection() {
 
         <div className="founders-rule" />
         <p className="founders-signoff">
-          Paul — 2016. Frank — 2017.
+          Paul, class of 2016. Frank, class of 2017.
           <br />
-          <span>Still here.</span>
+          <span>Solana is for builders. Let’s build.</span>
         </p>
       </div>
     </section>
