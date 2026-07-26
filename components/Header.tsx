@@ -44,6 +44,14 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M12 8.5S10.5 3.5 8 4.2C6.3 4.7 6.4 7 8 8c1.2.7 4 .5 4 .5zM12 8.5s1.5-5 4-4.3C21.7 4.7 17.6 7 16 8c-1.2.7-4 .5-4 .5z" />
     </svg>
   ),
+  users: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.6 19.4a5.6 5.6 0 0 1 10.8 0" />
+      <path d="M15.5 5.3a3.2 3.2 0 0 1 0 6" />
+      <path d="M17 14a5.6 5.6 0 0 1 3.4 5" />
+    </svg>
+  ),
 };
 
 const MENU: { title: string; items: { label: string; href: string; icon: string }[] }[] = [
@@ -61,6 +69,7 @@ const MENU: { title: string; items: { label: string; href: string; icon: string 
     items: [
       { label: 'Earn 25%', href: '/referral', icon: 'gift' },
       { label: 'Roadmap', href: '/roadmap', icon: 'map' },
+      { label: 'Founders', href: '/founders', icon: 'users' },
     ],
   },
 ];
@@ -95,6 +104,7 @@ export default function Header() {
             { label: 'Safety', href: '/safety' },
             { label: 'FAQ', href: '/faq' },
             { label: 'Roadmap', href: '/roadmap' },
+            { label: 'Founders', href: '/founders' },
           ].map(({ label, href }) => (
             <a
               key={label}

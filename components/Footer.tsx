@@ -33,6 +33,7 @@ export default function Footer() {
             { label: 'Safety', href: '/safety' },
             { label: 'FAQ', href: '/faq' },
             { label: 'Roadmap', href: '/roadmap' },
+            { label: 'Founders', href: '/founders' },
           ].map(({ label, href }) => (
             <a key={label} href={href} style={{
               fontFamily: 'General Sans, sans-serif',
