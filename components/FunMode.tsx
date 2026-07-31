@@ -9,13 +9,14 @@ import {
   summarize,
   lamportsToSol,
   FEE_BPS,
-  MIN_SOL_FOR_GAS,
+  MIN_SOL_FOR_CLOSE,
   type ClosableAccount,
   type Summary,
 } from '@/lib/funMode';
 import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy';
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
+import { lowGasNotice } from '@/lib/messages';
 
 type SolanaSigner = {
   signTransaction?: (tx: Transaction) => Promise<Transaction>;
@@ -104,8 +105,8 @@ export default function FunMode({
       // wat in Phantom een rode warning geeft. Vang dat hier rustig af i.p.v.
       // de wallet te openen. Stuurt NIETS naar Phantom als de balance te laag is.
       const balance = await conn.getBalance(owner);
-      if (balance < MIN_SOL_FOR_GAS) {
-        setNoticeMsg('Je wallet heeft een klein beetje SOL nodig voor netwerkkosten (±0,01 SOL). Stuur wat SOL naar je wallet en probeer het opnieuw.');
+      if (balance < MIN_SOL_FOR_CLOSE) {
+        setNoticeMsg(lowGasNotice(MIN_SOL_FOR_CLOSE));
         setPhase('idle');
         return;
       }

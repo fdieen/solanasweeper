@@ -7,11 +7,12 @@ import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
-import { buildBatches, summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_GAS } from '@/lib/funMode';
+import { buildBatches, summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
+import { lowGasNotice } from '@/lib/messages';
 
 type AnyTx = Transaction | VersionedTransaction;
 type SolanaSigner = {
@@ -199,9 +200,12 @@ export default function ProMode() {
       // Gas-poort: te weinig SOL → de fee-payer kan de tx niet laten simuleren,
       // wat in Phantom een rode warning geeft. Vang dat hier rustig af i.p.v.
       // de wallet te openen. Stuurt NIETS naar Phantom als de balance te laag is.
+      // Drempel hangt af van het pad: een swap-selectie vraagt de swap-drempel (transient
+      // wSOL-rent), een puur close/burn-run alleen de lagere close-drempel.
+      const minGas = swapSel.size > 0 ? MIN_SOL_FOR_SWAP : MIN_SOL_FOR_CLOSE;
       const balance = await conn.getBalance(owner);
-      if (balance < MIN_SOL_FOR_GAS) {
-        setNoticeMsg('Je wallet heeft een klein beetje SOL nodig voor netwerkkosten (±0,01 SOL). Stuur wat SOL naar je wallet en probeer het opnieuw.');
+      if (balance < minGas) {
+        setNoticeMsg(lowGasNotice(minGas));
         setPhase('ready');
         return;
       }

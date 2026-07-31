@@ -20,8 +20,12 @@ export const LAMPORTS_PER_SOL = 1_000_000_000;
 // laten simuleren/betalen. Onder deze drempel bestaat de fee-payer feitelijk
 // niet → Phantom's simulatie faalt met "AccountNotFound" en toont een rode
 // warning. We vangen dat vóór de tx af met een eigen vriendelijke melding.
-// Tunebaar: verhoog/verlaag indien nodig.
-export const MIN_SOL_FOR_GAS = 5_000_000; // 0.005 SOL
+// Twee drempels omdat de kosten per pad verschillen; tunebaar indien nodig:
+//  - CLOSE/BURN: alleen de base fee (5.000 lamports/tx, geen priority fee) → ruime marge op 0,001 SOL.
+//  - SWAP (Jupiter): wrapAndUnwrapSol maakt een transient wSOL-account; het SPL token-account
+//    rent-exempt minimum is 2.039.280 lamports, dus 2M is te laag → 0,003 SOL.
+export const MIN_SOL_FOR_CLOSE = 1_000_000; // 0.001 SOL — close/burn (base fee only)
+export const MIN_SOL_FOR_SWAP = 3_000_000;  // 0.003 SOL — Jupiter-swap (transient wSOL rent + marge)
 
 /**
  * Close-fee schakelaar (analoog aan BURN_FEE_ENABLED voor burns). De close-tx int
