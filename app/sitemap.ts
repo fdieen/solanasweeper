@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { GUIDE_ARTICLES } from "@/lib/guide";
+import { BLOG_ARTICLES } from "@/lib/blog";
 
 const SITE_URL = "https://solanasweeper.com";
 
@@ -21,5 +22,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticEntries, ...guideEntries];
+  const blogEntries: MetadataRoute.Sitemap = BLOG_ARTICLES.map((a) => ({
+    url: `${SITE_URL}/blog/${a.slug}`,
+    lastModified: new Date(a.datePublished),
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
+  return [...staticEntries, ...guideEntries, ...blogEntries];
 }
