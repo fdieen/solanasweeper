@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { PublicKey, Transaction } from '@solana/web3.js';
@@ -50,8 +50,23 @@ export default function FunMode({
   const [summary, setSummary] = useState<Summary | null>(null);
   const [result, setResult] = useState<{ closed: number; netSol: number; skipped: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
-  const [noticeMsg, setNoticeMsg] = useState(''); // rustige melding (bv. te weinig gas), geen error
+  const [balance, setBalance] = useState<number | null>(null); // wallet-SOL, voor de gas-check in de render
   const [referrer, setReferrer] = useState<PublicKey | null>(null); // gevalideerde referrer of null
+
+  // Balance proactief ophalen zodat de gas-blokkade al vóór het klikken zichtbaar is
+  // (niet alleen in execute()). execute() houdt dezelfde check als vangnet.
+  useEffect(() => {
+    if (!address) { setBalance(null); return; }
+    let cancelled = false;
+    getProxyConnection().getBalance(new PublicKey(address))
+      .then((b) => { if (!cancelled) setBalance(b); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [address]);
+
+  const hasWork = (initialAccounts ?? []).length > 0; // FunMode mount alleen met werk, maar borg het toch
+  const lowGas = balance != null && balance < MIN_SOL_FOR_CLOSE;
+  const blockedByGas = hasWork && lowGas; // amber + disabled alléén als er iets te vegen valt
 
   if (!isConnected) return null;
 
@@ -62,7 +77,6 @@ export default function FunMode({
     if (!address) return;
     setPhase('preparing');
     setErrorMsg('');
-    setNoticeMsg('');
     try {
       let closable = initialAccounts ?? [];
       if (closable.length === 0) {
@@ -96,7 +110,6 @@ export default function FunMode({
     if (!address) return;
     setPhase('working');
     setErrorMsg('');
-    setNoticeMsg('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
@@ -104,12 +117,9 @@ export default function FunMode({
       // Gas-poort: te weinig SOL → de fee-payer kan de tx niet laten simuleren,
       // wat in Phantom een rode warning geeft. Vang dat hier rustig af i.p.v.
       // de wallet te openen. Stuurt NIETS naar Phantom als de balance te laag is.
-      const balance = await conn.getBalance(owner);
-      if (balance < MIN_SOL_FOR_CLOSE) {
-        setNoticeMsg(lowGasNotice(MIN_SOL_FOR_CLOSE));
-        setPhase('idle');
-        return;
-      }
+      const bal = await conn.getBalance(owner);
+      setBalance(bal);
+      if (bal < MIN_SOL_FOR_CLOSE) { setPhase('idle'); return; }
 
       // Verse herverificatie net vóór tekenen
       const fresh = await scanClosable(conn, owner);
@@ -198,8 +208,15 @@ export default function FunMode({
 
   return (
     <div style={{ marginTop: '14px' }}>
+      {/* Gas-blokkade: eigen amber waarschuwings-tier, boven de knop, disablet 'm */}
+      {blockedByGas && (
+        <div style={warn}>
+          {warnIcon}
+          <span>{lowGasNotice(MIN_SOL_FOR_CLOSE)}</span>
+        </div>
+      )}
       {(phase === 'idle' || phase === 'error' || phase === 'done') && (
-        <button onClick={prepare} style={primaryBtn}>
+        <button onClick={prepare} disabled={blockedByGas} style={{ ...primaryBtn, opacity: blockedByGas ? 0.4 : 1, cursor: blockedByGas ? 'not-allowed' : 'pointer' }}>
           Reclaim my SOL
         </button>
       )}
@@ -208,11 +225,6 @@ export default function FunMode({
 
       {phase === 'error' && errorMsg && (
         <p style={{ ...muted, marginTop: '8px', color: 'rgba(255,140,140,0.8)' }}>{errorMsg}</p>
-      )}
-
-      {/* Rustige gas-melding (geen error-stijl) */}
-      {noticeMsg && (
-        <p style={{ ...muted, marginTop: '8px' }}>{noticeMsg}</p>
       )}
 
       {phase === 'done' && result && (
@@ -288,6 +300,20 @@ const ghostBtn: React.CSSProperties = {
 const muted: React.CSSProperties = {
   margin: 0, fontFamily: 'General Sans, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)',
 };
+// Waarschuwings-tier (amber): duidelijk onderscheiden van muted-status én van de rode error.
+const warn: React.CSSProperties = {
+  display: 'flex', alignItems: 'flex-start', gap: '9px',
+  margin: '0 0 12px', fontFamily: 'General Sans, sans-serif', fontSize: '0.85rem', fontWeight: 500, lineHeight: 1.5,
+  color: '#F5B740', background: 'rgba(245,183,64,0.12)',
+  border: '1px solid rgba(245,183,64,0.32)', borderRadius: '10px', padding: '10px 13px',
+};
+const warnIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: '2px' }}>
+    <path d="M12 3 2 20h20L12 3z" stroke="#F5B740" strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M12 10v4" stroke="#F5B740" strokeWidth="1.8" strokeLinecap="round" />
+    <circle cx="12" cy="17" r="0.9" fill="#F5B740" />
+  </svg>
+);
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(4,4,10,0.7)',
   backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',

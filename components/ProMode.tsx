@@ -46,7 +46,7 @@ export default function ProMode() {
 
   const [ackPermanent, setAckPermanent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [noticeMsg, setNoticeMsg] = useState(''); // rustige melding (bv. te weinig gas), geen error
+  const [balance, setBalance] = useState<number | null>(null); // wallet-SOL, voor de gas-check in de render
   const [result, setResult] = useState<ProResult | null>(null);
   // Wat er zojuist is opgeschoond (na bevestiging). Zolang gezet: toon de success-banner
   // en (na de herscan) de verse staat.
@@ -57,10 +57,10 @@ export default function ProMode() {
     if (!address) return;
     setPhase('scanning');
     setErrorMsg('');
-    setNoticeMsg('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
+      conn.getBalance(owner).then(setBalance).catch(() => {}); // gas-check in de render
       const holdings = await scanHoldings(conn, owner);
       const vals = await valuateAll(holdings);
       const buckets = classifyHoldings(holdings, vals);
@@ -191,7 +191,6 @@ export default function ProMode() {
     if (!address) return;
     setPhase('working');
     setErrorMsg('');
-    setNoticeMsg('');
     setSwept(null);
     try {
       const conn = getProxyConnection();
@@ -203,12 +202,9 @@ export default function ProMode() {
       // Drempel hangt af van het pad: een swap-selectie vraagt de swap-drempel (transient
       // wSOL-rent), een puur close/burn-run alleen de lagere close-drempel.
       const minGas = swapSel.size > 0 ? MIN_SOL_FOR_SWAP : MIN_SOL_FOR_CLOSE;
-      const balance = await conn.getBalance(owner);
-      if (balance < minGas) {
-        setNoticeMsg(lowGasNotice(minGas));
-        setPhase('ready');
-        return;
-      }
+      const bal = await conn.getBalance(owner);
+      setBalance(bal);
+      if (bal < minGas) { setPhase('ready'); return; }
 
       // ── Verse herclassificatie net vóór bouwen ──
       const freshHoldings = await scanHoldings(conn, owner);
@@ -323,6 +319,9 @@ export default function ProMode() {
   const hasContent = swap.length > 0 || burn.length > 0 || nft.length > 0 || empty.length > 0;
   // Iets te doen? Lege accounts sluiten altijd; swap/burn/nft alleen indien geselecteerd.
   const canClean = totals.emptyCount + totals.swapCount + totals.burnCount > 0;
+  const minGasNow = swapSel.size > 0 ? MIN_SOL_FOR_SWAP : MIN_SOL_FOR_CLOSE;
+  const lowGas = balance != null && balance < minGasNow;
+  const showGasWarn = canClean && lowGas; // niet tonen als er niets te vegen valt (dan wint "Nothing to clean")
 
   return (
     <div style={{ marginTop: '8px' }}>
@@ -388,9 +387,18 @@ export default function ProMode() {
         <p style={{ ...muted, marginTop: '10px' }}>+ {empty.length} empty account{empty.length === 1 ? '' : 's'} will be closed for rent.</p>
       )}
 
+      {/* Gas-blokkade: eigen amber waarschuwings-tier, boven de knop, disablet 'm.
+          Alleen tonen als er iets te vegen valt — anders spreekt het "Nothing to clean" tegen. */}
+      {showGasWarn && (
+        <div style={warn}>
+          {warnIcon}
+          <span>{lowGasNotice(minGasNow)}</span>
+        </div>
+      )}
+
       <button
-        style={{ ...primaryBtn, marginTop: '16px', opacity: canClean ? 1 : 0.4, cursor: canClean ? 'pointer' : 'not-allowed' }}
-        disabled={!canClean}
+        style={{ ...primaryBtn, marginTop: '16px', opacity: (canClean && !lowGas) ? 1 : 0.4, cursor: (canClean && !lowGas) ? 'pointer' : 'not-allowed' }}
+        disabled={!canClean || lowGas}
         onClick={openConfirm}
       >
         {canClean ? 'Review & sign' : 'Nothing to clean'}
@@ -398,8 +406,6 @@ export default function ProMode() {
 
       {phase === 'working' && <p style={{ ...muted, marginTop: '8px' }}>Working — approve in your wallet…</p>}
       {phase === 'error' && errorMsg && <p style={{ ...muted, marginTop: '8px', color: 'rgba(255,140,140,0.85)' }}>{errorMsg}</p>}
-      {/* Rustige gas-melding (geen error-stijl) */}
-      {noticeMsg && <p style={{ ...muted, marginTop: '8px' }}>{noticeMsg}</p>}
       {phase === 'done' && result && (
         <p style={{ ...muted, marginTop: '8px', color: '#14F195' }}>
           {result.closed} closed · {result.swapped} swapped · {result.burned} burned · {result.sol.toFixed(4)} SOL{result.skipped ? ` · ${result.skipped} skipped` : ''}
@@ -573,6 +579,20 @@ function KV({ label, value, dim, highlight }: { label: string; value?: string; d
 const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '2px 0' };
 const dot: React.CSSProperties = { width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', flexShrink: 0 };
 const muted: React.CSSProperties = { margin: 0, fontFamily: 'General Sans, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' };
+// Waarschuwings-tier (amber): duidelijk onderscheiden van muted-status én van de rode error.
+const warn: React.CSSProperties = {
+  display: 'flex', alignItems: 'flex-start', gap: '9px',
+  margin: '16px 0 0', fontFamily: 'General Sans, sans-serif', fontSize: '0.85rem', fontWeight: 500, lineHeight: 1.5,
+  color: '#F5B740', background: 'rgba(245,183,64,0.12)',
+  border: '1px solid rgba(245,183,64,0.32)', borderRadius: '10px', padding: '10px 13px',
+};
+const warnIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: '2px' }}>
+    <path d="M12 3 2 20h20L12 3z" stroke="#F5B740" strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M12 10v4" stroke="#F5B740" strokeWidth="1.8" strokeLinecap="round" />
+    <circle cx="12" cy="17" r="0.9" fill="#F5B740" />
+  </svg>
+);
 const primaryBtn: React.CSSProperties = { fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.9rem', background: '#14F195', color: '#05140d', border: 'none', borderRadius: '999px', padding: '11px 22px', cursor: 'pointer' };
 const ghostBtn: React.CSSProperties = { fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.9rem', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '999px', padding: '11px 22px', cursor: 'pointer' };
 const smallBtn: React.CSSProperties = { fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.72rem', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '999px', padding: '4px 10px', cursor: 'pointer' };
