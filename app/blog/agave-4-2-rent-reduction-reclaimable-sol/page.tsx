@@ -83,7 +83,7 @@ export default function BlogAgaveRentReduction() {
         >
           <a href="/" className="guide-crumb">Home</a>
           <span style={{ color: 'rgba(255,255,255,0.25)' }}>/</span>
-          <span>Blog</span>
+          <a href="/blog" className="guide-crumb">Blog</a>
         </nav>
 
         <header>
@@ -188,10 +188,11 @@ min_balance    = effective_size × lamports_per_byte`}</code>
           </div>
           <p>
             Anza&rsquo;s Agave v4.2 schedule targets the <strong>first</strong> of these steps for
-            mainnet activation in August 2026, alongside 200ms slot times and larger transaction
-            sizes. Each subsequent step is gated behind its own activation and requires an explicit
-            risk assessment — the concern being that cheaper state means faster state growth, which
-            is the thing validators have to carry.
+            mainnet activation on <strong>August 17, 2026</strong>, alongside 200ms slot times and
+            larger transaction sizes; Anza labels this a provisional schedule. Each subsequent step
+            is gated behind its own activation and requires an explicit risk assessment — the concern
+            being that cheaper state means faster state growth, which is the thing validators have to
+            carry.
           </p>
           <p>
             There is no published date for steps two through five. Treat the full 10x as a
@@ -260,6 +261,11 @@ min_balance    = effective_size × lamports_per_byte`}</code>
 
           <h2>References</h2>
           <ul>
+            <li>
+              <Ref href="https://github.com/anza-xyz/agave/wiki/v4.2-Release-Schedule">
+                Anza: Agave v4.2 Release Schedule
+              </Ref>
+            </li>
             <li>
               <Ref href="https://github.com/solana-foundation/solana-improvement-documents/pull/437">
                 SIMD-0437: Incremental Reduction of <code>lamports_per_byte</code> to 696

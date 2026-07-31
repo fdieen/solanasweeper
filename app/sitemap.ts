@@ -6,7 +6,7 @@ const SITE_URL = "https://solanasweeper.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
-  const routes = ["", "/how-it-works", "/safety", "/faq", "/roadmap", "/founders", "/guide"];
+  const routes = ["", "/how-it-works", "/safety", "/faq", "/roadmap", "/founders", "/guide", "/blog"];
 
   const staticEntries: MetadataRoute.Sitemap = routes.map((route) => ({
     url: `${SITE_URL}${route}`,

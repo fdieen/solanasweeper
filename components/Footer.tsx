@@ -30,6 +30,7 @@ export default function Footer() {
           {[
             { label: 'How it works', href: '/how-it-works' },
             { label: 'Guide', href: '/guide' },
+            { label: 'Blog', href: '/blog' },
             { label: 'Safety', href: '/safety' },
             { label: 'FAQ', href: '/faq' },
             { label: 'Roadmap', href: '/roadmap' },

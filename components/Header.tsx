@@ -52,6 +52,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M17 14a5.6 5.6 0 0 1 3.4 5" />
     </svg>
   ),
+  blog: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </svg>
+  ),
 };
 
 const MENU: { title: string; items: { label: string; href: string; icon: string }[] }[] = [
@@ -60,6 +66,7 @@ const MENU: { title: string; items: { label: string; href: string; icon: string 
     items: [
       { label: 'How it works', href: '/how-it-works', icon: 'book' },
       { label: 'Guide', href: '/guide', icon: 'guide' },
+      { label: 'Blog', href: '/blog', icon: 'blog' },
       { label: 'Safety', href: '/safety', icon: 'shield' },
       { label: 'FAQ', href: '/faq', icon: 'faq' },
     ],
@@ -101,6 +108,7 @@ export default function Header() {
           {[
             { label: 'How it works', href: '/how-it-works' },
             { label: 'Guide', href: '/guide' },
+            { label: 'Blog', href: '/blog' },
             { label: 'Safety', href: '/safety' },
             { label: 'FAQ', href: '/faq' },
             { label: 'Roadmap', href: '/roadmap' },

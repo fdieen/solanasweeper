@@ -41,7 +41,7 @@ SIMD-0437 reduces `lamports_per_byte` from 6,960 down to 696 — a 10x reduction
 | 4 | 1,322 | 0.00038735 SOL | 81% |
 | 5 | 696 | 0.00020393 SOL | 90% |
 
-Anza's Agave v4.2 schedule targets the **first** of these steps for mainnet activation in August 2026, alongside 200ms slot times and larger transaction sizes. Each subsequent step is gated behind its own activation and requires an explicit risk assessment — the concern being that cheaper state means faster state growth, which is the thing validators have to carry.
+Anza's Agave v4.2 schedule targets the **first** of these steps for mainnet activation on **August 17, 2026**, alongside 200ms slot times and larger transaction sizes; Anza labels this a provisional schedule. Each subsequent step is gated behind its own activation and requires an explicit risk assessment — the concern being that cheaper state means faster state growth, which is the thing validators have to carry.
 
 There is no published date for steps two through five. Treat the full 10x as a multi-stage process measured in quarters, not weeks.
 
@@ -75,6 +75,7 @@ If you decide to reclaim it, closing is non-custodial and happens in a transacti
 
 ## References
 
+- [Anza: Agave v4.2 Release Schedule](https://github.com/anza-xyz/agave/wiki/v4.2-Release-Schedule)
 - [SIMD-0437: Incremental Reduction of `lamports_per_byte` to 696](https://github.com/solana-foundation/solana-improvement-documents/pull/437)
 - [SIMD-0436: Reduce Rent-Exempt Minimum by 2x](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0436-reduce-rent-exempt-minimum-by-2x.md)
 - [Solana Network Upgrades](https://solana.com/news/solana-network-upgrades)
