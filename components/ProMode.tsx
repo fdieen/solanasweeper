@@ -13,6 +13,7 @@ import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
 import { lowGasNotice } from '@/lib/messages';
+import { track } from '@vercel/analytics';
 
 type AnyTx = Transaction | VersionedTransaction;
 type SolanaSigner = {
@@ -247,6 +248,7 @@ export default function ProMode() {
       // Closes + swaps: vooraf tekenen (sign-all), daarna versturen via sendRaw.
       const signedCloses = await signGroup(closeBuilt.transactions);
       const signedVersioned = await signGroup(versionedTxs);
+      track('sweep_signed', { mode: 'pro' });
 
       const closeRes = await sendAndCount(conn, signedCloses, closeCounts);
 
@@ -286,6 +288,13 @@ export default function ProMode() {
       // Pas NA on-chain bevestiging: als er iets is opgeschoond, ververs de kaart naar de
       // nieuwe staat (verse herscan) en seinsein de read-only preview — zelfde flow als Fun Mode.
       if (closedCount + burnedCount + swapRes.ok > 0) {
+        track('sweep_confirmed', {
+          mode: 'pro',
+          closed: closedCount,
+          swapped: swapRes.ok,
+          burned: burnedCount,
+          reclaimed_sol: Number(proResult.sol.toFixed(4)),
+        });
         setSwept(proResult);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('sweep-confirmed', { detail: { address } }));

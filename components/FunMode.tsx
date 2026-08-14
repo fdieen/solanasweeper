@@ -17,6 +17,7 @@ import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
 import { lowGasNotice } from '@/lib/messages';
+import { track } from '@vercel/analytics';
 
 type SolanaSigner = {
   signTransaction?: (tx: Transaction) => Promise<Transaction>;
@@ -144,6 +145,7 @@ export default function FunMode({
       } else {
         throw new Error('Wallet cannot sign transactions');
       }
+      track('sweep_signed', { mode: 'fun', transactions: signed.length });
 
       // Per batch: simuleren → versturen → bevestigen (geïsoleerd, atomair)
       let closed = 0;
@@ -191,6 +193,12 @@ export default function FunMode({
       // WalletScan de reclaimable-kaart naar 0 verversen én seinsein de read-only
       // "Check any wallet"-preview zodat die hetzelfde adres opnieuw scant.
       if (closed > 0) {
+        track('sweep_confirmed', {
+          mode: 'fun',
+          closed,
+          reclaimed_sol: Number(lamportsToSol(netLamports).toFixed(4)),
+          skipped,
+        });
         onSwept?.(sweptResult);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('sweep-confirmed', { detail: { address } }));

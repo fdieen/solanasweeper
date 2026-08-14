@@ -6,6 +6,7 @@ import { PublicKey } from '@solana/web3.js';
 import FunMode from './FunMode';
 import ProMode from './ProMode';
 import { getProxyConnection, scanClosable } from '@/lib/solanaProxy';
+import { track } from '@vercel/analytics';
 import { summarize, lamportsToSol, type ClosableAccount } from '@/lib/funMode';
 
 type Status = 'idle' | 'scanning' | 'done' | 'error';
@@ -40,6 +41,11 @@ export default function WalletScan() {
       setEmptyCount(sum.count);
       setReclaimSol(lamportsToSol(sum.grossLamports));
       setStatus('done');
+      // Analytics: alleen aggregaten (aantal + geronde SOL), geen adres/identiteit.
+      track('scan_completed', {
+        accounts: sum.count,
+        reclaimable_sol: Number(lamportsToSol(sum.grossLamports).toFixed(4)),
+      });
     } catch (e) {
       console.error('Wallet scan failed', e);
       setStatus('error');
@@ -59,6 +65,7 @@ export default function WalletScan() {
     // wallet) niet opnieuw. Dít was de credit-drain. Handmatig verversen = rescan().
     if (scannedFor.current === address) return;
     scannedFor.current = address;
+    track('wallet_connected'); // één keer per nieuw verbonden adres (scannedFor-guard), geen adres in de payload
     scan();
   }, [isConnected, address, scan]);
 

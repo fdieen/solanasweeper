@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import WalletProviders from "@/components/WalletProviders";
 import ReferralCapture from "@/components/ReferralCapture";
+import { Analytics } from "@vercel/analytics/next";
 
 const SITE_URL = "https://solanasweeper.com";
 
@@ -119,6 +120,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <ReferralCapture />
         <WalletProviders>{children}</WalletProviders>
+        <Analytics />
       </body>
     </html>
   );
