@@ -10,9 +10,10 @@ import {
   TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token';
 import { addFeeInstructions } from './fees';
+import { FEE_BPS } from './pricing';
 
 /* ── Constanten ── */
-export const FEE_BPS = 1000;           // 10% (basispunten)
+export { FEE_BPS };                     // fee-bron staat in lib/pricing.ts (web3.js-vrij)
 export const MAX_CLOSES_PER_TX = 20;   // veilige batchgrootte (tx-limiet 1232 bytes)
 export const LAMPORTS_PER_SOL = 1_000_000_000;
 

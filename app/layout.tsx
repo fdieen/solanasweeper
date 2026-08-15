@@ -3,6 +3,7 @@ import "./globals.css";
 import WalletProviders from "@/components/WalletProviders";
 import ReferralCapture from "@/components/ReferralCapture";
 import { Analytics } from "@vercel/analytics/next";
+import { FEE_PERCENT } from "@/lib/pricing";
 
 const SITE_URL = "https://solanasweeper.com";
 
@@ -101,10 +102,11 @@ const jsonLd = {
       url: SITE_URL,
       description:
         "Clean your Solana wallet: close empty token accounts, burn junk tokens and NFTs, and reclaim locked SOL. Swaps powered by Jupiter.",
+      // Geen vaste prijs: gratis in gebruik, maar we houden FEE_PERCENT% van de
+      // gereclaimde SOL in. price:"0" was feitelijk onjuist → fee expliciet gedeclareerd.
       offers: {
         "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
+        feesAndCommissionsSpecification: `SolanaSweeper charges a ${FEE_PERCENT}% fee on the SOL you reclaim (you keep ${100 - FEE_PERCENT}%). Free to use, no subscription, and nothing is charged if nothing is reclaimed.`,
       },
     },
   ],
