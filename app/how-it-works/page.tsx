@@ -1,33 +1,20 @@
 import type { Metadata } from 'next';
 import InnerLayout from '@/components/InnerLayout';
 import ScannerBot from '@/components/ScannerBot';
+import { FEE_PERCENT } from '@/lib/pricing';
 
 export const metadata: Metadata = {
-  title: 'How it works',
-  description: 'Connect your wallet, scan for junk, and reclaim locked SOL in three steps. Fun Mode and Pro Mode explained.',
+  title: 'How does SolanaSweeper work?',
+  description:
+    'SolanaSweeper scans your wallet for empty token accounts, batches them into as few transactions as possible, and returns the locked rent to your balance when you sign.',
   alternates: { canonical: '/how-it-works' },
 };
 
-const steps = [
-  {
-    num: '01',
-    title: 'Connect your wallet',
-    body: 'Hit Connect Wallet and approve in Phantom, Solflare, or Backpack. We never touch your keys. The connection is read-only until you explicitly sign a transaction.',
-    color: '#14F195',
-  },
-  {
-    num: '02',
-    title: 'Scan your accounts',
-    body: 'SolanaSweeper reads your on-chain token accounts and classifies them: empty accounts (junk, holding locked rent), tokens with residual value, and worthless SPL/NFT dust.',
-    color: '#9945FF',
-  },
-  {
-    num: '03',
-    title: 'Reclaim your SOL',
-    body: 'Select what to sweep. Fun Mode closes empty accounts and returns the ~0.002 SOL rent deposit per account straight to your wallet. Pro Mode also swaps leftover tokens to SOL via Jupiter, and burns true junk.',
-    color: '#14F195',
-  },
-];
+const eyebrow: React.CSSProperties = {
+  fontFamily: 'General Sans, sans-serif', fontWeight: 400,
+  fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+  color: 'rgba(255,255,255,0.35)', margin: '0 0 20px',
+};
 
 export default function HowItWorks() {
   return (
@@ -39,206 +26,71 @@ export default function HowItWorks() {
       radial-gradient(ellipse 55% 45% at 18% 100%, rgba(20,241,149,0.16) 0%, transparent 55%),
       linear-gradient(180deg, rgba(40,22,75,0.22) 0%, rgba(14,10,28,0.10) 50%, rgba(40,22,75,0.20) 100%)
     `}>
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: 'clamp(100px, 14vw, 160px) clamp(24px, 6vw, 80px) 80px' }}>
+      <article style={{ maxWidth: '760px', margin: '0 auto', padding: 'clamp(100px, 14vw, 160px) clamp(24px, 6vw, 32px) 80px' }}>
 
-        {/* Header */}
-        <p style={{
-          fontFamily: 'General Sans, sans-serif', fontWeight: 400,
-          fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.35)', marginBottom: '20px',
-        }}>
-          Three steps
-        </p>
+        <p style={eyebrow}>How it works</p>
         <h1 style={{
           fontFamily: 'General Sans, sans-serif', fontWeight: 700,
-          fontSize: 'clamp(2.2rem, 4.5vw, 3.8rem)', letterSpacing: '-0.03em',
-          lineHeight: 1.05, color: '#fff', marginBottom: '64px',
+          fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em',
+          lineHeight: 1.08, color: '#fff', margin: '0 0 20px',
         }}>
-          Connect, scan,<br />reclaim.
+          How does SolanaSweeper work?
         </h1>
-
-        {/* Steps — liquid glass cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {steps.map((step) => {
-            const c = step.color === '#14F195' ? '20,241,149' : '153,69,255';
-            return (
-              <div key={step.num} style={{
-                display: 'grid',
-                gridTemplateColumns: '80px 1fr',
-                gap: '0 32px',
-                padding: '32px',
-                borderRadius: '20px',
-                background: `linear-gradient(135deg, rgba(${c},0.10) 0%, rgba(255,255,255,0.04) 45%, rgba(${c},0.06) 100%)`,
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: `1px solid rgba(${c},0.22)`,
-                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 32px rgba(${c},0.08)`,
-              }}>
-                {/* Big number */}
-                <div style={{
-                  fontFamily: 'General Sans, sans-serif', fontWeight: 700,
-                  fontSize: '3rem', lineHeight: 1,
-                  color: step.color,
-                  opacity: 0.95,
-                  letterSpacing: '-0.04em',
-                  paddingTop: '4px',
-                  textShadow: `0 0 24px rgba(${c},0.4)`,
-                }}>
-                  {step.num}
-                </div>
-
-                <div>
-                  <h2 style={{
-                    fontFamily: 'General Sans, sans-serif', fontWeight: 600,
-                    fontSize: 'clamp(1.1rem, 2vw, 1.35rem)', letterSpacing: '-0.02em',
-                    color: '#fff', marginBottom: '12px',
-                  }}>
-                    {step.title}
-                  </h2>
-                  <p style={{
-                    fontFamily: 'General Sans, sans-serif', fontWeight: 400,
-                    fontSize: '0.95rem', lineHeight: 1.7,
-                    color: 'rgba(255,255,255,0.5)', maxWidth: '520px',
-                  }}>
-                    {step.body}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Modes callout */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px',
-          marginTop: '64px',
+        <p style={{
+          fontFamily: 'General Sans, sans-serif', fontSize: '1.2rem', lineHeight: 1.6,
+          color: 'rgba(255,255,255,0.82)', margin: '0 0 8px',
+          paddingBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}>
-          {[
-            {
-              label: 'Fun Mode',
-              color: '#14F195',
-              desc: 'Safe-only. Closes empty token accounts and reclaims rent. No tokens are destroyed.',
-            },
-            {
-              label: 'Pro Mode',
-              color: '#9945FF',
-              desc: 'Advanced. Swap residual tokens to SOL via Jupiter, and burn true junk. Burns are permanent. You\'ll confirm before signing.',
-            },
-          ].map(({ label, color, desc }) => (
-            <div key={label} style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '12px',
-              padding: '24px',
-            }}>
-              <span style={{
-                display: 'inline-block',
-                fontFamily: 'General Sans, sans-serif', fontWeight: 600,
-                fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase',
-                color, marginBottom: '12px',
-              }}>
-                {label}
-              </span>
-              <p style={{
-                fontFamily: 'General Sans, sans-serif', fontWeight: 400,
-                fontSize: '0.88rem', lineHeight: 1.6,
-                color: 'rgba(255,255,255,0.45)',
-              }}>
-                {desc}
-              </p>
-            </div>
-          ))}
+          SolanaSweeper scans your wallet for empty token accounts, batches them into as few
+          transactions as possible, and returns the locked rent to your balance when you sign.
+        </p>
+
+        <div className="guide-prose">
+          <h2>How do I connect my wallet?</h2>
+          <p>Hit Connect Wallet and approve in Phantom, Solflare or Backpack.</p>
+          <p>Any Solana wallet supporting the Wallet Standard is detected automatically. Mobile wallets connect by QR through WalletConnect. There is no account, no email and no signup.</p>
+
+          <h2>What does the scan look for?</h2>
+          <p>Every token account your wallet has ever opened, sorted into ones still holding something and ones holding nothing.</p>
+          <p>Only the empty ones can be closed. Accounts still holding tokens are left alone, and Solana would refuse to close them anyway. Frozen accounts are excluded because they cannot be closed until the mint authority thaws them.</p>
+
+          <h2>How much SOL will I get back?</h2>
+          <p>{`About 0.00204 SOL per empty account, minus our ${FEE_PERCENT}% fee and the network fee.`}</p>
+          <p>The scanner shows you the exact total before you sign anything. A wallet with 100 dead accounts is holding roughly 0.2 SOL. Token-2022 accounts with extensions can hold slightly more.</p>
+
+          <h2>How many transactions do I have to sign?</h2>
+          <p>Usually far fewer than you have accounts, because closes are batched together.</p>
+          <p>Solana caps transaction size, so large wallets are split across several transactions. Hardware wallet users should expect to approve each one on the device.</p>
+
+          <h2>What can I reclaim besides empty accounts?</h2>
+          <p>Pro Mode adds burning junk tokens and NFTs, and swapping leftovers through Jupiter.</p>
+          <p>Burning is deliberately separate from closing. Fun Mode only touches accounts that are already empty, so nothing you own can be destroyed by accident. Pro Mode is where you choose to clear out dust and spam, and it asks you to confirm before anything is burned.</p>
         </div>
 
-        {/* What you can reclaim — de diepere uitleg (vanaf de hero hierheen verplaatst) */}
-        <div style={{ marginTop: '64px' }}>
-          <h2 style={{
-            fontFamily: 'General Sans, sans-serif', fontWeight: 700,
-            fontSize: 'clamp(1.5rem, 3vw, 2rem)', letterSpacing: '-0.02em',
-            color: '#fff', marginBottom: '16px',
-          }}>
-            What you can reclaim
-          </h2>
-          <p style={{
-            fontFamily: 'General Sans, sans-serif', fontWeight: 400,
-            fontSize: '0.98rem', lineHeight: 1.7, color: 'rgba(255,255,255,0.5)',
-            maxWidth: '620px', marginBottom: '24px',
-          }}>
-            Every token account on Solana holds a small rent deposit — about 0.002 SOL — to stay
-            open on-chain. Close an account and that deposit comes straight back to your wallet.
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            {[
-              {
-                label: 'Empty token accounts',
-                color: '#14F195',
-                desc: 'Leftovers from airdrops you never claimed and tokens you\'ve sold. Closing them destroys nothing — it just returns the ~0.002 SOL rent. This is Fun Mode, safe by default.',
-              },
-              {
-                label: 'Unwanted tokens & NFTs',
-                color: '#9945FF',
-                desc: 'In Pro Mode you can burn junk tokens and NFTs you\'ll never use to reclaim their ~0.002 SOL account rent. Burning is permanent and opt-in — you pick each item and confirm before signing.',
-              },
-            ].map(({ label, color, desc }) => (
-              <div key={label} style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '12px', padding: '24px',
-              }}>
-                <span style={{
-                  display: 'inline-block',
-                  fontFamily: 'General Sans, sans-serif', fontWeight: 600,
-                  fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase',
-                  color, marginBottom: '12px',
-                }}>
-                  {label}
-                </span>
-                <p style={{
-                  fontFamily: 'General Sans, sans-serif', fontWeight: 400,
-                  fontSize: '0.88rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.45)',
-                }}>
-                  {desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <p style={{
-            fontFamily: 'General Sans, sans-serif', fontWeight: 400,
-            fontSize: '0.82rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.35)',
-            marginTop: '18px', maxWidth: '620px',
-          }}>
-            Every item returns the same ~0.002 SOL — we close the token account, not separate
-            metadata accounts. SolanaSweeper doesn&apos;t touch domains, LP positions, or compressed NFTs.
-            The more you&apos;ve piled up, the more adds up:{' '}
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>25 ≈ 0.05 · 50 ≈ 0.10 · 100 ≈ 0.20 SOL</span>.
-          </p>
-        </div>
+        {/* Related — minstens twee andere pagina's + de scanner */}
+        <nav aria-label="Related" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 22px', marginTop: '48px', paddingTop: '26px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <a href="/safety" className="guide-crumb" style={{ fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.9rem' }}>Is it safe? →</a>
+          <a href="/guide/what-is-rent-on-solana" className="guide-crumb" style={{ fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.9rem' }}>What is rent on Solana? →</a>
+          <a href="/" className="guide-crumb" style={{ fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.9rem' }}>Check a wallet →</a>
+        </nav>
 
         {/* CTA */}
-        <div style={{ marginTop: '64px' }}>
+        <div style={{ marginTop: '28px' }}>
           <a href="/" style={{
             display: 'inline-flex', alignItems: 'center', gap: '12px',
-            fontFamily: 'General Sans, sans-serif', fontWeight: 600,
-            fontSize: '0.95rem',
-            background: '#fff', color: '#05050a',
-            border: 'none', borderRadius: '999px',
-            padding: '14px 22px 14px 28px',
-            textDecoration: 'none',
+            fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.95rem',
+            background: '#fff', color: '#05050a', border: 'none', borderRadius: '999px',
+            padding: '14px 22px 14px 28px', textDecoration: 'none',
           }}>
             Start sweeping
-            <span style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '32px', height: '32px', background: '#05050a', borderRadius: '50%',
-            }}>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: '#05050a', borderRadius: '50%' }}>
               <svg width="14" height="12" viewBox="0 0 14 12" fill="none">
                 <path d="M2 6H12M12 6L8 2M12 6L8 10" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </span>
           </a>
         </div>
-      </div>
+      </article>
       <ScannerBot />
     </InnerLayout>
   );
