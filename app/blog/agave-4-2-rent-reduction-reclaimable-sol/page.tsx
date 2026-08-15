@@ -94,7 +94,7 @@ export default function BlogAgaveRentReduction() {
               lineHeight: 1.1, color: '#fff', margin: '0 0 14px',
             }}
           >
-            Agave 4.2 Rent Reduction: What It Actually Means for the SOL Locked in Your Token Accounts
+            What does the Agave 4.2 rent reduction mean for my locked SOL?
           </h1>
           <p
             style={{
@@ -140,7 +140,7 @@ export default function BlogAgaveRentReduction() {
 
           <h2>What rent is</h2>
           <p>
-            Rent on Solana is not a recurring fee. It is a refundable deposit. When an account is
+            <a href="/guide/what-is-rent-on-solana">Rent on Solana</a> is not a recurring fee. It is a refundable deposit. When an account is
             created, it has to hold a minimum lamport balance to be rent-exempt — this is the
             network&rsquo;s way of pricing permanent state storage. Close the account, and every
             lamport in it comes back to you.
@@ -254,7 +254,7 @@ min_balance    = effective_size × lamports_per_byte`}</code>
             address alone — paste it in, get the number.
           </p>
           <p>
-            If you decide to reclaim it, closing is non-custodial and happens in a transaction you
+            If you decide to <a href="/guide/how-to-reclaim-your-sol">reclaim it</a>, closing is non-custodial and happens in a transaction you
             sign yourself. Your tokens are never transferred, only empty accounts are closed, and the
             rent goes directly back to your wallet.
           </p>

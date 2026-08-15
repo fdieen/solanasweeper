@@ -22,10 +22,10 @@ export default function Page() {
         existed.
       </p>
 
-      <h2>Why Solana works this way</h2>
+      <h2>Why does Solana charge rent?</h2>
       <p>
-        Solana stores data on-chain in accounts. Storing data costs resources, so the network
-        requires each account to hold a minimum SOL balance to stay alive. This is called
+        To cover the cost of storing your data on-chain. Solana keeps every account in validator
+        memory, so it requires each one to hold a minimum SOL balance to stay alive — this is called
         rent-exempt status.
       </p>
       <p>
@@ -36,12 +36,17 @@ export default function Page() {
       <p className="note">
         The current deposit for a standard token account is about <strong>0.00204 SOL</strong>.
       </p>
-
-      <h2>Where your SOL gets stuck</h2>
       <p>
-        On Solana, token balances don&apos;t live in your wallet address. Each token gets its own
-        token account, tied to your wallet. Buy a memecoin, and a token account is created. Receive
-        an airdrop, another account. Mint an NFT, another account.
+        That figure is scheduled to fall in stages — see{' '}
+        <a href="/blog/agave-4-2-rent-reduction-reclaimable-sol">what the Agave 4.2 rent reduction means for your locked SOL</a>.
+      </p>
+
+      <h2>How many token accounts do I have?</h2>
+      <p>
+        One for every token you have ever held. On Solana, token balances don&apos;t live in your
+        wallet address — each token gets its own token account, tied to your wallet. Buy a memecoin,
+        and a token account is created. Receive an airdrop, another account. Mint an NFT, another
+        account.
       </p>
       <p>Each of those accounts holds ~0.00204 SOL as its deposit.</p>
       <p>
@@ -50,8 +55,8 @@ export default function Page() {
         SOL, until you explicitly close it.
       </p>
 
-      <h2>How much adds up</h2>
-      <p>The math is simple. Every empty account holds roughly 0.002 SOL you can reclaim.</p>
+      <h2>How much does it add up to?</h2>
+      <p>Roughly 0.002 SOL per empty account, and it stacks up fast. Every empty account holds that deposit, ready to reclaim.</p>
       <ul>
         <li>25 empty accounts → about 0.05 SOL</li>
         <li>50 → about 0.10 SOL</li>
@@ -63,7 +68,7 @@ export default function Page() {
         per token, and nothing in your wallet interface tells you they&apos;re there.
       </p>
 
-      <h2>Reclaiming it</h2>
+      <h2>How do I get my rent back?</h2>
       <p>
         Closing an empty token account returns the deposit to your wallet. Two conditions apply: the
         balance must be zero, and you must hold the close authority, which normally is you, as the
@@ -74,7 +79,7 @@ export default function Page() {
         <a href="/guide/how-to-reclaim-your-sol">how to reclaim your SOL</a>.
       </p>
 
-      <h2>What this isn&apos;t</h2>
+      <h2>Is reclaimed rent free money?</h2>
       <p>
         Reclaiming rent is not free money from nowhere. It&apos;s your own SOL, returned. You paid
         the deposit when the account was created, usually without noticing, and you get it back when
