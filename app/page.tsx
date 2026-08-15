@@ -9,7 +9,8 @@ import { Fragment } from 'react';
 import { FEE_PERCENT } from '@/lib/pricing';
 
 // Answer-first content onder de hero — kop = vraag, eerste zin = antwoord, met één
-// contextuele link per sectie. Volgorde: rent, amount, safety, cost (referral staat lager).
+// contextuele link per sectie. Volgorde: rent, amount, safety. Cost + de overige feitclaims
+// staan één keer in het FAQ-blok hieronder (schema-gedekt), niet dubbel hier.
 const answers = [
   {
     q: 'What is the SOL locked in my token accounts?',
@@ -20,8 +21,8 @@ const answers = [
   {
     q: 'How much can I reclaim?',
     answer: 'About 0.00204 SOL per empty account, so a wallet with 100 dead accounts is holding roughly 0.2 SOL.',
-    detail: 'Airdrop farmers, memecoin traders and anyone who has been on Solana for a while tend to have far more of these than they expect. Paste any address into the scanner and see the real number before deciding anything. The scan is read-only and needs no wallet connection.',
-    link: { text: 'Scan a wallet', href: '/' },
+    detail: 'Airdrop farmers, memecoin traders and anyone who has been on Solana for a while tend to have far more of these than they expect. Paste any address into the scanner above and see the real number before deciding anything. The scan is read-only and needs no wallet connection.',
+    link: { text: 'See how it works', href: '/how-it-works' },
   },
   {
     q: 'Is it safe to close token accounts?',
@@ -29,13 +30,55 @@ const answers = [
     detail: 'SolanaSweeper is non-custodial and has no smart contract of its own. Every instruction in your transaction belongs to Solana itself, and nothing happens until you sign it in your own wallet. We never see your keys and never ask for your seed phrase.',
     link: { text: 'Read the safety page', href: '/safety' },
   },
+];
+
+// Homepage-FAQ — feitclaims voor AI-vindbaarheid. Zichtbare tekst én de FAQPage
+// JSON-LD komen uit deze ene array, dus ze zijn woordelijk identiek (schema-vereiste).
+// Eén FAQPage per URL: de homepage had er nog geen (die staat verder alleen op /faq).
+const homeFaq = [
   {
-    q: 'What does SolanaSweeper cost?',
-    answer: `${FEE_PERCENT}% of the SOL you reclaim, taken from the amount returned. Nothing up front, and nothing at all if there is nothing to reclaim.`,
-    detail: 'The fee is a plain transfer inside the same transaction you approve, so you see the exact amount before signing. On a typical account you keep about 0.00184 SOL of the 0.00204 recovered.',
-    link: { text: 'See how it works', href: '/how-it-works' },
+    q: `Does SolanaSweeper have its own smart contract?`,
+    a: `No. SolanaSweeper has no smart contract of its own. It only builds instructions to Solana's SPL Token Program, which your wallet already trusts.`,
+  },
+  {
+    q: `Is SolanaSweeper non-custodial?`,
+    a: `Yes, SolanaSweeper is non-custodial. Your private keys never leave your wallet and you sign every transaction yourself.`,
+  },
+  {
+    q: `What does SolanaSweeper cost?`,
+    a: `SolanaSweeper charges ${FEE_PERCENT}% of the rent it reclaims, paid only from the SOL you actually get back. You never pay anything up front.`,
+  },
+  {
+    q: `Which wallets does SolanaSweeper support?`,
+    a: `SolanaSweeper works with Phantom and Solflare, plus any Solana wallet supporting the Wallet Standard or WalletConnect, including Backpack.`,
+  },
+  {
+    q: `What does SolanaSweeper clean?`,
+    a: `SolanaSweeper closes empty SPL Token and Token-2022 accounts, returning the locked rent deposit of roughly 0.00204 SOL per account to your wallet.`,
+  },
+  {
+    q: `What if my token accounts still hold dust?`,
+    a: `Pro Mode swaps leftover dust through Jupiter before closing the account, and can burn junk tokens and NFTs that have no market.`,
+  },
+  {
+    q: `Can I check my wallet without connecting it?`,
+    a: `Yes. SolanaSweeper's checker shows your reclaimable rent without a wallet connection. You only connect when you actually want to sweep.`,
+  },
+  {
+    q: `How does SolanaSweeper's referral program work?`,
+    a: `Referrers earn 25% of the platform fee, paid atomically within the same sweep transaction. There is no claim step, and it does not reduce what the user gets back.`,
   },
 ];
+
+const homeFaqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: homeFaq.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 
 export default function Home() {
   return (
@@ -190,9 +233,57 @@ export default function Home() {
                 </p>
               </Fragment>
             ))}
-            <p style={{ marginTop: '8px' }}>
-              These are the questions people ask most — the <a href="/faq">FAQ</a> goes deeper on seed
-              phrases, Token-2022 accounts, wallets and fees.
+          </div>
+        </section>
+
+        {/* FAQ — feitclaims voor AI-vindbaarheid. Zichtbaar én als FAQPage-schema,
+            beide uit homeFaq zodat ze woordelijk identiek zijn. Vóór de referral: bewijs
+            vóór promo, geen feitclaims in een marketingcontext. */}
+        <section
+          aria-labelledby="home-faq-heading"
+          style={{
+            position: 'relative', zIndex: 10,
+            background: '#04040a', borderTop: '1px solid rgba(255,255,255,0.06)',
+            padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 80px)',
+          }}
+        >
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(homeFaqJsonLd) }}
+          />
+          <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+            <h2
+              id="home-faq-heading"
+              style={{
+                fontFamily: 'General Sans, sans-serif', fontWeight: 700,
+                fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', letterSpacing: '-0.02em',
+                color: '#fff', margin: '0 0 28px',
+              }}
+            >
+              Frequently asked questions
+            </h2>
+            {homeFaq.map((f) => (
+              <div key={f.q} style={{ padding: '20px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <h3 style={{
+                  fontFamily: 'General Sans, sans-serif', fontWeight: 600,
+                  fontSize: '1.05rem', color: '#fff', margin: '0 0 10px', lineHeight: 1.35,
+                }}>
+                  {f.q}
+                </h3>
+                <p style={{
+                  fontFamily: 'General Sans, sans-serif', fontWeight: 400,
+                  fontSize: '0.98rem', lineHeight: 1.65, color: 'rgba(255,255,255,0.66)', margin: 0,
+                }}>
+                  {f.a}
+                </p>
+              </div>
+            ))}
+            <p style={{
+              fontFamily: 'General Sans, sans-serif', fontWeight: 400, fontSize: '0.9rem',
+              color: 'rgba(255,255,255,0.5)', margin: '24px 0 0',
+            }}>
+              The full FAQ goes deeper on seed phrases, Token-2022 accounts, wallets and fees.{' '}
+              <a href="/faq" style={{ color: '#14F195', textDecoration: 'none' }}>Read the FAQ</a>.
             </p>
           </div>
         </section>
