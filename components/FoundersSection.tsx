@@ -26,9 +26,9 @@ export default function FoundersSection() {
     <section className="founders-section" aria-labelledby="founders-heading">
       <div className="founders-inner">
         <p className="founders-eyebrow">About the founders</p>
-        <h2 id="founders-heading" className="founders-title">
+        <h1 id="founders-heading" className="founders-title">
           We were here before this was a career.
-        </h2>
+        </h1>
         <p className="founders-lede">
           SolanaSweeper is built by two people who have been in this space since before it had
           one. <b>Paul since 2016, Frank since 2017.</b>
@@ -44,7 +44,7 @@ export default function FoundersSection() {
                 <img src={f.img} alt={f.alt} width={100} height={100} />
               </div>
               <div className="founders-who">
-                <h3>{f.name}</h3>
+                <h2>{f.name}</h2>
                 <p>{f.blurb}</p>
                 <span className="founders-chip">{f.chip}</span>
               </div>
