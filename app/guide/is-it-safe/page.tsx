@@ -22,7 +22,7 @@ export default function Page() {
         questions.
       </p>
 
-      <h2>What closing an account actually does</h2>
+      <h2>What does closing an account actually do?</h2>
       <p>
         An empty token account holds no tokens. Closing it does one thing: it returns the rent
         deposit to your wallet and removes the account from the chain. Nothing is destroyed, because
@@ -33,7 +33,7 @@ export default function Page() {
         rent to your wallet.
       </p>
 
-      <h2>What a non-custodial tool can and can&apos;t do</h2>
+      <h2>What can a non-custodial tool not do?</h2>
       <p>
         A non-custodial tool never holds your keys. It builds a transaction and asks you to sign it.
         That means:
@@ -47,7 +47,7 @@ export default function Page() {
         The signature is the boundary. Everything a tool does happens because you approved it.
       </p>
 
-      <h2>Where the real risks are</h2>
+      <h2>Where are the real risks?</h2>
       <p>The danger isn&apos;t the operation. It&apos;s the tool, and how you got to it.</p>
       <p>
         <strong>Fake sites.</strong>{' '}The most common attack. Someone clones a popular cleaner,
@@ -65,7 +65,7 @@ export default function Page() {
         you&apos;re unsure what something is, look it up on Solscan before you destroy it.
       </p>
 
-      <h2>The rule that covers most of it</h2>
+      <h2>What is the one rule that covers most of it?</h2>
       <p>
         <strong>Don&apos;t trust, verify.</strong>{' '}Check the URL. Read the transaction.
         Understand what you&apos;re signing.

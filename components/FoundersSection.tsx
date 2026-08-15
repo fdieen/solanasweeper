@@ -27,7 +27,7 @@ export default function FoundersSection() {
       <div className="founders-inner">
         <p className="founders-eyebrow">About the founders</p>
         <h1 id="founders-heading" className="founders-title">
-          We were here before this was a career.
+          Who builds SolanaSweeper?
         </h1>
         <p className="founders-lede">
           SolanaSweeper is built by two people who have been in this space since before it had

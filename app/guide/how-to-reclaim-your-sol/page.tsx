@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <GuideArticle article={article}>
-      <h2>Manually, using Solana&apos;s CLI</h2>
+      <h2>Can I do it myself with the Solana CLI?</h2>
       <p>
         If you&apos;re comfortable with a terminal, you don&apos;t need a tool. Solana&apos;s own
         command-line interface can find and close empty token accounts.
@@ -32,7 +32,7 @@ export default function Page() {
         people.
       </p>
 
-      <h2>Through your wallet</h2>
+      <h2>Can my wallet do it?</h2>
       <p>
         Some wallets have started adding account cleanup. Check your wallet&apos;s settings before
         reaching for a tool.
@@ -42,7 +42,7 @@ export default function Page() {
         most wallets only handle simple cases.
       </p>
 
-      <h2>With a wallet cleaner</h2>
+      <h2>What does a wallet cleaner add?</h2>
       <p>
         Tools scan your wallet, find closeable accounts, and batch the close instructions into one
         or a few transactions. You review and sign; the tool never holds your keys.
@@ -52,7 +52,7 @@ export default function Page() {
         fee, taken from the reclaimed SOL. Fees vary between tools, from roughly 2% to 20%.
       </p>
 
-      <h2>What to check before you use any tool</h2>
+      <h2>What should I check before using any tool?</h2>
       <ul>
         <li>
           <strong>The URL.</strong>{' '}Fake versions of popular cleaners exist. Type it, don&apos;t

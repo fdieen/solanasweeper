@@ -21,7 +21,7 @@ export default function Page() {
         won&apos;t come back, no matter which tool you use.
       </p>
 
-      <h2>Accounts with a balance, even a tiny one</h2>
+      <h2>Why can&apos;t I close an account with a balance?</h2>
       <p>
         A token account must be completely empty to close. A balance of 0.000001 tokens blocks it.
         Dust like this is common, especially from failed swaps or spam airdrops.
@@ -31,7 +31,7 @@ export default function Page() {
         transferring it away or burning it. Burning is permanent.
       </p>
 
-      <h2>Accounts where close authority was delegated</h2>
+      <h2>What if close authority was delegated?</h2>
       <p>
         Normally the account owner can close it. But close authority can be assigned to another
         address. If that happened, you can&apos;t close the account yourself, even though it&apos;s
@@ -39,14 +39,14 @@ export default function Page() {
       </p>
       <p>This is rare, but it exists.</p>
 
-      <h2>Compressed NFTs</h2>
+      <h2>Why don&apos;t compressed NFTs count?</h2>
       <p>
         Compressed NFTs (cNFTs) don&apos;t hold a rent deposit the way standard NFTs do. They live
         in a Merkle tree, not in individual accounts. Burning them returns little or nothing.
       </p>
       <p>If a tool implies you&apos;ll recover meaningful SOL from cNFTs, be skeptical.</p>
 
-      <h2>Accounts an app is using</h2>
+      <h2>What about accounts an app is using?</h2>
       <p>
         Some DeFi protocols use token accounts as escrow or as temporary holding accounts for open
         positions. Closing one of these can break a withdrawal later.
@@ -56,7 +56,8 @@ export default function Page() {
         recognize.
       </p>
 
-      <h2>Metadata accounts</h2>
+      <h2>Can I close metadata accounts?</h2>
+      <p>Sometimes — the token account closes normally, but the metadata account behind an NFT needs a separate instruction that many tools skip.</p>
       <p>
         An NFT creates more than one account. The token account holds the rent, but there&apos;s
         also a metadata account. Most cleaners close the token account only, which returns about
