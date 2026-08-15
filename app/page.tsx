@@ -5,6 +5,37 @@ import HelpBot from '@/components/HelpBot';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import WalletScan from '@/components/WalletScan';
 import WalletPreview from '@/components/WalletPreview';
+import { Fragment } from 'react';
+import { FEE_PERCENT } from '@/lib/pricing';
+
+// Answer-first content onder de hero — kop = vraag, eerste zin = antwoord, met één
+// contextuele link per sectie. Volgorde: rent, amount, safety, cost (referral staat lager).
+const answers = [
+  {
+    q: 'What is the SOL locked in my token accounts?',
+    answer: 'It is rent: a deposit Solana charges to store each token account on-chain, roughly 0.00204 SOL per account.',
+    detail: 'Every token you have ever received opened its own account and locked that deposit. Selling the token does not give it back. The empty account sits there holding your SOL until someone closes it. It is not an airdrop or a reward, it is money you already paid.',
+    link: { text: 'What is rent on Solana?', href: '/guide/what-is-rent-on-solana' },
+  },
+  {
+    q: 'How much can I reclaim?',
+    answer: 'About 0.00204 SOL per empty account, so a wallet with 100 dead accounts is holding roughly 0.2 SOL.',
+    detail: 'Airdrop farmers, memecoin traders and anyone who has been on Solana for a while tend to have far more of these than they expect. Paste any address into the scanner and see the real number before deciding anything. The scan is read-only and needs no wallet connection.',
+    link: { text: 'Scan a wallet', href: '/' },
+  },
+  {
+    q: 'Is it safe to close token accounts?',
+    answer: 'Yes. Solana refuses to close any account that still holds a balance, so tokens you own cannot be touched.',
+    detail: 'SolanaSweeper is non-custodial and has no smart contract of its own. Every instruction in your transaction belongs to Solana itself, and nothing happens until you sign it in your own wallet. We never see your keys and never ask for your seed phrase.',
+    link: { text: 'Read the safety page', href: '/safety' },
+  },
+  {
+    q: 'What does SolanaSweeper cost?',
+    answer: `${FEE_PERCENT}% of the SOL you reclaim, taken from the amount returned. Nothing up front, and nothing at all if there is nothing to reclaim.`,
+    detail: 'The fee is a plain transfer inside the same transaction you approve, so you see the exact amount before signing. On a typical account you keep about 0.00184 SOL of the 0.00204 recovered.',
+    link: { text: 'See how it works', href: '/how-it-works' },
+  },
+];
 
 export default function Home() {
   return (
@@ -60,9 +91,10 @@ export default function Home() {
                 lineHeight: 1.65,
                 color: 'rgba(255,255,255,0.62)',
                 margin: 0,
-                maxWidth: '340px',
+                maxWidth: '380px',
               }}>
-                Close empty token accounts, reclaim locked SOL, and clean your wallet in one click.
+                Every token you have ever held left about 0.00204 SOL behind in an empty account.
+                SolanaSweeper closes them and returns the SOL to your wallet.
               </p>
             </div>
 
@@ -139,6 +171,28 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Answer-first content — de substance vóór de referral. Elke kop is een vraag,
+            de eerste zin is het antwoord, met één contextuele link per sectie. */}
+        <section style={{
+          position: 'relative', zIndex: 10,
+          background: '#04040a', borderTop: '1px solid rgba(255,255,255,0.06)',
+          padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 80px)',
+        }}>
+          <div className="guide-prose" style={{ maxWidth: '720px', margin: '0 auto' }}>
+            {answers.map((a) => (
+              <Fragment key={a.q}>
+                <h2>{a.q}</h2>
+                <p>{a.answer}</p>
+                <p>{a.detail}</p>
+                <p style={{ margin: '0 0 8px' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.3)' }}>→ </span>
+                  <a href={a.link.href}>{a.link.text}</a>
+                </p>
+              </Fragment>
+            ))}
+          </div>
+        </section>
+
         {/* Aankondigingsbanner — subtiel, groen accent, direct onder de hero */}
         <a href="/referral" className="ref-banner">
           <span className="ref-banner-tag">New</span>
@@ -153,25 +207,14 @@ export default function Home() {
             <h2 id="ref-heading" className="ref-title">
               Share your link, earn <b>25%</b> of every sweep
             </h2>
-            <p className="ref-lead">
-              Refer wallets to SolanaSweeper and your cut is paid straight to you — inside the sweep
-              transaction itself, on-chain, forever.
+            <p className="ref-lead" style={{ marginBottom: '18px' }}>
+              Refer wallets to SolanaSweeper and 25% of the fee goes straight to you, inside the sweep
+              transaction itself, on-chain, settled immediately.
             </p>
-
-            <div className="ref-points">
-              {[
-                '25% of platform fees, lifetime',
-                'Paid inside the sweep transaction itself, verifiable on-chain',
-                'No connect needed to get your link',
-              ].map((point) => (
-                <div key={point} className="ref-point">
-                  <svg className="ref-point-check" width="18" height="18" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path d="M2 7.5L5.5 11L12 3.5" stroke="#14F195" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="ref-point-text">{point}</span>
-                </div>
-              ))}
-            </div>
+            <p className="ref-lead">
+              There is no claim step and no dashboard to chase. The split happens in the same
+              transaction the sweep does, which means your share arrives at the moment the sweep confirms.
+            </p>
 
             <a href="/referral" className="ref-cta">
               Get your link
