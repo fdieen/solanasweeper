@@ -190,6 +190,10 @@ export default function Home() {
                 </p>
               </Fragment>
             ))}
+            <p style={{ marginTop: '8px' }}>
+              These are the questions people ask most — the <a href="/faq">FAQ</a> goes deeper on seed
+              phrases, Token-2022 accounts, wallets and fees.
+            </p>
           </div>
         </section>
 

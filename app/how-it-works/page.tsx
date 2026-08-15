@@ -56,7 +56,7 @@ export default function HowItWorks() {
 
           <h2>How much SOL will I get back?</h2>
           <p>{`About 0.00204 SOL per empty account, minus our ${FEE_PERCENT}% fee and the network fee.`}</p>
-          <p>The scanner shows you the exact total before you sign anything. A wallet with 100 dead accounts is holding roughly 0.2 SOL. Token-2022 accounts with extensions can hold slightly more.</p>
+          <p>The scanner shows you the exact total before you sign anything. A wallet with 100 dead accounts is holding roughly 0.2 SOL. Token-2022 accounts with extensions can hold slightly more, and the <a href="/faq">FAQ</a> breaks down the fee math in detail.</p>
 
           <h2>How many transactions do I have to sign?</h2>
           <p>Usually far fewer than you have accounts, because closes are batched together.</p>
@@ -64,7 +64,7 @@ export default function HowItWorks() {
 
           <h2>What can I reclaim besides empty accounts?</h2>
           <p>Pro Mode adds burning junk tokens and NFTs, and swapping leftovers through Jupiter.</p>
-          <p>Burning is deliberately separate from closing. Fun Mode only touches accounts that are already empty, so nothing you own can be destroyed by accident. Pro Mode is where you choose to clear out dust and spam, and it asks you to confirm before anything is burned.</p>
+          <p>Burning is deliberately separate from closing. Fun Mode only touches accounts that are already empty, so nothing you own can be destroyed by accident. Pro Mode is where you choose to clear out dust and spam, and it asks you to confirm before anything is burned. That separation is a deliberate choice — see <a href="/founders">who builds SolanaSweeper</a>.</p>
         </div>
 
         {/* Related — minstens twee andere pagina's + de scanner */}

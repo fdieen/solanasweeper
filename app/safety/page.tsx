@@ -101,7 +101,7 @@ export default function Safety() {
 
           <h2>Can I read the code?</h2>
           <p>Yes. The source is public at <a href="https://github.com/fdieen/solanasweeper" target="_blank" rel="noopener noreferrer">github.com/fdieen/solanasweeper</a> under an MIT license.</p>
-          <p>You do not have to take our word for what the app does. Read it, or watch the transaction in your own wallet, or both.</p>
+          <p>You do not have to take our word for what the app does. Read it, watch the transaction in your own wallet, or see <a href="/founders">who builds it</a>.</p>
         </div>
 
         {/* Related — elke pagina linkt naar minstens twee andere + de scanner */}
