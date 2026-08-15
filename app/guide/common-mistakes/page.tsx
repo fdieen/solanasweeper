@@ -29,7 +29,7 @@ export default function Page() {
       </p>
 
       <h2>How do I know the URL is real?</h2>
-      <p>Type the address yourself or open it from your own bookmark — never a link in a DM, ad, or search result.</p>
+      <p>Type the address yourself or open it from your own bookmark. Never a link in a DM, ad, or search result.</p>
       <p>
         This bears repeating because it&apos;s how people lose wallets. Fake cleaner sites exist and
         have caught users. If you only take one thing from this guide, take{' '}

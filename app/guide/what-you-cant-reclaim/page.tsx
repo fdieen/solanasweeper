@@ -57,7 +57,7 @@ export default function Page() {
       </p>
 
       <h2>Can I close metadata accounts?</h2>
-      <p>Sometimes — the token account closes normally, but the metadata account behind an NFT needs a separate instruction that many tools skip.</p>
+      <p>Sometimes. The token account closes normally, but the metadata account behind an NFT needs a separate instruction that many tools skip.</p>
       <p>
         An NFT creates more than one account. The token account holds the rent, but there&apos;s
         also a metadata account. Most cleaners close the token account only, which returns about
