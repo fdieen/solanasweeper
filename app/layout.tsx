@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: "%s · SolanaSweeper",
   },
   description:
-    "SolanaSweeper is a non-custodial Solana dApp that cleans your wallet. Close empty token accounts, burn junk tokens and NFTs, and reclaim locked SOL in one click.",
+    `Non-custodial Solana wallet cleaner. Close empty token accounts and reclaim locked SOL rent. ${FEE_PERCENT}% fee, no smart contract of its own.`,
   applicationName: "SolanaSweeper",
   keywords: [
     "Solana",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     siteName: "SolanaSweeper",
     title: "SolanaSweeper · Reclaim Your SOL",
     description:
-      "Clean your Solana wallet. Close empty token accounts, burn junk, and reclaim locked SOL in one click. Non-custodial — you sign every transaction.",
+      `SolanaSweeper is a non-custodial Solana dApp that closes empty SPL Token and Token-2022 accounts and returns the locked rent deposit (~0.00204 SOL per account) to your wallet. It has no smart contract of its own. It only builds instructions to Solana's SPL Token Program. The fee is ${FEE_PERCENT}% of reclaimed rent, taken only from SOL you successfully recover.`,
     locale: "en_US",
     // Statische PNG in /public i.p.v. een dynamische edge-route: die gaf 0 bytes
     // terug, waardoor de X/OG-card leeg bleef. Statisch is betrouwbaar voor crawlers.
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SolanaSweeper · Reclaim Your SOL",
     description:
-      "Clean your Solana wallet. Close empty token accounts, burn junk, and reclaim locked SOL in one click.",
+      `Non-custodial Solana wallet cleaner. Close empty token accounts and reclaim locked SOL rent. ${FEE_PERCENT}% fee, no smart contract of its own.`,
     images: [`${SITE_URL}/og.png`],
   },
   robots: {
@@ -85,7 +85,7 @@ const jsonLd = {
       url: SITE_URL,
       name: "SolanaSweeper",
       description:
-        "Non-custodial Solana wallet cleaner. Reclaim locked SOL from empty token accounts.",
+        `Non-custodial Solana wallet cleaner. Close empty token accounts and reclaim locked SOL rent. ${FEE_PERCENT}% fee, no smart contract of its own.`,
     },
     {
       "@type": "Organization",
@@ -101,7 +101,7 @@ const jsonLd = {
       operatingSystem: "Web",
       url: SITE_URL,
       description:
-        "Clean your Solana wallet: close empty token accounts, burn junk tokens and NFTs, and reclaim locked SOL. Swaps powered by Jupiter.",
+        `SolanaSweeper is a non-custodial Solana dApp that closes empty SPL Token and Token-2022 accounts and returns the locked rent deposit (~0.00204 SOL per account) to your wallet. It has no smart contract of its own. It only builds instructions to Solana's SPL Token Program. The fee is ${FEE_PERCENT}% of reclaimed rent, taken only from SOL you successfully recover.`,
       // Geen vaste prijs: gratis in gebruik, maar we houden FEE_PERCENT% van de
       // gereclaimde SOL in. price:"0" was feitelijk onjuist → fee expliciet gedeclareerd.
       offers: {
