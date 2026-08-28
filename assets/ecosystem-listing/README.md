@@ -29,6 +29,28 @@ dat je hem zonder verbinding kunt gebruiken.
 Rendermethode: `shoot-static.js`, bewust buiten de repo gehouden zodat Playwright
 niet in de dependencies van de app belandt.
 
+### Gecomprimeerde versies voor uploadformulieren
+
+Naast elke PNG staat een `-compressed.jpg` met dezelfde afmetingen, voor formulieren
+met een uploadlimiet. De PNG's blijven het origineel.
+
+| bestand | formaat | PNG | JPG |
+| --- | --- | --- | --- |
+| `01-homepage-hero` | 2880x1520 | 2,3 MB | 328 KB |
+| `02-how-it-works` | 2880x1800 | 2,3 MB | 332 KB |
+| `03-safety-non-custodial` | 2880x1800 | 2,2 MB | 322 KB |
+
+JPEG kwaliteit 90, progressive, zonder chroma-subsampling (4:4:4) zodat de groene
+tekst en accenten scherp blijven. Geen PNG-variant: er is geen pngquant of oxipng
+op deze machine, en PNG8 via PIL haalde de 500 KB niet voor twee van de drie
+(642 en 484 KB bij 128 kleuren) én bandeert de verlopen zichtbaar.
+
+Opnieuw genereren kan met PIL:
+
+```python
+src.save(out, 'JPEG', quality=90, optimize=True, progressive=True, subsampling=0)
+```
+
 ## Logo
 
 `solanasweeper-logo-250x250.png` — 250x250, geschaald uit `youtube-avatar-800x800.png`
