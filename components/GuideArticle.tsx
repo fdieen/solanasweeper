@@ -18,9 +18,16 @@ const linkStyle = { color: 'rgba(255,255,255,0.85)', textDecoration: 'none' } as
  */
 export default function GuideArticle({
   article,
+  richProse = false,
   children,
 }: {
   article: GuideArticle;
+  /**
+   * Zet .blog-prose erbij: styling voor <table> (in een .table-wrap die op mobiel
+   * horizontaal scrollt) en <pre>-codeblokken, bovenop de guide-typografie. Standaard
+   * uit, zodat de guides zonder tabel of codeblok niets van deze regels meekrijgen.
+   */
+  richProse?: boolean;
   children: React.ReactNode;
 }) {
   const { index, total, prev, next } = getGuideNav(article.slug);
@@ -87,8 +94,8 @@ export default function GuideArticle({
           {article.excerpt}
         </p>
 
-        {/* Body — alleen semantische h2/h3, p, ul */}
-        <div className="guide-prose">{children}</div>
+        {/* Body — alleen semantische h2/h3, p, ul (+ table/pre met richProse) */}
+        <div className={richProse ? 'guide-prose blog-prose' : 'guide-prose'}>{children}</div>
 
         {/* Prev / next binnen de guide */}
         {(prev || next) && (
