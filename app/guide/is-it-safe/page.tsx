@@ -24,9 +24,10 @@ export default function Page() {
 
       <h2>What does closing an account actually do?</h2>
       <p>
-        An empty token account holds no tokens. Closing it does one thing: it returns the rent
-        deposit to your wallet and removes the account from the chain. Nothing is destroyed, because
-        there was nothing in it. Your transaction history is unaffected.
+        An empty token account holds no tokens. Closing it does one thing: it returns{' '}
+        <a href="/guide/what-is-rent-on-solana">the rent deposit Solana locked when the account
+        was created</a>{' '}to your wallet and removes the account from the chain. Nothing is
+        destroyed, because there was nothing in it. Your transaction history is unaffected.
       </p>
       <p>
         Solana&apos;s own documentation describes it plainly: closing an empty account returns the
@@ -62,7 +63,9 @@ export default function Page() {
       <p>
         <strong>Burning the wrong thing.</strong>{' '}Closing empty accounts is safe. Burning tokens
         and NFTs is permanent. Any tool that offers burning should make you confirm explicitly. If
-        you&apos;re unsure what something is, look it up on Solscan before you destroy it.
+        you&apos;re unsure what something is, look it up on Solscan before you destroy it. Burning
+        is also the only route to closing an account that still holds a balance, and{' '}
+        <a href="/guide/what-you-cant-reclaim">some accounts stay locked even after you burn</a>.
       </p>
 
       <h2>What is the one rule that covers most of it?</h2>
@@ -70,7 +73,11 @@ export default function Page() {
         <strong>Don&apos;t trust, verify.</strong>{' '}Check the URL. Read the transaction.
         Understand what you&apos;re signing.
       </p>
-      <p>That advice is boring, and it&apos;s why it works.</p>
+      <p>
+        That advice is boring, and it&apos;s why it works. It also covers most of{' '}
+        <a href="/guide/common-mistakes">the five mistakes people make when cleaning a
+        wallet</a>.
+      </p>
     </GuideArticle>
   );
 }

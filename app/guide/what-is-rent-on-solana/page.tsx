@@ -67,6 +67,11 @@ export default function Page() {
         through a cycle often has dozens, sometimes hundreds. The accounts accumulate quietly, one
         per token, and nothing in your wallet interface tells you they&apos;re there.
       </p>
+      <p>
+        Not all of it comes back, though.{' '}
+        <a href="/guide/what-you-cant-reclaim">Dust balances, delegated close authority and
+        compressed NFTs</a>{' '}keep their deposit locked no matter which tool you point at them.
+      </p>
 
       <h2>How do I get my rent back?</h2>
       <p>
@@ -75,8 +80,12 @@ export default function Page() {
         account owner.
       </p>
       <p>
-        For the different ways to do it, see{' '}
-        <a href="/guide/how-to-reclaim-your-sol">how to reclaim your SOL</a>.
+        There are{' '}
+        <a href="/guide/how-to-reclaim-your-sol">three ways to close token accounts</a>: the
+        Solana CLI, your wallet, or a cleaner that batches them. If you want to know what you
+        are signing before you pick one,{' '}
+        <a href="/guide/is-it-safe">what closing a token account actually does</a>{' '}walks
+        through the instruction itself.
       </p>
 
       <h2>Is reclaimed rent free money?</h2>
@@ -91,6 +100,11 @@ export default function Page() {
         meaningful amounts are the ones with hundreds of accounts from years of trading.
       </p>
       <p>Anyone promising more than that is selling you something.</p>
+      <p>
+        Which makes the downside worth more attention than the upside:{' '}
+        <a href="/guide/common-mistakes">the mistakes that cost people SOL, or their whole
+        wallet</a>{' '}are all avoidable, and none of them are about the amount.
+      </p>
     </GuideArticle>
   );
 }

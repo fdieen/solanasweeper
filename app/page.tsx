@@ -280,8 +280,11 @@ export default function Home() {
               fontFamily: 'General Sans, sans-serif', fontWeight: 400, fontSize: '0.9rem',
               color: 'rgba(255,255,255,0.5)', margin: '24px 0 0',
             }}>
-              The full FAQ goes deeper on seed phrases, Token-2022 accounts, wallets and fees.{' '}
-              <a href="/faq" style={{ color: '#14F195', textDecoration: 'none' }}>Read the FAQ</a>.
+              Twelve more answers in{' '}
+              <a href="/faq" style={{ color: '#14F195', textDecoration: 'none' }}>
+                the full Solana rent and token account FAQ
+              </a>
+              , covering seed phrases, Token-2022 accounts, supported wallets and the fee math.
             </p>
           </div>
         </section>

@@ -19,7 +19,9 @@ export default function Page() {
       <h2>Can I do it myself with the Solana CLI?</h2>
       <p>
         If you&apos;re comfortable with a terminal, you don&apos;t need a tool. Solana&apos;s own
-        command-line interface can find and close empty token accounts.
+        command-line interface can find and close empty token accounts, which returns{' '}
+        <a href="/guide/what-is-rent-on-solana">the rent deposit each one locked when it was
+        created</a>.
       </p>
       <p>
         The commands are <code>spl-token accounts</code>{' '}to list them and{' '}
@@ -45,7 +47,10 @@ export default function Page() {
       <h2>What does a wallet cleaner add?</h2>
       <p>
         Tools scan your wallet, find closeable accounts, and batch the close instructions into one
-        or a few transactions. You review and sign; the tool never holds your keys.
+        or a few transactions. You review and sign; the tool never holds your keys. Expect the
+        count to be lower than your account total, because{' '}
+        <a href="/guide/what-you-cant-reclaim">dust, cNFTs and in-use accounts</a>{' '}are not
+        closeable at all.
       </p>
       <p>
         <strong>Trade-off:</strong>{' '}fastest option, handles hundreds of accounts. Tools charge a
@@ -61,7 +66,7 @@ export default function Page() {
         <li>
           <strong>Non-custodial.</strong>{' '}The tool should never ask for your seed phrase or
           private key. It should only request a signature on a transaction you can review.{' '}
-          <a href="/guide/is-it-safe">More on what that means</a>.
+          <a href="/guide/is-it-safe">What a non-custodial tool can and cannot do</a>.
         </li>
         <li>
           <strong>Read the transaction before signing.</strong>{' '}Your wallet shows you exactly
@@ -70,7 +75,9 @@ export default function Page() {
         <li>
           <strong>Start with the safe mode.</strong>{' '}Most tools separate &ldquo;close empty
           accounts&rdquo; (reversible in the sense that nothing is destroyed) from &ldquo;burn
-          tokens and NFTs&rdquo; (permanent). Begin with the first.
+          tokens and NFTs&rdquo; (permanent). Begin with the first, and read{' '}
+          <a href="/guide/common-mistakes">the mistakes that cost people SOL</a>{' '}before you
+          touch the second.
         </li>
       </ul>
     </GuideArticle>

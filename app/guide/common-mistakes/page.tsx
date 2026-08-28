@@ -25,7 +25,9 @@ export default function Page() {
       <h2>Why verify before burning?</h2>
       <p>
         Spam tokens sometimes mimic the names of real projects. Check the mint address on Solscan
-        before you destroy anything.
+        before you destroy anything. Burning is the only way to empty a dust balance, and{' '}
+        <a href="/guide/what-you-cant-reclaim">not every account gives its deposit back even
+        then</a>.
       </p>
 
       <h2>How do I know the URL is real?</h2>
@@ -38,8 +40,10 @@ export default function Page() {
 
       <h2>How much should I actually expect back?</h2>
       <p>
-        For most wallets, the total is under 0.1 SOL. Useful, but modest. Anyone promising more is
-        selling something.
+        For most wallets, the total is under 0.1 SOL. Useful, but modest. It works out at{' '}
+        <a href="/guide/what-is-rent-on-solana">roughly 0.00204 SOL per empty account</a>, so the
+        total says more about how long you have been trading than about the tool. Anyone promising
+        more is selling something.
       </p>
 
       <h2>Why not skip the safe mode?</h2>

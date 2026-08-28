@@ -18,7 +18,8 @@ export default function Page() {
     <GuideArticle article={article}>
       <p>
         Most guides tell you what a tool does. Fewer tell you what it doesn&apos;t. Here&apos;s what
-        won&apos;t come back, no matter which tool you use.
+        won&apos;t come back, no matter which tool you use — the exceptions to{' '}
+        <a href="/guide/what-is-rent-on-solana">the rent deposit every account holds</a>.
       </p>
 
       <h2>Why can&apos;t I close an account with a balance?</h2>
@@ -28,7 +29,9 @@ export default function Page() {
       </p>
       <p>
         To close the account, you first have to get rid of the balance. That means either
-        transferring it away or burning it. Burning is permanent.
+        transferring it away or burning it. Burning is permanent, which is why{' '}
+        <a href="/guide/common-mistakes">checking the mint on Solscan before you burn</a>{' '}is
+        worth the thirty seconds.
       </p>
 
       <h2>What if close authority was delegated?</h2>
@@ -66,7 +69,9 @@ export default function Page() {
       </p>
       <p>
         This is why estimates of &ldquo;how much you get back per NFT&rdquo; vary between tools.
-        Check what a tool actually closes.
+        Check what a tool actually closes — and for the accounts that do qualify,{' '}
+        <a href="/guide/how-to-reclaim-your-sol">the three ways to close them</a>{' '}differ mostly
+        in effort and fee.
       </p>
     </GuideArticle>
   );
