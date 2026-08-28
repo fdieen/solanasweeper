@@ -8,7 +8,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Links — SolanaSweeper",
+  // absolute: de titel draagt het merk al, anders plakt de root-template er een
+  // tweede "· SolanaSweeper" achter.
+  title: { absolute: "Links — SolanaSweeper" },
   description:
     "All official SolanaSweeper links. Reclaim the SOL locked in your empty token accounts.",
   alternates: { canonical: "/links" },

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FaqSchema } from "@/components/StructuredData";
 
 export const metadata: Metadata = {
   title: { absolute: "Solana Rent & Token Account FAQ — 12 Common Questions · SolanaSweeper" },
@@ -13,6 +14,14 @@ export const metadata: Metadata = {
   },
 };
 
+// Het FAQPage-schema staat hier en niet in page.tsx: die is een client component,
+// terwijl de layout server-side is. Beide lezen FAQS uit lib/faq, dus de structured
+// data blijft woordelijk gelijk aan de zichtbare antwoorden.
 export default function FaqLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <FaqSchema />
+      {children}
+    </>
+  );
 }

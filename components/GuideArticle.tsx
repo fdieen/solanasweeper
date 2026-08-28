@@ -1,5 +1,6 @@
 import InnerLayout from './InnerLayout';
-import { GUIDE_ARTICLES, getGuideNav, SITE_URL, type GuideArticle } from '@/lib/guide';
+import { GUIDE_ARTICLES, getGuideNav, type GuideArticle } from '@/lib/guide';
+import { GuideSchema } from './StructuredData';
 
 const guideBg = `
   radial-gradient(ellipse 70% 45% at 50% 0%, rgba(50,26,95,0.20) 0%, transparent 62%),
@@ -11,9 +12,9 @@ const linkStyle = { color: 'rgba(255,255,255,0.85)', textDecoration: 'none' } as
 
 /**
  * Herbruikbare, rustige leeslayout voor /guide/<slug>.
- * Levert de enige <h1> (de body gebruikt alleen <h2>/<h3>), de Article-JSON-LD,
- * semantische structuur (article/header/nav/section), prev/next-navigatie en
- * interne links naar de rest van de guide.
+ * Levert de enige <h1> (de body gebruikt alleen <h2>/<h3>), semantische structuur
+ * (article/header/nav/section), prev/next-navigatie en interne links naar de rest
+ * van de guide. Het schema komt uit components/StructuredData.
  */
 export default function GuideArticle({
   article,
@@ -22,34 +23,11 @@ export default function GuideArticle({
   article: GuideArticle;
   children: React.ReactNode;
 }) {
-  const url = `${SITE_URL}/guide/${article.slug}`;
   const { index, total, prev, next } = getGuideNav(article.slug);
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: article.title,
-    description: article.description,
-    datePublished: article.datePublished,
-    dateModified: article.dateModified,
-    author: { '@type': 'Organization', name: 'SolanaSweeper', url: SITE_URL },
-    publisher: {
-      '@type': 'Organization',
-      name: 'SolanaSweeper',
-      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.svg` },
-    },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-    isPartOf: { '@type': 'CreativeWork', name: 'The SolanaSweeper Guide', url: `${SITE_URL}/guide` },
-    image: `${SITE_URL}/og.png`,
-    inLanguage: 'en',
-  };
 
   return (
     <InnerLayout bg={guideBg}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <GuideSchema article={article} />
 
       <article
         style={{

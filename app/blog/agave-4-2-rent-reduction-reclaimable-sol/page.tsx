@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import InnerLayout from '@/components/InnerLayout';
 import { getBlog, SITE_URL } from '@/lib/blog';
+import { BlogPostSchema } from '@/components/StructuredData';
 
 const article = getBlog('agave-4-2-rent-reduction-reclaimable-sol')!;
-const url = `${SITE_URL}/blog/${article.slug}`;
 
 export const metadata: Metadata = {
   title: article.title,
@@ -26,24 +26,6 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: article.title,
-  description: article.description,
-  datePublished: article.datePublished,
-  dateModified: article.datePublished,
-  author: { '@type': 'Organization', name: 'SolanaSweeper', url: SITE_URL },
-  publisher: {
-    '@type': 'Organization',
-    name: 'SolanaSweeper',
-    logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.svg` },
-  },
-  mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-  image: `${SITE_URL}/og.png`,
-  inLanguage: 'en',
-};
-
 const blogBg = `
   radial-gradient(ellipse 70% 45% at 50% 0%, rgba(50,26,95,0.20) 0%, transparent 62%),
   radial-gradient(ellipse 45% 34% at 8% 5%, rgba(153,69,255,0.14) 0%, transparent 55%),
@@ -62,7 +44,7 @@ function Ref({ href, children }: { href: string; children: React.ReactNode }) {
 export default function BlogAgaveRentReduction() {
   return (
     <InnerLayout bg={blogBg}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BlogPostSchema article={article} />
 
       <article
         style={{

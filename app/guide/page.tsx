@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import InnerLayout from '@/components/InnerLayout';
-import { GUIDE_ARTICLES, SITE_URL } from '@/lib/guide';
+import { GUIDE_ARTICLES } from '@/lib/guide';
+import { GuideIndexSchema } from '@/components/StructuredData';
 
 export const metadata: Metadata = {
   title: 'The Guide to Reclaiming Locked SOL on Solana',
@@ -16,24 +17,6 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  '@id': `${SITE_URL}/guide`,
-  url: `${SITE_URL}/guide`,
-  name: 'The SolanaSweeper Guide',
-  description: 'A plain-English guide to Solana rent and reclaiming locked SOL.',
-  mainEntity: {
-    '@type': 'ItemList',
-    itemListElement: GUIDE_ARTICLES.map((a, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      url: `${SITE_URL}/guide/${a.slug}`,
-      name: a.h1,
-    })),
-  },
-};
-
 export default function GuideIndex() {
   return (
     <InnerLayout bg={`
@@ -41,7 +24,7 @@ export default function GuideIndex() {
       radial-gradient(ellipse 46% 34% at 10% 6%, rgba(153,69,255,0.15) 0%, transparent 55%),
       radial-gradient(ellipse 44% 30% at 92% 10%, rgba(20,241,149,0.09) 0%, transparent 55%)
     `}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <GuideIndexSchema />
 
       <article style={{ maxWidth: '720px', margin: '0 auto', padding: 'clamp(100px, 14vw, 156px) clamp(24px, 6vw, 32px) 80px' }}>
         <header>

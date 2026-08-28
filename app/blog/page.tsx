@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import InnerLayout from '@/components/InnerLayout';
 import { BLOG_ARTICLES, SITE_URL } from '@/lib/blog';
+import { BlogIndexSchema } from '@/components/StructuredData';
 
 export const metadata: Metadata = {
   title: { absolute: 'Solana Rent, Dust & Wallet Cleanup — Blog · SolanaSweeper' },
@@ -22,24 +23,6 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  '@id': `${SITE_URL}/blog`,
-  url: `${SITE_URL}/blog`,
-  name: 'The SolanaSweeper Blog',
-  description: 'Notes on Solana rent and reclaiming locked SOL.',
-  mainEntity: {
-    '@type': 'ItemList',
-    itemListElement: BLOG_ARTICLES.map((a, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      url: `${SITE_URL}/blog/${a.slug}`,
-      name: a.title,
-    })),
-  },
-};
-
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -57,7 +40,7 @@ export default function BlogIndex() {
       radial-gradient(ellipse 46% 34% at 10% 6%, rgba(153,69,255,0.15) 0%, transparent 55%),
       radial-gradient(ellipse 44% 30% at 92% 10%, rgba(20,241,149,0.09) 0%, transparent 55%)
     `}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BlogIndexSchema />
 
       <article style={{ maxWidth: '720px', margin: '0 auto', padding: 'clamp(100px, 14vw, 156px) clamp(24px, 6vw, 32px) 80px' }}>
         <header>

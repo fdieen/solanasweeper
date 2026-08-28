@@ -6,6 +6,7 @@ import HelpBot from '@/components/HelpBot';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import WalletScan from '@/components/WalletScan';
 import WalletPreview from '@/components/WalletPreview';
+import { HomeSchema } from '@/components/StructuredData';
 import { Fragment } from 'react';
 import { FEE_PERCENT } from '@/lib/pricing';
 
@@ -41,9 +42,10 @@ const answers = [
   },
 ];
 
-// Homepage-FAQ — feitclaims voor AI-vindbaarheid. Zichtbare tekst én de FAQPage
-// JSON-LD komen uit deze ene array, dus ze zijn woordelijk identiek (schema-vereiste).
-// Eén FAQPage per URL: de homepage had er nog geen (die staat verder alleen op /faq).
+// Homepage-FAQ — feitclaims voor AI-vindbaarheid, als zichtbare tekst. Bewust ZONDER
+// FAQPage-schema: dat stond hier én op /faq, wat twee concurrerende FAQPages voor
+// grotendeels dezelfde vragen opleverde. Het schema hoort bij de volledige FAQ; deze
+// sectie is de samenvatting die daarnaartoe doorverwijst.
 const homeFaq = [
   {
     q: `Does SolanaSweeper have its own smart contract?`,
@@ -79,19 +81,11 @@ const homeFaq = [
   },
 ];
 
-const homeFaqJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: homeFaq.map((f) => ({
-    '@type': 'Question',
-    name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a },
-  })),
-};
-
 export default function Home() {
   return (
     <main style={{ minHeight: '100vh', background: '#04040a', display: 'flex', flexDirection: 'column' }}>
+      {/* WebApplication — alleen hier; Organization komt uit de root-layout. */}
+      <HomeSchema />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <Header />
@@ -245,9 +239,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FAQ — feitclaims voor AI-vindbaarheid. Zichtbaar én als FAQPage-schema,
-            beide uit homeFaq zodat ze woordelijk identiek zijn. Vóór de referral: bewijs
-            vóór promo, geen feitclaims in een marketingcontext. */}
+        {/* FAQ — feitclaims voor AI-vindbaarheid. Vóór de referral: bewijs vóór promo,
+            geen feitclaims in een marketingcontext. Het FAQPage-schema staat op /faq. */}
         <section
           aria-labelledby="home-faq-heading"
           style={{
@@ -256,10 +249,6 @@ export default function Home() {
             padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 80px)',
           }}
         >
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(homeFaqJsonLd) }}
-          />
           <div style={{ maxWidth: '720px', margin: '0 auto' }}>
             <h2
               id="home-faq-heading"
