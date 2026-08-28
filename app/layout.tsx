@@ -9,12 +9,14 @@ const SITE_URL = "https://solanasweeper.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // Zoekterm vooraan, merk erachter. Kindpagina's die de generieke term zelf al
+  // vooraan zetten, gebruiken title.absolute i.p.v. deze template.
   title: {
-    default: "SolanaSweeper · Reclaim Your SOL",
+    default: "SolanaSweeper — Reclaim the SOL Locked in Empty Token Accounts",
     template: "%s · SolanaSweeper",
   },
   description:
-    `Non-custodial Solana wallet cleaner. Close empty token accounts and reclaim locked SOL rent. ${FEE_PERCENT}% fee, no smart contract of its own.`,
+    `Close the empty token accounts in your Solana wallet and reclaim the locked rent, about 0.00204 SOL each. Non-custodial, ${FEE_PERCENT}% fee on what you recover.`,
   applicationName: "SolanaSweeper",
   keywords: [
     "Solana",

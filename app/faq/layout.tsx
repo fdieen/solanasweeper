@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FAQ",
+  title: { absolute: "Solana Rent & Token Account FAQ — 12 Common Questions · SolanaSweeper" },
   description:
-    "Frequently asked questions about SolanaSweeper: rent reclaim, safety, fees, Fun Mode vs Pro Mode, supported wallets, and Token-2022 support.",
+    "12 common questions about Solana rent and token accounts: how much you reclaim, whether it is safe, the fee, Token-2022 support and supported wallets.",
   alternates: { canonical: "/faq" },
   openGraph: {
     title: "FAQ · SolanaSweeper",

@@ -4,9 +4,11 @@ import ScannerBot from '@/components/ScannerBot';
 import { FEE_PERCENT } from '@/lib/pricing';
 
 export const metadata: Metadata = {
-  title: 'How does SolanaSweeper work?',
+  // absolute: de zoekterm staat al vooraan en het merk al achteraan, dus niet
+  // nog eens door de "%s · SolanaSweeper"-template van de root-layout heen.
+  title: { absolute: 'How to Close Empty Solana Token Accounts (Step by Step) · SolanaSweeper' },
   description:
-    'SolanaSweeper scans your wallet for empty token accounts, batches them into as few transactions as possible, and returns the locked rent to your balance when you sign.',
+    'Close empty Solana token accounts step by step: scan your wallet, check what is closeable, sign once, and the locked rent lands back in your balance.',
   alternates: { canonical: '/how-it-works' },
 };
 

@@ -3,9 +3,9 @@ import InnerLayout from '@/components/InnerLayout';
 import { BLOG_ARTICLES, SITE_URL } from '@/lib/blog';
 
 export const metadata: Metadata = {
-  title: 'Blog',
+  title: { absolute: 'Solana Rent, Dust & Wallet Cleanup — Blog · SolanaSweeper' },
   description:
-    'Notes on Solana rent, token-account closures, and the mechanics of reclaiming the SOL locked in your wallet.',
+    'Notes on Solana rent, token dust and wallet cleanup: what rent is worth, what Agave 4.2 changes, and how to reclaim the SOL locked in your wallet.',
   alternates: { canonical: '/blog' },
   openGraph: {
     type: 'website',

@@ -4,9 +4,9 @@ import KeyClient from '@/components/KeyClient';
 import { FEE_PERCENT } from '@/lib/pricing';
 
 export const metadata: Metadata = {
-  title: 'Is SolanaSweeper safe to use?',
+  title: { absolute: 'Is It Safe to Close Solana Token Accounts? What You Actually Sign · SolanaSweeper' },
   description:
-    'SolanaSweeper is non-custodial: it never holds your keys, never asks for your seed phrase, and cannot move a lamport without a transaction you sign yourself.',
+    'What you actually sign when closing Solana token accounts: closeAccount instructions only. Non-custodial, no seed phrase, no smart contract of its own.',
   alternates: { canonical: '/safety' },
 };
 
