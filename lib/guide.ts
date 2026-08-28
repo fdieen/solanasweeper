@@ -41,21 +41,22 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       'Your wallet is holding SOL you cannot spend. Not because anyone is charging you, but because every account on Solana carries a storage deposit — one you can get back.',
     datePublished: '2026-07-09',
     dateModified: '2026-08-28',
-    readingTime: '6 min read',
+    readingTime: '7 min read',
   },
   {
     slug: 'how-to-reclaim-your-sol',
     title: 'How to Reclaim Your SOL: 3 Ways to Close Token Accounts',
     h1: 'How to reclaim your SOL',
     description:
-      "Three ways to get your locked SOL back on Solana: the CLI, your wallet, or a wallet cleaner. The trade-offs of each, and what to check before you use any tool.",
+      'Three ways to close Solana token accounts and get the rent back: the CLI, your wallet, or a cleaner. The commands, the batching limits, and what each costs.',
     keywords: [
       'how to reclaim SOL', 'close token accounts Solana', 'spl-token close',
       'Solana wallet cleaner', 'reclaim rent Solana',
     ],
-    excerpt: 'Three ways to get your locked SOL back. Each has trade-offs.',
+    excerpt:
+      'There are three ways to get locked SOL out of your token accounts. They differ in effort, cost, and trust.',
     datePublished: '2026-07-09',
-    dateModified: '2026-07-09',
+    dateModified: '2026-08-28',
     readingTime: '4 min read',
   },
   {
@@ -63,15 +64,15 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     title: 'Is It Safe to Close Solana Token Accounts?',
     h1: 'Is it safe?',
     description:
-      "Closing empty token accounts is one of the safest operations on Solana. Here's what it actually does, what a non-custodial tool can and can't do, and where the real risks are.",
+      'Closing token accounts is safe. Tools that do it for you are another question. How to read the transaction, and the four instructions to watch for.',
     keywords: [
       'is it safe to close token accounts', 'Solana wallet cleaner safe',
       'non-custodial Solana', 'reclaim rent safe', 'Solana drainer',
     ],
     excerpt:
-      'Closing empty token accounts is one of the safest operations on Solana. The tool you use is a different question.',
+      'The operation is one of the safest on Solana. Whether a given tool is safe is an entirely different question.',
     datePublished: '2026-07-09',
-    dateModified: '2026-07-09',
+    dateModified: '2026-08-28',
     readingTime: '4 min read',
   },
   {
@@ -79,31 +80,32 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     title: "What You Can't Reclaim on Solana (Dust, cNFTs, Metadata)",
     h1: "What you can't reclaim",
     description:
-      'Not every account gives SOL back. Dust balances, delegated close authority, compressed NFTs, in-use accounts, and metadata rent. What stays locked, and why.',
+      'Not every account returns SOL. Dust, frozen accounts, delegated close authority, compressed NFTs, in-use positions and metadata — what stays locked, and why.',
     keywords: [
       "what you can't reclaim Solana", 'compressed NFT rent', 'metadata account rent',
       'token dust Solana', 'close authority delegated',
     ],
     excerpt:
-      "Most guides tell you what a tool does. Fewer tell you what it doesn't. Here's what won't come back.",
+      "Most guides tell you what a tool does. Fewer tell you what it doesn't. Here is what will not come back.",
     datePublished: '2026-07-09',
-    dateModified: '2026-07-09',
-    readingTime: '3 min read',
+    dateModified: '2026-08-28',
+    readingTime: '4 min read',
   },
   {
     slug: 'common-mistakes',
     title: 'Common Mistakes When Cleaning a Solana Wallet',
     h1: 'Common mistakes',
     description:
-      'The mistakes that cost people SOL, or their whole wallet, when reclaiming rent: rushing a large selection, burning before verifying, fake URLs, and skipping the safe mode.',
+      'The mistakes that cost people SOL, or their whole wallet: rushing a selection, burning unverified tokens, fake URLs, and expecting the wrong number.',
     keywords: [
       'Solana wallet cleaning mistakes', 'reclaim SOL mistakes',
       'fake Solana cleaner', 'burn tokens mistake', 'Solscan verify mint',
     ],
-    excerpt: 'The small mistakes that cost people SOL, or their whole wallet. Avoid these five.',
+    excerpt:
+      'The small mistakes that cost people SOL — and the one that costs them everything. Six things to avoid.',
     datePublished: '2026-07-09',
-    dateModified: '2026-07-09',
-    readingTime: '2 min read',
+    dateModified: '2026-08-28',
+    readingTime: '3 min read',
   },
 ];
 

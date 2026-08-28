@@ -211,10 +211,12 @@ export default function Page() {
       <p>Not every account in your wallet is a candidate.</p>
       <p>
         Accounts still holding tokens cannot be closed until the balance is zero, so dust has to be
-        swapped or burned first. Accounts that are frozen by the token&apos;s issuer cannot be
-        touched at all. Some protocol positions look like idle accounts but are in use, and closing
-        them would break something. And a handful of accounts, including compressed NFTs, do not
-        carry per-account rent in the first place, so there is nothing to recover.
+        swapped or burned first. Accounts frozen by the token&apos;s issuer are a special case: they
+        close normally if the balance is already zero, but if they still hold tokens you are stuck,
+        because you cannot transfer or burn out of a frozen account. Some protocol positions look
+        like idle accounts but are in use, and closing them would break something. And a handful of
+        accounts, including compressed NFTs, do not carry per-account rent in the first place, so
+        there is nothing to recover.
       </p>
       <p>
         The full list, and how to recognise each case, is in{' '}
