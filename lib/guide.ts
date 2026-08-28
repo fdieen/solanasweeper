@@ -31,15 +31,17 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     title: 'What Is Rent on Solana? How to Reclaim Your Locked SOL',
     h1: 'What is rent on Solana?',
     description:
-      'Rent is the small SOL deposit every Solana account holds to stay on-chain. Learn what rent is, why your wallet fills with empty token accounts, and how much you can reclaim.',
+      'Rent is the SOL deposit every Solana account holds to stay on-chain. How it is calculated, what Token-2022 and SIMD-0437 change, and how to reclaim it.',
     keywords: [
       'Solana rent', 'what is rent on Solana', 'token account rent',
       'reclaim SOL rent', 'rent exemption Solana', 'empty token accounts',
+      'rent exempt minimum', 'lamports per byte', 'Token-2022 rent', 'SIMD-0437',
     ],
-    excerpt: 'Every account on Solana holds a small amount of SOL. Not as a fee, but as a deposit.',
+    excerpt:
+      'Your wallet is holding SOL you cannot spend. Not because anyone is charging you, but because every account on Solana carries a storage deposit — one you can get back.',
     datePublished: '2026-07-09',
-    dateModified: '2026-07-09',
-    readingTime: '5 min read',
+    dateModified: '2026-08-28',
+    readingTime: '6 min read',
   },
   {
     slug: 'how-to-reclaim-your-sol',
