@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CircuitBackground from '@/components/CircuitBackground';
@@ -7,6 +8,14 @@ import WalletScan from '@/components/WalletScan';
 import WalletPreview from '@/components/WalletPreview';
 import { Fragment } from 'react';
 import { FEE_PERCENT } from '@/lib/pricing';
+
+// Titel en description komen uit de root-layout (title.default). Alleen de canonical
+// staat hier: de homepage wordt ook met ?ref=<wallet> gedeeld en moet zichzelf als
+// origineel aanwijzen. Geen redirect — de bezoeker blijft op de parameter-URL, anders
+// verdwijnt de referral-attributie die ReferralCapture client-side uitleest.
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 // Answer-first content onder de hero — kop = vraag, eerste zin = antwoord, met één
 // contextuele link per sectie. Volgorde: rent, amount, safety. Cost + de overige feitclaims

@@ -34,9 +34,12 @@ export const metadata: Metadata = {
   authors: [{ name: "SolanaSweeper" }],
   creator: "SolanaSweeper",
   publisher: "SolanaSweeper",
-  alternates: {
-    canonical: "/",
-  },
+  // Bewust GEEN alternates.canonical hier: metadata erft naar beneden door, dus een
+  // canonical in de root-layout laat elke route zonder eigen canonical naar de homepage
+  // wijzen (dat maakte /links een "duplicaat" in Search Console). Elke route zet nu zijn
+  // eigen self-referencing canonical naar de schone URL — zonder queryparameters, zodat
+  // ?ref=-varianten naar het origineel verwijzen terwijl de bezoeker op de parameter-URL
+  // blijft (de referral-attributie in lib/referral.ts leest die client-side).
   openGraph: {
     type: "website",
     url: SITE_URL,

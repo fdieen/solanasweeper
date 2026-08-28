@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Links — SolanaSweeper",
   description:
     "All official SolanaSweeper links. Reclaim the SOL locked in your empty token accounts.",
+  alternates: { canonical: "/links" },
   robots: { index: true, follow: true },
 };
 
