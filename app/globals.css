@@ -132,6 +132,17 @@ html, body {
   .hero-action { grid-area: action; align-self: start; justify-self: end; margin-top: 0; }
 }
 
+/* Trustregel onder de hero-tekst (verving de drie losse trust-chips) */
+.hero-trust-line {
+  font-family: 'General Sans', sans-serif;
+  font-weight: 400;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 16px 0 0;
+  max-width: 380px;
+}
+
 /* Wallet-preview adres-input: nette, leesbare placeholder */
 .wp-addr::placeholder { color: rgba(255,255,255,0.55); }
 

@@ -21,23 +21,37 @@ export const metadata: Metadata = {
 // Answer-first content onder de hero — kop = vraag, eerste zin = antwoord, met één
 // contextuele link per sectie. Volgorde: rent, amount, safety. Cost + de overige feitclaims
 // staan één keer in het FAQ-blok hieronder (schema-gedekt), niet dubbel hier.
-const answers = [
+const answers: { q: string; paras: string[]; link?: { text: string; href: string } }[] = [
   {
     q: 'What is the SOL locked in my token accounts?',
-    answer: 'It is rent: a deposit Solana charges to store each token account on-chain, roughly 0.00204 SOL per account.',
-    detail: 'Every token you have ever received opened its own account and locked that deposit. Selling the token does not give it back. The empty account sits there holding your SOL until someone closes it. It is not an airdrop or a reward, it is money you already paid.',
+    paras: [
+      'It is rent: a deposit Solana charges to store each token account on-chain, roughly 0.00204 SOL per account.',
+      'Every token you have ever received opened its own account and locked that deposit. Selling the token does not give it back. The empty account sits there holding your SOL until someone closes it. It is not an airdrop or a reward, it is money you already paid.',
+    ],
     link: { text: 'What is rent on Solana?', href: '/guide/what-is-rent-on-solana' },
   },
   {
     q: 'How much can I reclaim?',
-    answer: 'About 0.00204 SOL per empty account, so a wallet with 100 dead accounts is holding roughly 0.2 SOL.',
-    detail: 'Airdrop farmers, memecoin traders and anyone who has been on Solana for a while tend to have far more of these than they expect. Paste any address into the scanner above and see the real number before deciding anything. The scan is read-only and needs no wallet connection.',
+    paras: [
+      'Two things come back. The rent is predictable: about 0.00204 SOL per empty account, so 100 inactive accounts hold roughly 0.2 SOL. The dust is not predictable. Some wallets hold a few cents, some hold a few hundred dollars in coins nobody bothered to sell. Airdrop farmers and memecoin traders almost always find more than they expected, on both counts.',
+      'Run the checker to see your own numbers. It does not need your wallet connected.',
+    ],
     link: { text: 'See how it works', href: '/how-it-works' },
   },
   {
+    q: 'Why we swap your dust instead of burning it',
+    paras: [
+      'Most wallet cleaners burn whatever is left in your accounts. Burning destroys the token and hands you the rent deposit, about 0.00204 SOL, and nothing else. That is fine when the token is truly worthless, but a lot of dust is not worthless. It is a few dollars of a coin you stopped watching.',
+      'Pro Mode routes that dust through Jupiter and sells it for SOL, so the value comes back to you instead of going up in smoke. The accounts that were already empty are closed in the same sweep and their rent comes with it. An account that only empties because of the swap is closed the next time you sweep. Fun Mode skips the swap and simply closes the empty accounts, which is what you want when there is nothing left to sell.',
+      'That is also why our fee looks higher than the burners. Their percentage comes off the rent alone. Ours comes off the rent plus whatever the dust was actually worth, and you keep the rest.',
+    ],
+  },
+  {
     q: 'Is it safe to close token accounts?',
-    answer: 'Yes. Solana refuses to close any account that still holds a balance, so tokens you own cannot be touched.',
-    detail: 'SolanaSweeper is non-custodial and has no smart contract of its own. Every instruction in your transaction belongs to Solana itself, and nothing happens until you sign it in your own wallet. We never see your keys and never ask for your seed phrase.',
+    paras: [
+      'Yes. Solana refuses to close any account that still holds a balance, so tokens you own cannot be touched.',
+      'SolanaSweeper is non-custodial and has no smart contract of its own. Every instruction in your transaction belongs to Solana itself, and nothing happens until you sign it in your own wallet. We never see your keys and never ask for your seed phrase.',
+    ],
     link: { text: 'Read the safety page', href: '/safety' },
   },
 ];
@@ -119,16 +133,27 @@ export default function Home() {
 
             {/* Links: hero-tekst */}
             <div className="hero-intro">
+              <p style={{
+                fontFamily: 'General Sans, sans-serif',
+                fontWeight: 500,
+                fontSize: '0.9rem',
+                lineHeight: 1.5,
+                color: 'rgba(255,255,255,0.7)',
+                margin: '0 0 18px',
+                maxWidth: '380px',
+              }}>
+                Hi, I&apos;m SOL-E! 🧹 I find the SOL hiding in your empty token accounts, and the value hiding in your dust.
+              </p>
               <h1 style={{
                 fontFamily: 'General Sans, sans-serif',
                 fontWeight: 700,
-                fontSize: 'clamp(2.4rem, 3.6vw, 3.6rem)',
+                fontSize: 'clamp(2.4rem, 3.6vw, 3rem)',
                 lineHeight: 1.02,
                 letterSpacing: '-0.035em',
                 color: '#fff',
                 margin: '0 0 22px',
               }}>
-                Sweep your<br />dust into SOL
+                Reclaim your rent, sweep your dust into&nbsp;SOL
               </h1>
               <p style={{
                 fontFamily: 'General Sans, sans-serif',
@@ -136,11 +161,37 @@ export default function Home() {
                 fontSize: '1rem',
                 lineHeight: 1.65,
                 color: 'rgba(255,255,255,0.62)',
+                margin: '0 0 14px',
+                maxWidth: '380px',
+              }}>
+                Every token you have ever held left an empty account behind with about 0.00204 SOL locked inside.
+                SolanaSweeper swaps the dust instead of burning it, closes the accounts, and sends the SOL back to your wallet.
+              </p>
+              <p style={{
+                fontFamily: 'General Sans, sans-serif',
+                fontWeight: 700,
+                fontSize: '1rem',
+                lineHeight: 1.5,
+                color: 'rgba(255,255,255,0.9)',
                 margin: 0,
                 maxWidth: '380px',
               }}>
-                Every token you have ever held left about 0.00204 SOL behind in an empty account.
-                SolanaSweeper closes them and returns the SOL to your wallet.
+                Check what yours is worth before you connect.
+              </p>
+
+              <p className="hero-trust-line">
+                You sign every transaction · Keys never leave your wallet · Swaps powered by Jupiter
+              </p>
+
+              <p style={{
+                fontFamily: 'General Sans, sans-serif',
+                fontWeight: 400,
+                fontSize: '0.86rem',
+                margin: '14px 0 0',
+              }}>
+                <a href="/how-it-works" style={{ color: '#14F195', textDecoration: 'none', borderBottom: '1px solid rgba(20,241,149,0.3)' }}>
+                  See how it works
+                </a>
               </p>
             </div>
 
@@ -159,36 +210,9 @@ export default function Home() {
               <WalletPreview />
             </div>
 
-            {/* Links-onder (desktop) / onderaan (mobiel): trust-cards */}
+            {/* Links-onder (desktop) / onderaan (mobiel): de reclaim-rekensom.
+                De losse trust-chips zijn vervangen door de trustregel in de hero-tekst. */}
             <div className="hero-trust" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px', width: '100%', maxWidth: '360px' }}>
-              {[
-                { t: 'You sign every transaction', size: 0.85, pad: '9px 16px', icon: 15 },
-                { t: 'Powered by Jupiter',         size: 0.85, pad: '9px 16px', icon: 15 },
-                { t: 'Keys never leave your wallet', size: 0.85, pad: '9px 16px', icon: 15 },
-              ].map(({ t, size, pad, icon }) => (
-                <span key={t} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontFamily: 'General Sans, sans-serif',
-                  fontWeight: 500,
-                  fontSize: `${size}rem`,
-                  color: 'rgba(255,255,255,0.6)',
-                  background: 'linear-gradient(135deg, rgba(20,241,149,0.08) 0%, rgba(153,69,255,0.08) 100%)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '10px',
-                  padding: pad,
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
-                }}>
-                  <svg width={icon} height={icon} viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                    <path d="M2 7.5L5.5 11L12 3.5" stroke="#14F195" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  {t}
-                </span>
-              ))}
-
               {/* Reclaim-box — zelfde chip-stijl (gelijke breedte), met de oplopende rekensom erin */}
               <div style={{
                 display: 'flex', alignItems: 'flex-start', gap: '10px',
@@ -228,12 +252,15 @@ export default function Home() {
             {answers.map((a) => (
               <Fragment key={a.q}>
                 <h2>{a.q}</h2>
-                <p>{a.answer}</p>
-                <p>{a.detail}</p>
-                <p style={{ margin: '0 0 8px' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.3)' }}>→ </span>
-                  <a href={a.link.href}>{a.link.text}</a>
-                </p>
+                {a.paras.map((t, i) => (
+                  <p key={i}>{t}</p>
+                ))}
+                {a.link && (
+                  <p style={{ margin: '0 0 8px' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.3)' }}>→ </span>
+                    <a href={a.link.href}>{a.link.text}</a>
+                  </p>
+                )}
               </Fragment>
             ))}
           </div>
@@ -280,7 +307,7 @@ export default function Home() {
               fontFamily: 'General Sans, sans-serif', fontWeight: 400, fontSize: '0.9rem',
               color: 'rgba(255,255,255,0.5)', margin: '24px 0 0',
             }}>
-              Twelve more answers in{' '}
+              Fifteen more answers in{' '}
               <a href="/faq" style={{ color: '#14F195', textDecoration: 'none' }}>
                 the full Solana rent and token account FAQ
               </a>

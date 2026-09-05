@@ -13,11 +13,11 @@ export const metadata: Metadata = {
   // Zoekterm vooraan, merk erachter. Kindpagina's die de generieke term zelf al
   // vooraan zetten, gebruiken title.absolute i.p.v. deze template.
   title: {
-    default: "SolanaSweeper — Reclaim the SOL Locked in Empty Token Accounts",
+    default: "Reclaim SOL Rent and Sweep Dust into SOL — SolanaSweeper",
     template: "%s · SolanaSweeper",
   },
   description:
-    `Close the empty token accounts in your Solana wallet and reclaim the locked rent, about 0.00204 SOL each. Non-custodial, ${FEE_PERCENT}% fee on what you recover.`,
+    "Close the empty token accounts in your Solana wallet, reclaim about 0.00204 SOL rent each, and swap your dust to SOL instead of burning it. Non-custodial.",
   applicationName: "SolanaSweeper",
   keywords: [
     "Solana",
@@ -45,9 +45,9 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE_URL,
     siteName: "SolanaSweeper",
-    title: "SolanaSweeper · Reclaim Your SOL",
+    title: "Reclaim SOL Rent and Sweep Dust into SOL — SolanaSweeper",
     description:
-      `SolanaSweeper is a non-custodial Solana dApp that closes empty SPL Token and Token-2022 accounts and returns the locked rent deposit (~0.00204 SOL per account) to your wallet. It has no smart contract of its own. It only builds instructions to Solana's SPL Token Program. The fee is ${FEE_PERCENT}% of reclaimed rent, taken only from SOL you successfully recover.`,
+      "Close the empty token accounts in your Solana wallet, reclaim about 0.00204 SOL rent each, and swap your dust to SOL instead of burning it. Non-custodial.",
     locale: "en_US",
     // Statische PNG in /public i.p.v. een dynamische edge-route: die gaf 0 bytes
     // terug, waardoor de X/OG-card leeg bleef. Statisch is betrouwbaar voor crawlers.

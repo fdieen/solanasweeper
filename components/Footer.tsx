@@ -23,9 +23,20 @@ export default function Footer() {
         justifyContent: 'space-between',
         gap: '16px',
       }}>
-        <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          <img src="/logo.svg?v=2" alt="SolanaSweeper" style={{ height: '28px', width: 'auto' }} />
-        </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <img src="/logo.svg?v=2" alt="SolanaSweeper" style={{ height: '28px', width: 'auto' }} />
+          </a>
+          <p style={{
+            fontFamily: 'General Sans, sans-serif',
+            fontWeight: 400,
+            fontSize: '0.82rem',
+            color: 'rgba(255,255,255,0.35)',
+            margin: 0,
+          }}>
+            Sweep your dust into SOL
+          </p>
+        </div>
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           {[
             { label: 'How it works', href: '/how-it-works' },

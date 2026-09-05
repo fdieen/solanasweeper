@@ -135,7 +135,7 @@ export default function WalletPreview() {
           onChange={(e) => setInput(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="Solana address…"
+          placeholder="paste any wallet address"
           spellCheck={false}
           autoCapitalize="none"
           autoCorrect="off"

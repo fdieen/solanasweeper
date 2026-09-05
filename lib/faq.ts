@@ -63,4 +63,16 @@ export const FAQS: Faq[] = [
     q: 'How is SolanaSweeper different from other Solana cleaners?',
     a: `SolanaSweeper runs no smart contract of its own, so there is nothing you have to trust beyond Solana's own programs and the transaction in front of you. You can also scan any address before connecting a wallet at all. Most comparisons of Solana cleanup tools are written by the tools themselves, and the fee figures contradict each other depending on who published them. The honest position is that on 0.00204 SOL per account, the difference between a 2% and a 20% fee is a few dollars across a full cleanup — what actually matters is whether you can verify what you are signing. For pure rent reclamation with no third party at all, spl-token close --gc in the Solana CLI is free and always will be. We are selling batching, safety checks and a UI, not capability.`,
   },
+  {
+    q: 'Do you burn my tokens?',
+    a: `Only if you ask us to. Fun Mode closes empty accounts and touches nothing else. Pro Mode sells your dust through Jupiter, so the value comes back as SOL rather than disappearing. Tokens that Jupiter cannot route are the only ones we can burn, they are never ticked for you, and nothing burns unless you tick it yourself.`,
+  },
+  {
+    q: 'What is the difference between Fun Mode and Pro Mode?',
+    a: `Fun Mode closes empty token accounts and returns the rent. Pro Mode also swaps the leftover dust in your accounts to SOL through Jupiter, so you recover the token value as well as the rent. Accounts that are already empty are closed in the same sweep. An account that only becomes empty because of the swap is closed the next time you sweep.`,
+  },
+  {
+    q: 'Why is your fee 10% when other tools charge 2%?',
+    a: `Because it is a percentage of a different number. A burner takes its cut of the rent, roughly 0.002 SOL per account. We take ours of the rent plus the SOL your dust sold for, and that second number is usually the larger one. If your dust is genuinely worthless, Fun Mode gives you the same outcome as a burner and you can judge the fee against the amount the checker showed you before you connected.`,
+  },
 ];
