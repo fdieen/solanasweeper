@@ -133,17 +133,6 @@ export default function Home() {
 
             {/* Links: hero-tekst */}
             <div className="hero-intro">
-              <p style={{
-                fontFamily: 'General Sans, sans-serif',
-                fontWeight: 500,
-                fontSize: '0.9rem',
-                lineHeight: 1.5,
-                color: 'rgba(255,255,255,0.7)',
-                margin: '0 0 18px',
-                maxWidth: '380px',
-              }}>
-                Hi, I&apos;m SOL-E! 🧹 I find the SOL hiding in your empty token accounts, and the value hiding in your dust.
-              </p>
               <h1 style={{
                 fontFamily: 'General Sans, sans-serif',
                 fontWeight: 700,

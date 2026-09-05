@@ -19,7 +19,11 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
   const [blink, setBlink] = useState(false);
   const [happy, setHappy] = useState(false);
   const [bubble, setBubble] = useState(false);
+  // Hover opent de ballon apart van de tap-toggle: op muis-apparaten volgt hij de cursor,
+  // op touch bestaat hover niet en blijft alleen de tap over.
+  const [hovered, setHovered] = useState(false);
   const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const track = (e: MouseEvent) => {
@@ -62,9 +66,20 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
         return next;
       });
     };
+    // Tik/klik buiten SOL-E sluit de ballon. Op touch is dit de enige manier om hem
+    // weg te krijgen vóór de 4s-timer, want daar bestaat geen mouseleave.
+    const onOutside = (e: Event) => {
+      const root = rootRef.current;
+      if (!root || root.contains(e.target as Node)) return;
+      if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
+      setBubble(false);
+    };
+
     window.addEventListener('sol-e-tap', onTap);
+    document.addEventListener('pointerdown', onOutside);
     return () => {
       window.removeEventListener('sol-e-tap', onTap);
+      document.removeEventListener('pointerdown', onOutside);
       if (tapTimer.current) clearTimeout(tapTimer.current);
       if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
     };
@@ -108,8 +123,12 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
   const robot = (
     <div
       className="hb-robot"
-      onMouseEnter={() => setHappy(true)}
-      onMouseLeave={() => setHappy(false)}
+      onMouseEnter={() => {
+        setHappy(true);
+        // (hover: hover) sluit touch uit, waar een tap anders een blijvende hover-staat geeft
+        if (isHero && window.matchMedia('(hover: hover)').matches) setHovered(true);
+      }}
+      onMouseLeave={() => { setHappy(false); setHovered(false); }}
       onClick={handleClick}
       style={{
         position: 'relative',
@@ -170,7 +189,7 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
   );
 
   return (
-    <div className={isHero ? 'help-bot-hero' : 'help-bot'}>
+    <div ref={rootRef} className={isHero ? 'help-bot-hero' : 'help-bot'}>
       <style>{`
         @keyframes helpbot-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         @keyframes sphere-a { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
@@ -250,8 +269,8 @@ export default function HelpBot({ variant = 'faq' }: { variant?: 'faq' | 'hero' 
 
       {isHero ? <div className="hb-scale">{robot}</div> : robot}
       {isHero && (
-        <div className={`sol-e-bubble${bubble ? ' is-visible' : ''}`} aria-hidden="true">
-          Hi, I&apos;m SOL-E! 🧹 I find the SOL hiding in your empty token accounts.
+        <div className={`sol-e-bubble${bubble || hovered ? ' is-visible' : ''}`} aria-hidden="true">
+          Hi, I&apos;m SOL-E! 🧹 I find the SOL in your empty accounts, and the value in your dust.
         </div>
       )}
     </div>

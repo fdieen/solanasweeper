@@ -130,6 +130,13 @@ html, body {
   .hero-intro  { grid-area: intro; align-self: start; }
   .hero-trust  { grid-area: trust; align-self: start; margin-top: 0; }
   .hero-action { grid-area: action; align-self: start; justify-self: end; margin-top: 0; }
+
+  /* De grid-laag staat hier absoluut over de hele hero (inset: 0) op z-index 10 en ving
+     daarmee ook de muis/tap op SOL-E af, die op z-index 6 eronder ligt. De laag zelf laat
+     pointer-events nu door; de drie kolommen vangen ze zelf weer op. Zonder dit is de
+     mascotte op desktop niet aanklikbaar en opent de tekstballon nooit. */
+  .hero-grid { pointer-events: none; }
+  .hero-intro, .hero-trust, .hero-action { pointer-events: auto; }
 }
 
 /* Trustregel onder de hero-tekst (verving de drie losse trust-chips) */
