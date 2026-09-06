@@ -284,9 +284,33 @@ export async function planSweep(params: {
   referrer?: PublicKey | null;
   computeUnitPrice?: number;
 }): Promise<SweepPlan> {
-  const { connection, owner, feeWallet, blockhash, referrer = null, computeUnitPrice } = params;
+  const { connection, ...rest } = params;
+  const { closeable, skipped } = await scanCloseableAccounts(connection, params.owner);
+  return planFromAccounts({ connection, ...rest, accounts: closeable, skipped });
+}
 
-  const { closeable, skipped } = await scanCloseableAccounts(connection, owner);
+/**
+ * Zelfde planner, maar voor een aanroeper die de accounts al heeft. Pro Mode kent
+ * zijn lege accounts al uit scanHoldings/classifyHoldings; die hoeft dus niet nóg
+ * een scanCloseableAccounts te doen (dat zou twee RPC-rondes extra kosten).
+ */
+export async function planFromAccounts(params: {
+  connection: Connection;
+  owner: PublicKey;
+  accounts: CloseableAccount[];
+  feeWallet: PublicKey | null;
+  blockhash: Blockhash;
+  referrer?: PublicKey | null;
+  computeUnitPrice?: number;
+  /** Al bekende skips van de aanroeper; de planner vult aan. */
+  skipped?: SkippedAccount[];
+}): Promise<SweepPlan> {
+  const {
+    connection, owner, accounts, feeWallet, blockhash,
+    referrer = null, computeUnitPrice,
+  } = params;
+  const skipped: SkippedAccount[] = [...(params.skipped ?? [])];
+  const closeable = accounts;
   const transactions: Transaction[] = [];
   const batches: CloseableAccount[][] = [];
   const errors: string[] = [];

@@ -1,15 +1,5 @@
-import {
-  PublicKey,
-  Transaction,
-  ComputeBudgetProgram,
-  type Blockhash,
-} from '@solana/web3.js';
-import {
-  createCloseAccountInstruction,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
-} from '@solana/spl-token';
-import { addFeeInstructions } from './fees';
+import { PublicKey } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { FEE_BPS } from './pricing';
 
 /* ── Constanten ── */
@@ -140,61 +130,7 @@ export function lamportsToSol(lamports: number): number {
   return lamports / LAMPORTS_PER_SOL;
 }
 
-/* ── Bouw één batch-transactie ──
- * compute budget + N×closeAccount (rent → owner) + 10%-transfer (owner → fee-wallet).
- * Alles atomair: closes en fee zitten in dezelfde tx.
- */
-export function buildBatchTransaction(params: {
-  owner: PublicKey;
-  accounts: ClosableAccount[]; // één chunk
-  feeWallet: PublicKey | null;
-  blockhash: Blockhash;
-  feeBps?: number;
-  computeUnitPrice?: number; // microLamports priority fee (optioneel)
-  referrer?: PublicKey | null; // gevalideerde referrer (base58 + bestaat + niet self)
-}): Transaction {
-  const { owner, accounts, feeWallet, blockhash, feeBps = FEE_BPS, computeUnitPrice = 0, referrer = null } = params;
-
-  const tx = new Transaction();
-  tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }));
-  if (computeUnitPrice > 0) {
-    tx.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: computeUnitPrice }));
-  }
-
-  // closeAccount: rent gaat naar de owner zelf
-  for (const acc of accounts) {
-    tx.add(createCloseAccountInstruction(acc.pubkey, owner, owner, [], acc.programId));
-  }
-
-  // 10% fee over de teruggewonnen rent van DEZE batch
-  const batchGross = accounts.reduce((s, a) => s + a.lamports, 0);
-  const batchFee = Math.floor((batchGross * feeBps) / 10_000);
-  // Fee-transfer alleen wanneer CLOSE_FEE_ENABLED aan staat (zie constante hierboven).
-  // Bij een geldige referrer splitst addFeeInstructions 25%/75% (referrer/fee-wallet).
-  if (CLOSE_FEE_ENABLED && feeWallet && batchFee > 0) {
-    addFeeInstructions(tx, owner, feeWallet, batchFee, referrer);
-  }
-
-  tx.feePayer = owner;
-  tx.recentBlockhash = blockhash;
-  return tx;
-}
-
-/* ── Bouw alle batches ── */
-export function buildBatches(params: {
-  owner: PublicKey;
-  accounts: ClosableAccount[];
-  feeWallet: PublicKey | null;
-  blockhash: Blockhash;
-  maxPerTx?: number;
-  feeBps?: number;
-  computeUnitPrice?: number;
-  referrer?: PublicKey | null;
-}): { transactions: Transaction[]; batches: ClosableAccount[][] } {
-  const { owner, accounts, feeWallet, blockhash, maxPerTx = MAX_CLOSES_PER_TX, feeBps, computeUnitPrice, referrer = null } = params;
-  const batches = chunk(accounts, maxPerTx);
-  const transactions = batches.map((batch) =>
-    buildBatchTransaction({ owner, accounts: batch, feeWallet, blockhash, feeBps, computeUnitPrice, referrer })
-  );
-  return { transactions, batches };
-}
+/* Bouwen van close-transacties zit in lib/sweep.ts (buildSweepTransaction +
+ * planFromAccounts). buildBatchTransaction/buildBatches stonden hier, maar hadden
+ * geen harvest-instructie voor Token-2022 en een eigen batchgrootte; Fun Mode en
+ * Pro Mode gebruiken nu dezelfde bouwer, zodat ze niet uit elkaar kunnen lopen. */

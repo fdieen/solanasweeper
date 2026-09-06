@@ -7,7 +7,8 @@ import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
-import { buildBatches, summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
+import { summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
+import { planFromAccounts, PreflightError, type CloseableAccount } from '@/lib/sweep';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
@@ -229,7 +230,20 @@ export default function ProMode() {
 
       // Legacy txs: lege accounts sluiten (close) + burn (alleen 'safe') — apart gehouden:
       // closes via onze sendRaw-route, burns via de wallet-adapter (signAndSendTransaction).
-      const closeBuilt = buildBatches({ owner, accounts: freshEmpty.map((h) => ({ pubkey: h.tokenAccount, programId: h.programId, lamports: h.lamports })), feeWallet, blockhash, referrer });
+      // Closes lopen door dezelfde planner als Fun Mode: harvest-instructie per mint
+      // vóór de closes, kleinere batch als er geharvest moet worden, en preflight met
+      // split-retry vóór het tekenen. De accounts komen uit de al gedane scanHoldings,
+      // dus planFromAccounts i.p.v. planSweep — dat scheelt twee RPC-rondes.
+      const closeAccounts: CloseableAccount[] = freshEmpty.map((h) => ({
+        address: h.tokenAccount,
+        mint: h.mint,
+        programId: h.programId,
+        needsHarvest: h.needsHarvest ?? false,
+        rentLamports: h.lamports,
+      }));
+      const closeBuilt = await planFromAccounts({
+        connection: conn, owner, accounts: closeAccounts, feeWallet, blockhash, referrer,
+      });
       const burnBuilt = buildBurnBatches({ owner, accounts: burnSafe, feeWallet, blockhash, referrer });
       const closeCounts = closeBuilt.batches.map((b) => b.length);
       const burnCounts = burnBuilt.batches.map((b) => b.length);
@@ -260,15 +274,20 @@ export default function ProMode() {
       // Referral-payouts registreren voor bevestigde close- en burn-batches. De fee-split
       // zit alleen op de rent-fee (SystemProgram-transfer), niet op de Jupiter-swap-fee.
       if (referrer && feeWallet) {
-        const rec = (accts: { lamports: number }[], sig: string) => {
-          const gross = accts.reduce((s, a) => s + a.lamports, 0);
+        // Bedrag i.p.v. een array: close-batches dragen rentLamports (CloseableAccount),
+        // burn-batches lamports (TokenHolding).
+        const rec = (gross: number, sig: string) => {
           const fee = Math.floor((gross * FEE_BPS) / 10_000);
           const { referrerLamports } = splitFee(fee, referrer);
           // Alleen de signature melden; de server verifieert + leidt de rest af.
           if (referrerLamports > 0) recordReferralPayout(sig);
         };
-        for (const c of closeRes.confirmed) rec(closeBuilt.batches[c.i], c.sig);
-        for (const c of burnRes.confirmed) rec(burnBuilt.batches[c.i], c.sig);
+        for (const c of closeRes.confirmed) {
+          rec(closeBuilt.batches[c.i].reduce((s, a) => s + a.rentLamports, 0), c.sig);
+        }
+        for (const c of burnRes.confirmed) {
+          rec(burnBuilt.batches[c.i].reduce((s, a) => s + a.lamports, 0), c.sig);
+        }
       }
 
       const closedCount = closeRes.ok;
@@ -280,7 +299,8 @@ export default function ProMode() {
         closed: closedCount,
         burned: burnedCount,
         swapped: swapRes.ok,
-        skipped: closeRes.skipped + burnRes.skipped + swapRes.skipped + burnRejected.length,
+        skipped: closeRes.skipped + burnRes.skipped + swapRes.skipped
+          + burnRejected.length + closeBuilt.skipped.length,
         sol: lamportsToSol(netLamports),
       };
       setResult(proResult);
@@ -305,9 +325,15 @@ export default function ProMode() {
       }
     } catch (e) {
       console.error(e);
-      const msg = e instanceof Error && /reject|denied|user/i.test(e.message)
-        ? 'You cancelled the signature.'
-        : 'Something went wrong. No funds moved unless a transaction confirmed.';
+      let msg: string;
+      if (e instanceof PreflightError) {
+        // Al gebruikersklare tekst (te weinig SOL, simulatie-oorzaak) — direct tonen.
+        msg = e.message;
+      } else if (e instanceof Error && /reject|denied|user/i.test(e.message)) {
+        msg = 'You cancelled the signature.';
+      } else {
+        msg = 'Something went wrong. No funds moved unless a transaction confirmed.';
+      }
       setErrorMsg(msg);
       setPhase('error');
     }

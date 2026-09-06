@@ -60,7 +60,14 @@ async function getTokenAccounts(connection: Connection, owner: PublicKey): Promi
     }
     for (const acc of value) {
       const data = acc.account.data as {
-        parsed?: { info?: { tokenAmount?: { amount?: string; decimals?: number }; state?: string; mint?: string } };
+        parsed?: {
+          info?: {
+            tokenAmount?: { amount?: string; decimals?: number };
+            state?: string;
+            mint?: string;
+            extensions?: Array<{ extension?: string; state?: { withheldAmount?: string } }>;
+          };
+        };
       };
       const info = data?.parsed?.info;
       if (!info?.mint || info.tokenAmount?.amount === undefined) continue;
@@ -77,6 +84,14 @@ async function getTokenAccounts(connection: Connection, owner: PublicKey): Promi
         // voorlopige NFT-heuristiek; DAS overschrijft hieronder indien bekend
         isNft: decimals === 0 && amountRaw === '1',
         compressed: false,
+        // Token-2022 met openstaande withheld fees: zelfde bron als filterClosable
+        // in lib/funMode.ts, uit de parsed data die we hier toch al ophalen.
+        needsHarvest: (info.extensions ?? []).some(
+          (e) =>
+            e.extension === 'transferFeeAmount' &&
+            e.state?.withheldAmount !== undefined &&
+            e.state.withheldAmount !== '0'
+        ),
       });
     }
   }

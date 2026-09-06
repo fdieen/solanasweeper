@@ -17,6 +17,13 @@ export type TokenHolding = {
   compressed: boolean;
   name?: string;     // metadata (DAS) — voor de burn-UI (naam herkennen)
   image?: string;    // logo/afbeelding (DAS)
+  /**
+   * Token-2022 met openstaande withheld transfer-fees. Zo'n account is pas
+   * sluitbaar nadat de fees geharvest zijn; buildSweepTransaction zet daarvoor
+   * een harvest-instructie per mint vóór de closes. Zonder dat faalt de close
+   * met 0x23. Wordt gezet in lib/holdings.ts uit dezelfde parsed accountdata.
+   */
+  needsHarvest?: boolean;
 };
 
 export type Valuation = {
