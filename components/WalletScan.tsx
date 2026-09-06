@@ -22,7 +22,10 @@ export default function WalletScan() {
   const [closable, setClosable] = useState<ClosableAccount[]>([]);
   // Wat er zojuist is teruggewonnen (na bevestigde close-tx). Zolang gezet: toon de
   // "Wallet is clean ✓"-success i.p.v. de oude reclaimable + CTA.
-  const [swept, setSwept] = useState<SweptResult | null>(null);
+  // Aan het adres gekoppeld: zo is er geen effect nodig dat de success bij een wallet-wissel
+  // wist (setState in een effect kost een extra renderronde) en kan de banner van wallet A
+  // nooit boven wallet B verschijnen.
+  const [sweptState, setSwept] = useState<{ addr: string; result: SweptResult } | null>(null);
 
   // Onthoudt voor welk adres we al gescand hebben, zodat een reconnect/re-render
   // (Reown pingt de sessie → re-render) NIET opnieuw scant. Dít was de credit-drain.
@@ -35,6 +38,10 @@ export default function WalletScan() {
     setClosable(found);
     setEmptyCount(sum.count);
     setReclaimSol(lamportsToSol(sum.grossLamports));
+    // Vindt een verse scan weer werk, dan is de success-banner achterhaald — definitief
+    // wissen, anders zou hij later (na een schone scan) opnieuw opduiken. Dit stond in een
+    // effect; hier is het een gewone callback, dus zonder extra renderronde.
+    if (sum.count > 0) setSwept(null);
     return sum;
   }, []);
 
@@ -76,20 +83,21 @@ export default function WalletScan() {
     scan();
   }, [isConnected, address, scan]);
 
-  // Ander wallet-adres → een eventuele "just swept"-success is niet meer relevant.
-  useEffect(() => { setSwept(null); }, [address]);
-
-  // Na een bevestigde sweep: herbevestig de on-chain state met een verse scan. Blijkt er
-  // (door skips) toch nog iets closable, dan valt de success weg en toont de kaart de rest.
-  useEffect(() => {
-    if (swept && status === 'done' && emptyCount > 0) setSwept(null);
-  }, [swept, status, emptyCount]);
+  /* Wanneer tonen we de success-banner? Afgeleid, niet in state bijgehouden:
+   *  - alleen voor het adres waarvoor er gesweept is;
+   *  - en alleen zolang de verse scan daarna niets meer te doen vindt. Blijkt er (door
+   *    skips) toch nog iets closable, dan wint de kaart met de rest.
+   */
+  const swept =
+    sweptState && sweptState.addr === address && !(status === 'done' && emptyCount > 0)
+      ? sweptState.result
+      : null;
 
   // Aangeroepen door FunMode NA on-chain bevestiging (niet na versturen).
   const onSwept = useCallback((r: SweptResult) => {
-    setSwept(r);
+    if (address) setSwept({ addr: address, result: r });
     rescan(); // verse RPC-state ophalen zodat reclaimable/telling naar 0 gaan
-  }, [rescan]);
+  }, [address, rescan]);
 
   /**
    * Wisselen van mode → verse scan, zodat de teller klopt vóórdat iemand op de knop drukt.

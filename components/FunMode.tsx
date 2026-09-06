@@ -57,16 +57,21 @@ export default function FunMode({
   const [result, setResult] = useState<{ closed: number; netSol: number; skipped: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [notice, setNotice] = useState(''); // uitleg bij overgeslagen batches na een geslaagde sweep
-  const [balance, setBalance] = useState<number | null>(null); // wallet-SOL, voor de gas-check in de render
+  // Balance aan het adres gekoppeld: geen effect meer dat 'm synchroon op null zet bij een
+  // wallet-wissel (extra renderronde), en het saldo van de vorige wallet kan nooit één
+  // render lang de gas-check van de nieuwe sturen.
+  const [balanceState, setBalance] = useState<{ addr: string; lamports: number } | null>(null);
   const [referrer, setReferrer] = useState<PublicKey | null>(null); // gevalideerde referrer of null
 
   // Balance proactief ophalen zodat de gas-blokkade al vóór het klikken zichtbaar is
   // (niet alleen in execute()). execute() houdt dezelfde check als vangnet.
+  const balance = balanceState && balanceState.addr === address ? balanceState.lamports : null;
+
   useEffect(() => {
-    if (!address) { setBalance(null); return; }
+    if (!address) return;
     let cancelled = false;
     getProxyConnection().getBalance(new PublicKey(address))
-      .then((b) => { if (!cancelled) setBalance(b); })
+      .then((b) => { if (!cancelled) setBalance({ addr: address, lamports: b }); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [address]);
@@ -135,7 +140,7 @@ export default function FunMode({
       // wat in Phantom een rode warning geeft. Vang dat hier rustig af i.p.v.
       // de wallet te openen. Stuurt NIETS naar Phantom als de balance te laag is.
       const bal = await conn.getBalance(owner);
-      setBalance(bal);
+      setBalance({ addr: address, lamports: bal });
       if (bal < MIN_SOL_FOR_CLOSE) { setPhase('idle'); return; }
 
       // Plannen: verse scan → chunken → per batch herbevestigen → preflight met

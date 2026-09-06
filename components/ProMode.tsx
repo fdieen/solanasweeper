@@ -96,7 +96,11 @@ export default function ProMode() {
   const [result, setResult] = useState<ProResult | null>(null);
   // Wat er zojuist is opgeschoond (na bevestiging). Zolang gezet: toon de success-banner
   // en (na de herscan) de verse staat.
-  const [swept, setSwept] = useState<ProResult | null>(null);
+  // Aan het adres gekoppeld opgeslagen: zo hoeft er geen effect te zijn dat de banner wist
+  // bij een wallet-wissel (setState in een effect = extra renderronde), en kan de banner van
+  // wallet A nooit één render lang boven wallet B hangen.
+  const [sweptState, setSwept] = useState<{ addr: string; result: ProResult } | null>(null);
+  const swept = sweptState && sweptState.addr === address ? sweptState.result : null;
   const [referrer, setReferrer] = useState<PublicKey | null>(null); // gevalideerde referrer of null
 
   const scan = useCallback(async () => {
@@ -144,9 +148,6 @@ export default function ProMode() {
     scannedFor.current = address;
     scan();
   }, [isConnected, address, scan]);
-
-  // Ander wallet-adres → een eventuele success-banner is niet meer relevant.
-  useEffect(() => { setSwept(null); }, [address]);
 
   const toggle = (set: Set<string>, k: string, setter: (s: Set<string>) => void) => {
     const next = new Set(set);
@@ -492,7 +493,7 @@ export default function ProMode() {
           burned: burnedCount,
           reclaimed_sol: Number(proResult.sol.toFixed(4)),
         });
-        setSwept(proResult);
+        setSwept(address ? { addr: address, result: proResult } : null);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('sweep-confirmed', { detail: { address } }));
         }
