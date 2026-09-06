@@ -12,7 +12,24 @@ export type BlogArticle = {
   readingTime: string;
 };
 
+// Nieuwste eerst: /blog rendert deze volgorde ongewijzigd.
 export const BLOG_ARTICLES: BlogArticle[] = [
+  {
+    slug: 'insufficient-funds-for-rent-solana',
+    title: 'Insufficient funds for rent on Solana: what it means and how to fix it',
+    description:
+      "Seeing 'insufficient funds for rent' or 'InsufficientFundsForRent' in Phantom, Solflare or Jupiter? Here's what Solana rent is, why the error appears even when you have SOL, and three ways to fix it in under a minute.",
+    datePublished: '2026-09-07',
+    readingTime: '3 min read',
+  },
+  {
+    slug: 'every-solana-token-costs-0002-sol',
+    title: 'Why every Solana token you ever held costs you 0.002 SOL',
+    description:
+      'Each token you receive on Solana quietly locks 0.002 SOL in a token account — and it stays locked after you sell. Here\'s how the math adds up, how to see your number, and how to get it back.',
+    datePublished: '2026-09-07',
+    readingTime: '3 min read',
+  },
   {
     slug: 'agave-4-2-rent-reduction-reclaimable-sol',
     title:

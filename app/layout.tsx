@@ -13,11 +13,11 @@ export const metadata: Metadata = {
   // Zoekterm vooraan, merk erachter. Kindpagina's die de generieke term zelf al
   // vooraan zetten, gebruiken title.absolute i.p.v. deze template.
   title: {
-    default: "Reclaim SOL Rent and Sweep Dust into SOL — SolanaSweeper",
+    default: "SolanaSweeper – Reclaim SOL rent from empty token accounts | Solana cleaner",
     template: "%s · SolanaSweeper",
   },
   description:
-    "Close the empty token accounts in your Solana wallet, reclaim about 0.00204 SOL rent each, and swap your dust to SOL instead of burning it. Non-custodial.",
+    "Reclaim the SOL locked in your wallet's empty token accounts, about 0.00204 SOL each, and swap dust to SOL instead of burning it. Non-custodial Solana cleaner.",
   applicationName: "SolanaSweeper",
   keywords: [
     "Solana",
@@ -45,9 +45,9 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE_URL,
     siteName: "SolanaSweeper",
-    title: "Reclaim SOL Rent and Sweep Dust into SOL — SolanaSweeper",
+    title: "SolanaSweeper – Reclaim SOL rent from empty token accounts | Solana cleaner",
     description:
-      "Close the empty token accounts in your Solana wallet, reclaim about 0.00204 SOL rent each, and swap your dust to SOL instead of burning it. Non-custodial.",
+      "Reclaim the SOL locked in your wallet's empty token accounts, about 0.00204 SOL each, and swap dust to SOL instead of burning it. Non-custodial Solana cleaner.",
     locale: "en_US",
     // Statische PNG in /public i.p.v. een dynamische edge-route: die gaf 0 bytes
     // terug, waardoor de X/OG-card leeg bleef. Statisch is betrouwbaar voor crawlers.

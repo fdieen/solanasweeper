@@ -60,7 +60,12 @@ const answers: { q: string; paras: string[]; link?: { text: string; href: string
 // FAQPage-schema: dat stond hier én op /faq, wat twee concurrerende FAQPages voor
 // grotendeels dezelfde vragen opleverde. Het schema hoort bij de volledige FAQ; deze
 // sectie is de samenvatting die daarnaartoe doorverwijst.
-const homeFaq = [
+const homeFaq: { q: string; a: string; link?: { text: string; href: string } }[] = [
+  {
+    q: `Why do I get "insufficient funds for rent" when I still have SOL?`,
+    a: `Solana rejects any transaction that would leave an account below its rent minimum — about 0.00089 SOL for your wallet and 0.00204 SOL for each new token account. Topping up fixes it, and so does closing the empty token accounts you already own: that rent comes straight back to your wallet.`,
+    link: { text: 'Insufficient funds for rent: what it means and how to fix it', href: '/blog/insufficient-funds-for-rent-solana' },
+  },
   {
     q: `Does SolanaSweeper have its own smart contract?`,
     a: `No. SolanaSweeper has no smart contract of its own. It only builds instructions to Solana's SPL Token Program, which your wallet already trusts.`,
@@ -290,6 +295,13 @@ export default function Home() {
                 }}>
                   {f.a}
                 </p>
+                {f.link && (
+                  <p style={{ margin: '8px 0 0', fontSize: '0.9rem' }}>
+                    <a href={f.link.href} style={{ color: '#14F195', textDecoration: 'none' }}>
+                      {f.link.text} →
+                    </a>
+                  </p>
+                )}
               </div>
             ))}
             <p style={{

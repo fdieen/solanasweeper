@@ -21,7 +21,7 @@ const CONTENT_UPDATED: Record<string, string> = {
   "/safety": "2026-08-15",
   "/faq": "2026-08-15",
   "/guide": "2026-07-09",
-  "/blog": "2026-07-31",
+  "/blog": "2026-09-07",
   "/referral": "2026-07-19",
   "/links": "2026-07-23",
   "/founders": "2026-07-26",
