@@ -3,19 +3,19 @@ import { PublicKey, type Connection } from '@solana/web3.js';
 /**
  * Referral-attributie (client-side).
  * - Leest ?ref= van de URL, valideert als base58 Solana-adres, bewaart in localStorage
- *   met timestamp. 30 dagen geldig, last-click wins.
+ *   met timestamp. 60 dagen geldig, last-click wins.
  * - Negeert een referrer die gelijk is aan de (later) verbonden wallet (geen self-referral).
  * De on-chain fee-split gebruikt deze waarde; Supabase-tracking is optioneel en apart.
  *
- * Twee termijnen, bewust verschillend:
- *  - de klik in localStorage geldt 30 dagen (MAX_AGE_MS) — dat is het attributievenster
- *    vóór er ooit gesweept is;
- *  - de vastgelegde binding op de server geldt 60 dagen vanaf het moment van binden
- *    (migratie 0003). Een nieuwere klik overschrijft die binding, zie resolveReferrer.
+ * Eén termijn voor het hele programma: 60 dagen. De klik in localStorage (MAX_AGE_MS) is
+ * het attributievenster vóór er ooit gesweept is; de vastgelegde binding op de server
+ * (migratie 0003) telt 60 dagen vanaf het moment van binden. Bewust hetzelfde getal —
+ * twee termijnen voor hetzelfde concept valt niet uit te leggen op de referral-pagina.
+ * Een nieuwere klik overschrijft een bestaande binding, zie resolveReferrer.
  */
 
 const KEY = 'ss_ref';
-const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 dagen
+const MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000; // 60 dagen — gelijk aan de binding-TTL
 
 export function isValidSolAddress(s: string): boolean {
   try {
@@ -68,7 +68,7 @@ export function getStoredReferral(): Stored | null {
   }
 }
 
-/** De opgeslagen referrer als die nog geldig is (binnen 30 dagen), anders null. */
+/** De opgeslagen referrer als die nog geldig is (binnen 60 dagen), anders null. */
 export function getStoredReferrer(): string | null {
   return getStoredReferral()?.ref ?? null;
 }
