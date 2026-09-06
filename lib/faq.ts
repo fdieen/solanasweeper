@@ -34,6 +34,14 @@ export const FAQS: Faq[] = [
     link: { text: 'Read the guide', href: '/guide/what-is-rent-on-solana' },
   },
   {
+    q: 'Why do I get "insufficient funds for rent" when I still have SOL?',
+    a: `Because Solana rejects any transaction that would leave an account below its rent minimum, and that minimum is separate from the transaction fee. Your main wallet account needs about 0.00089 SOL to stay rent-exempt, and every new token account needs about 0.00204 SOL of its own — so receiving a token you have never held before can fail even when the swap itself is tiny. Two fixes: top the wallet up with 0.01 SOL, or close the empty token accounts you already own, which returns roughly 0.00204 SOL each to the same wallet. If the error mentions custom program error 0x23, it is a Token-2022 account whose withheld transfer fee has to be harvested to the mint before the account can close.`,
+    link: {
+      text: 'Insufficient funds for rent: what it means and how to fix it',
+      href: '/blog/insufficient-funds-for-rent-solana',
+    },
+  },
+  {
     q: 'Does SolanaSweeper need my seed phrase?',
     a: `No. SolanaSweeper never asks for your seed phrase, never holds your keys, and cannot move funds. Every transaction is signed in your own wallet. The wallet signature is the security boundary: we build a transaction, your wallet shows you exactly what it contains, and nothing happens until you approve it. Any site asking for a seed phrase to "reclaim" SOL is a drainer, without exception.`,
   },

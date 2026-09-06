@@ -308,7 +308,7 @@ export default function Home() {
               fontFamily: 'General Sans, sans-serif', fontWeight: 400, fontSize: '0.9rem',
               color: 'rgba(255,255,255,0.5)', margin: '24px 0 0',
             }}>
-              Fifteen more answers in{' '}
+              Sixteen more answers in{' '}
               <a href="/faq" style={{ color: '#14F195', textDecoration: 'none' }}>
                 the full Solana rent and token account FAQ
               </a>
