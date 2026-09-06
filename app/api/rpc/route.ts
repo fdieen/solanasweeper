@@ -16,6 +16,7 @@ const ALLOWED_METHODS = new Set<string>([
   'getSignatureStatuses',
   'sendTransaction',
   'simulateTransaction',
+  'getFeeForMessage',
   'getTokenAccountsByOwner',
   'getAccountInfo',
   'getMultipleAccounts',

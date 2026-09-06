@@ -8,7 +8,7 @@ import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
 import { summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
-import { planFromAccounts, PreflightError, type CloseableAccount } from '@/lib/sweep';
+import { planFromAccounts, humanizeSweepError, humanizeSimError, type CloseableAccount, type SkipReason } from '@/lib/sweep';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
@@ -21,14 +21,56 @@ type SolanaSigner = {
   signTransaction?: <T extends AnyTx>(tx: T) => Promise<T>;
   signAllTransactions?: <T extends AnyTx>(txs: T[]) => Promise<T[]>;
   signAndSendTransaction?: (tx: AnyTx) => Promise<string>;
+  /** WalletConnect-sessie (Trust, Ledger Live, …): noemt exact welke RPC-methodes de wallet kan. */
+  session?: { namespaces?: Record<string, { methods?: string[] }> };
+  /** Wallet Standard (injected wallets): feature-map met o.a. 'solana:signAndSendTransaction'. */
+  features?: Record<string, unknown>;
 };
 
+/**
+ * Kan deze wallet zelf tekenen én versturen? AppKit zet signAndSendTransaction altijd op
+ * de provider, ook voor wallets die het niet kunnen — Trust via WalletConnect gooit dan pas
+ * bij de aanroep 'The method "solana_signAndSendTransaction" is not supported by the wallet'.
+ * Daarom eerst de capabilities lezen: de WalletConnect-sessie of de Wallet Standard-features.
+ * Onbekend → true, zodat Phantom c.s. hun eigen (veiligere) route houden; een verkeerde gok
+ * wordt alsnog opgevangen door isUnsupportedMethodError in sendBurnGroup.
+ */
+function supportsSignAndSend(signer: SolanaSigner): boolean {
+  if (typeof signer.signAndSendTransaction !== 'function') return false;
+  const wcMethods = signer.session?.namespaces?.solana?.methods;
+  if (Array.isArray(wcMethods)) return wcMethods.includes('solana_signAndSendTransaction');
+  if (signer.features && typeof signer.features === 'object') {
+    return 'solana:signAndSendTransaction' in signer.features;
+  }
+  return true;
+}
+
+/** Wallet kent de methode niet (los van of hij hem adverteert) → doorschakelen naar sign+send. */
+function isUnsupportedMethodError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  return /not supported by the wallet|unsupported method|method not (found|supported)|signAndSendTransaction is not a function/i.test(msg);
+}
+
 type Phase = 'idle' | 'scanning' | 'ready' | 'confirm' | 'working' | 'done' | 'error';
-type ProResult = { closed: number; swapped: number; burned: number; skipped: number; sol: number };
+/** Eén overgeslagen item met de reden erbij — de UI toont die per regel, niet alleen een aantal. */
+type SkipDetail = { label: string; reason: string };
+type ProResult = { closed: number; swapped: number; burned: number; skipped: number; sol: number; details: SkipDetail[] };
 
 const FEE_ACCOUNT = process.env.NEXT_PUBLIC_JUP_FEE_ACCOUNT || undefined;
 const key = (h: TokenHolding) => h.tokenAccount.toBase58();
 const shortMint = (m: PublicKey) => `${m.toBase58().slice(0, 4)}…${m.toBase58().slice(-4)}`;
+/** Zelfde verkorting, ook voor account-adressen (niet alleen mints). */
+const shortPk = shortMint;
+/** Herkenbare naam voor in de skip-lijst: metadata-naam, anders het verkorte mint-adres. */
+const labelOf = (h: TokenHolding) => h.name ?? shortMint(h.mint);
+
+/** Skip-redenen van de close-planner in UI-taal. */
+const CLOSE_SKIP_TEXT: Record<SkipReason, string> = {
+  already_closed: 'Account was already closed.',
+  not_empty: 'Account is no longer empty.',
+  frozen: 'Account is frozen — it cannot be closed.',
+  preflight_failed: 'Simulation failed, so this account was left untouched.',
+};
 
 export default function ProMode() {
   const { address, isConnected } = useAppKitAccount();
@@ -139,53 +181,89 @@ export default function ProMode() {
     throw new Error('Wallet cannot sign transactions');
   }
 
-  async function sendAndCount(conn: ReturnType<typeof getProxyConnection>, signed: AnyTx[], countPerTx: number[]) {
+  // labelsPerTx: de items die in tx i zitten, zodat een mislukte tx per item een reden oplevert.
+  async function sendAndCount(conn: ReturnType<typeof getProxyConnection>, signed: AnyTx[], labelsPerTx: string[][]) {
     let ok = 0;
-    let skipped = 0;
+    const skipped: SkipDetail[] = [];
     const confirmedTxs: { i: number; sig: string }[] = [];
+    const skipAll = (labels: string[], reason: string) => {
+      for (const label of labels) skipped.push({ label, reason });
+    };
     for (let i = 0; i < signed.length; i++) {
+      const labels = labelsPerTx[i] ?? [];
       try {
         const tx = signed[i];
         const sim = tx instanceof VersionedTransaction
           ? await conn.simulateTransaction(tx)
           : await conn.simulateTransaction(tx);
-        if (sim.value.err) { skipped += countPerTx[i]; continue; }
+        if (sim.value.err) {
+          skipAll(labels, humanizeSimError(sim.value.err, sim.value.logs ?? []));
+          continue;
+        }
         const sig = await conn.sendRawTransaction(signed[i].serialize(), { skipPreflight: false, maxRetries: 3 });
         const confirmed = await pollConfirm(conn, sig);
-        if (confirmed) { ok += countPerTx[i]; confirmedTxs.push({ i, sig }); }
-        else skipped += countPerTx[i];
+        if (confirmed) { ok += labels.length; confirmedTxs.push({ i, sig }); }
+        else skipAll(labels, 'Not confirmed in time — nothing was changed. Please retry.');
       } catch (e) {
         console.error('tx failed', e);
-        skipped += countPerTx[i];
+        skipAll(labels, humanizeSweepError(e));
       }
     }
     return { ok, skipped, confirmed: confirmedTxs };
   }
 
-  // Burn-send via de wallet-adapter's signAndSendTransaction: de wallet tekent
-  // én verstuurt zelf (de aanbevolen, "veilige" Phantom-route), i.p.v. onze
-  // eigen sendRawTransaction. Confirm-polling blijft via onze proxy-connection.
-  // signAndSendTransaction is per-tx (geen batch), dus burns tekenen los.
-  async function signAndSendGroup(conn: ReturnType<typeof getProxyConnection>, txs: AnyTx[], countPerTx: number[]) {
+  /**
+   * Burn-send. Eerste keus blijft signAndSendTransaction: de wallet tekent én verstuurt
+   * zelf (de aanbevolen, "veilige" Phantom-route), per tx — geen batch. Kan de wallet dat
+   * niet (Trust via WalletConnect), dan gaan de resterende burns over exact hetzelfde pad
+   * als de closes: signTransaction/signAllTransactions → sendRawTransaction → pollConfirm.
+   * Indices in `confirmed` verwijzen altijd terug naar de oorspronkelijke txs, zodat de
+   * referral-registratie en de SOL-telling de juiste batch pakken.
+   */
+  async function sendBurnGroup(conn: ReturnType<typeof getProxyConnection>, txs: AnyTx[], labelsPerTx: string[][]) {
     const signer = walletProvider as SolanaSigner;
     let ok = 0;
-    let skipped = 0;
+    const skipped: SkipDetail[] = [];
     const confirmedTxs: { i: number; sig: string }[] = [];
     if (txs.length === 0) return { ok, skipped, confirmed: confirmedTxs };
-    if (!signer.signAndSendTransaction) {
-      throw new Error('Wallet does not support signAndSendTransaction');
-    }
-    for (let i = 0; i < txs.length; i++) {
-      try {
-        const sig = await signer.signAndSendTransaction(txs[i]);
-        const confirmed = await pollConfirm(conn, sig);
-        if (confirmed) { ok += countPerTx[i]; confirmedTxs.push({ i, sig }); }
-        else skipped += countPerTx[i];
-      } catch (e) {
-        console.error('burn tx failed', e);
-        skipped += countPerTx[i];
+
+    const pending = txs.map((_, i) => i); // nog niet afgehandeld
+
+    if (supportsSignAndSend(signer) && signer.signAndSendTransaction) {
+      while (pending.length > 0) {
+        const i = pending[0];
+        const labels = labelsPerTx[i] ?? [];
+        try {
+          const sig = await signer.signAndSendTransaction(txs[i]);
+          const confirmed = await pollConfirm(conn, sig);
+          if (confirmed) { ok += labels.length; confirmedTxs.push({ i, sig }); }
+          else for (const label of labels) skipped.push({ label, reason: 'Not confirmed in time — nothing was burned. Please retry.' });
+        } catch (e) {
+          // Wallet kent de methode niet → deze tx NIET als mislukt tellen; hij gaat
+          // samen met de rest door de fallback hieronder.
+          if (isUnsupportedMethodError(e)) {
+            console.warn('signAndSendTransaction unsupported, falling back to sign + send', e);
+            break;
+          }
+          console.error('burn tx failed', e);
+          // De wallet weigert of de simulatie faalt → reden tonen i.p.v. stil optellen.
+          const reason = humanizeSweepError(e);
+          for (const label of labels) skipped.push({ label, reason });
+        }
+        pending.shift();
       }
     }
+
+    if (pending.length > 0) {
+      // Fallback: zelf tekenen en versturen. signGroup gooit als de wallet ook dit niet
+      // kan — die fout landt in humanizeSweepError met een leesbare tekst.
+      const signed = await signGroup(pending.map((i) => txs[i]));
+      const res = await sendAndCount(conn, signed, pending.map((i) => labelsPerTx[i] ?? []));
+      ok += res.ok;
+      skipped.push(...res.skipped);
+      for (const c of res.confirmed) confirmedTxs.push({ i: pending[c.i], sig: c.sig });
+    }
+
     return { ok, skipped, confirmed: confirmedTxs };
   }
 
@@ -245,18 +323,24 @@ export default function ProMode() {
         connection: conn, owner, accounts: closeAccounts, feeWallet, blockhash, referrer,
       });
       const burnBuilt = buildBurnBatches({ owner, accounts: burnSafe, feeWallet, blockhash, referrer });
-      const closeCounts = closeBuilt.batches.map((b) => b.length);
-      const burnCounts = burnBuilt.batches.map((b) => b.length);
+      const closeLabels = closeBuilt.batches.map((b) => b.map((a) => shortMint(a.mint)));
+      const burnLabels = burnBuilt.batches.map((b) => b.map(labelOf));
 
       // Versioned txs: Jupiter swaps (één per token)
       const versionedTxs: VersionedTransaction[] = [];
-      const swapCounts: number[] = [];
+      const swapLabels: string[][] = [];
+      const swapHoldings: TokenHolding[] = []; // parallel aan versionedTxs, voor de opbrengst per bevestigde swap
+      const swapSkipped: SkipDetail[] = [];
       for (const h of freshSwap) {
         const quote = await getQuote(h.mint.toBase58(), h.amountRaw);
-        if (!quote) continue;
+        if (!quote) {
+          swapSkipped.push({ label: labelOf(h), reason: 'No swap route available right now.' });
+          continue;
+        }
         const vtx = await buildSwapTransaction(quote, owner.toBase58(), FEE_ACCOUNT);
         versionedTxs.push(vtx);
-        swapCounts.push(1);
+        swapLabels.push([labelOf(h)]);
+        swapHoldings.push(h);
       }
 
       // Closes + swaps: vooraf tekenen (sign-all), daarna versturen via sendRaw.
@@ -264,12 +348,12 @@ export default function ProMode() {
       const signedVersioned = await signGroup(versionedTxs);
       track('sweep_signed', { mode: 'pro' });
 
-      const closeRes = await sendAndCount(conn, signedCloses, closeCounts);
+      const closeRes = await sendAndCount(conn, signedCloses, closeLabels);
 
       // Burns: wallet tekent én verstuurt zelf (veilige Phantom-route).
-      const burnRes = await signAndSendGroup(conn, burnBuilt.transactions, burnCounts);
+      const burnRes = await sendBurnGroup(conn, burnBuilt.transactions, burnLabels);
 
-      const swapRes = await sendAndCount(conn, signedVersioned, swapCounts);
+      const swapRes = await sendAndCount(conn, signedVersioned, swapLabels);
 
       // Referral-payouts registreren voor bevestigde close- en burn-batches. De fee-split
       // zit alleen op de rent-fee (SystemProgram-transfer), niet op de Jupiter-swap-fee.
@@ -292,16 +376,38 @@ export default function ProMode() {
 
       const closedCount = closeRes.ok;
       const burnedCount = burnRes.ok;
-      const reclaimedLamports = [...freshEmpty, ...burnSafe].reduce((s, a) => s + a.lamports, 0);
-      const netLamports = reclaimedLamports - Math.floor((reclaimedLamports * FEE_BPS) / 10_000);
+
+      // Opbrengst UITSLUITEND uit bevestigde transacties — nooit uit het plan. Zonder
+      // bevestiging is er niets teruggewonnen en moet er 0.0000 SOL staan.
+      const grossLamports =
+        closeRes.confirmed.reduce((sum, c) => sum + closeBuilt.batches[c.i].reduce((s, a) => s + a.rentLamports, 0), 0)
+        + burnRes.confirmed.reduce((sum, c) => sum + burnBuilt.batches[c.i].reduce((s, a) => s + a.lamports, 0), 0)
+        + swapRes.confirmed.reduce(
+            (sum, c) => sum + (freshVals.get(swapHoldings[c.i].mint.toBase58())?.outLamports ?? 0), 0);
+      const netLamports = grossLamports - Math.floor((grossLamports * FEE_BPS) / 10_000);
+
+      // Alles wat níét is doorgegaan, met reden: planner-skips, burn-guard, mislukte txs.
+      const details: SkipDetail[] = [
+        ...closeBuilt.skipped.map((sk) => ({
+          label: shortPk(sk.address),
+          reason: sk.reason === 'preflight_failed'
+            ? (closeBuilt.errors[0] ?? CLOSE_SKIP_TEXT.preflight_failed)
+            : CLOSE_SKIP_TEXT[sk.reason],
+        })),
+        ...burnRejected.map((r) => ({ label: labelOf(r.holding), reason: r.reason })),
+        ...swapSkipped,
+        ...closeRes.skipped,
+        ...burnRes.skipped,
+        ...swapRes.skipped,
+      ];
 
       const proResult: ProResult = {
         closed: closedCount,
         burned: burnedCount,
         swapped: swapRes.ok,
-        skipped: closeRes.skipped + burnRes.skipped + swapRes.skipped
-          + burnRejected.length + closeBuilt.skipped.length,
+        skipped: details.length,
         sol: lamportsToSol(netLamports),
+        details,
       };
       setResult(proResult);
 
@@ -325,16 +431,8 @@ export default function ProMode() {
       }
     } catch (e) {
       console.error(e);
-      let msg: string;
-      if (e instanceof PreflightError) {
-        // Al gebruikersklare tekst (te weinig SOL, simulatie-oorzaak) — direct tonen.
-        msg = e.message;
-      } else if (e instanceof Error && /reject|denied|user/i.test(e.message)) {
-        msg = 'You cancelled the signature.';
-      } else {
-        msg = 'Something went wrong. No funds moved unless a transaction confirmed.';
-      }
-      setErrorMsg(msg);
+      // Eén bron van waarheid voor de tekst (preflight, cancel, RPC-storing).
+      setErrorMsg(humanizeSweepError(e));
       setPhase('error');
     }
   }
@@ -442,9 +540,12 @@ export default function ProMode() {
       {phase === 'working' && <p style={{ ...muted, marginTop: '8px' }}>Working — approve in your wallet…</p>}
       {phase === 'error' && errorMsg && <p style={{ ...muted, marginTop: '8px', color: 'rgba(255,140,140,0.85)' }}>{errorMsg}</p>}
       {phase === 'done' && result && (
-        <p style={{ ...muted, marginTop: '8px', color: '#14F195' }}>
-          {result.closed} closed · {result.swapped} swapped · {result.burned} burned · {result.sol.toFixed(4)} SOL{result.skipped ? ` · ${result.skipped} skipped` : ''}
-        </p>
+        <>
+          <p style={{ ...muted, marginTop: '8px', color: '#14F195' }}>
+            {result.closed} closed · {result.swapped} swapped · {result.burned} burned · {result.sol.toFixed(4)} SOL{result.skipped ? ` · ${result.skipped} skipped` : ''}
+          </p>
+          <SkipList details={result.details} />
+        </>
       )}
 
       {/* Bevestigingsscherm — via portal naar <body> (parent-kaart heeft backdrop-filter,
@@ -508,6 +609,24 @@ export default function ProMode() {
 }
 
 // Success-banner na een bevestigde Pro-clean.
+/**
+ * Wat er is overgeslagen én waarom. Een kaal aantal ("1 skipped") vertelt de gebruiker
+ * niets; per item de reden erbij maakt duidelijk of er iets te doen valt (retry, gas,
+ * bevroren account) of niet.
+ */
+function SkipList({ details }: { details: SkipDetail[] }) {
+  if (details.length === 0) return null;
+  return (
+    <ul style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: '4px' }}>
+      {details.map((d, i) => (
+        <li key={`${d.label}-${i}`} style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
+          <span style={{ color: 'rgba(255,255,255,0.8)' }}>{d.label}</span> — {d.reason}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function SweptBanner({ swept }: { swept: ProResult }) {
   const parts: string[] = [];
   if (swept.closed) parts.push(`${swept.closed} closed`);
@@ -529,6 +648,7 @@ function SweptBanner({ swept }: { swept: ProResult }) {
           <b style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{swept.sol.toFixed(4)} SOL</b> reclaimed
           {swept.skipped ? ` · ${swept.skipped} skipped` : ''}
         </div>
+        <SkipList details={swept.details} />
       </div>
     </div>
   );

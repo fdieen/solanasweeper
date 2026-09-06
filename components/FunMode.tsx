@@ -13,7 +13,7 @@ import {
   type Summary,
 } from '@/lib/funMode';
 import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy';
-import { planSweep, PreflightError } from '@/lib/sweep';
+import { planSweep, humanizeSweepError } from '@/lib/sweep';
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
 import { lowGasNotice } from '@/lib/messages';
@@ -215,16 +215,8 @@ export default function FunMode({
       }
     } catch (e) {
       console.error(e);
-      let msg: string;
-      if (e instanceof PreflightError) {
-        // Al gebruikersklare tekst (te weinig SOL, simulatie-oorzaak) — direct tonen.
-        msg = e.message;
-      } else if (e instanceof Error && /reject|denied|user/i.test(e.message)) {
-        msg = 'You cancelled the signature.';
-      } else {
-        msg = 'Something went wrong. No funds moved unless a transaction confirmed.';
-      }
-      setErrorMsg(msg);
+      // Eén bron van waarheid voor de tekst (preflight, cancel, RPC-storing).
+      setErrorMsg(humanizeSweepError(e));
       setPhase('error');
     }
   }

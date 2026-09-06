@@ -201,12 +201,53 @@ export function chunkBatches(accounts: CloseableAccount[]): CloseableAccount[][]
 /* ── 3. Preflight ── */
 export class PreflightError extends Error {
   constructor(
-    public code: 'insufficient_sol' | 'simulation_failed',
+    public code: 'insufficient_sol' | 'simulation_failed' | 'rpc_unavailable',
     msg: string,
     public logs?: string[],
   ) {
     super(msg);
     this.name = 'PreflightError';
+  }
+}
+
+/** Eén tekst voor de hele klasse "RPC deed het niet" — nooit rauwe JSON in de UI. */
+export const FEE_ESTIMATE_MESSAGE = 'Could not estimate fee, please retry.';
+
+const BASE_FEE_PER_SIGNATURE = 5_000;
+
+/**
+ * Priority fee uit de ComputeBudget-instructies van de tx zelf, zodat de fallback
+ * niet te laag uitkomt bij een sweep met computeUnitPrice > 0.
+ * Data-layout: [2, u32 units] = SetComputeUnitLimit, [3, u64 microLamports] = SetComputeUnitPrice.
+ */
+function priorityFeeLamports(tx: Transaction): number {
+  let units = 0;
+  let microLamports = 0;
+  for (const ix of tx.instructions) {
+    if (!ix.programId.equals(ComputeBudgetProgram.programId)) continue;
+    const d = ix.data;
+    const view = new DataView(d.buffer, d.byteOffset, d.byteLength);
+    if (d[0] === 2 && d.length >= 5) units = view.getUint32(1, true);
+    else if (d[0] === 3 && d.length >= 9) microLamports = Number(view.getBigUint64(1, true));
+  }
+  if (!units || !microLamports) return 0;
+  return Math.ceil((units * microLamports) / 1_000_000);
+}
+
+/**
+ * Fee van de tx. Faalt getFeeForMessage (RPC down, methode geblokkeerd, blockhash
+ * verlopen → value null), dan schatten we zelf: 5000 lamports per handtekening plus
+ * de priority fee. Een mislukte schatting mag de sweep niet blokkeren.
+ */
+async function estimateTxFee(connection: Connection, tx: Transaction): Promise<number> {
+  const message = tx.compileMessage();
+  const fallback = BASE_FEE_PER_SIGNATURE * message.header.numRequiredSignatures + priorityFeeLamports(tx);
+  try {
+    const feeMsg = await connection.getFeeForMessage(message, 'confirmed');
+    return feeMsg.value ?? fallback;
+  } catch (e) {
+    console.warn('[sweep] getFeeForMessage failed, using fallback estimate', e);
+    return fallback;
   }
 }
 
@@ -219,9 +260,14 @@ export async function preflight(
   owner: PublicKey,
   tx: Transaction,
 ): Promise<void> {
-  const balance = await connection.getBalance(owner, 'processed');
-  const feeMsg = await connection.getFeeForMessage(tx.compileMessage(), 'confirmed');
-  const txFee = feeMsg.value ?? 5_000; // fallback: base fee voor één handtekening
+  let balance: number;
+  try {
+    balance = await connection.getBalance(owner, 'processed');
+  } catch (e) {
+    console.error('[sweep] getBalance failed', e);
+    throw new PreflightError('rpc_unavailable', FEE_ESTIMATE_MESSAGE);
+  }
+  const txFee = await estimateTxFee(connection, tx);
 
   // De sweep brengt zelf SOL binnen, dus alleen de tx-fee + reserve moet er nú al staan.
   if (balance < txFee + MIN_WALLET_RESERVE) {
@@ -232,7 +278,15 @@ export async function preflight(
     );
   }
 
-  const sim = await connection.simulateTransaction(tx);
+  let sim: Awaited<ReturnType<Connection['simulateTransaction']>>;
+  try {
+    sim = await connection.simulateTransaction(tx);
+  } catch (e) {
+    // Transport/proxy-fout (403 van de allowlist, netwerk, rate-limit) — geen
+    // programmafout. Splitsen helpt hier niet; toon één leesbare melding.
+    console.error('[sweep] simulateTransaction failed', e);
+    throw new PreflightError('rpc_unavailable', FEE_ESTIMATE_MESSAGE);
+  }
   if (sim.value.err) {
     throw new PreflightError(
       'simulation_failed',
@@ -242,7 +296,7 @@ export async function preflight(
   }
 }
 
-function humanizeSimError(err: unknown, logs: string[]): string {
+export function humanizeSimError(err: unknown, logs: string[]): string {
   const joined = logs.join('\n');
   if (joined.includes('withheld fee balance')) {
     return 'A Token-2022 account still has unharvested fees. Try again — the harvest step is added automatically.';
@@ -256,7 +310,45 @@ function humanizeSimError(err: unknown, logs: string[]): string {
   if (JSON.stringify(err).includes('InsufficientFundsForRent')) {
     return 'This transaction would push your wallet below the rent minimum. Add about 0.002 SOL.';
   }
-  return `Simulation failed: ${JSON.stringify(err)}`;
+  // Geen rauwe JSON in de UI — het detail staat in de console voor debuggen.
+  console.error('[sweep] simulation error', err, logs);
+  return 'This sweep could not be prepared. Please retry in a moment.';
+}
+
+/**
+ * Wallets die een tekenmethode niet ondersteunen. Trust via WalletConnect gooit
+ * 'The method "solana_signAndSendTransaction" is not supported by the wallet'; Pro Mode
+ * valt dan terug op signTransaction + sendRawTransaction. Kan de wallet ook dát niet,
+ * dan komt de fout hier terecht en moet de gebruiker weten dat het aan de wallet ligt.
+ */
+function isUnsupportedWalletMethod(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  return /not supported by the wallet|unsupported method|method not (found|supported)|cannot sign transactions|does not support sign/i.test(
+    msg,
+  );
+}
+
+/** True bij fouten die uit de RPC-laag komen (proxy-allowlist, netwerk, rate-limit). */
+function isRpcTransportError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  return /method not allowed|failed to get fee for message|rate limit|upstream rpc|origin not allowed|failed to fetch|fetch failed|network(error| request failed)|\b(403|429|502|503)\b/i.test(
+    msg,
+  );
+}
+
+/**
+ * Eén plek waar een sweep-fout een UI-tekst wordt, zodat Fun Mode en Pro Mode
+ * hetzelfde tonen — en nooit een rauwe JSON-dump.
+ */
+export function humanizeSweepError(e: unknown): string {
+  if (e instanceof PreflightError) return e.message; // al gebruikersklaar
+  // Vóór de cancel-check: een "not supported"-melding is geen weigering van de gebruiker.
+  if (isUnsupportedWalletMethod(e)) {
+    return "Your wallet doesn't support this signing method. Try Phantom, or another wallet that can sign this transaction.";
+  }
+  if (e instanceof Error && /reject|denied|user/i.test(e.message)) return 'You cancelled the signature.';
+  if (isRpcTransportError(e)) return FEE_ESTIMATE_MESSAGE;
+  return 'Something went wrong. No funds moved unless a transaction confirmed.';
 }
 
 /* ── Plannen: scan → chunk → refresh → preflight (met split-retry) ── */
@@ -330,7 +422,8 @@ export async function planFromAccounts(params: {
       await preflight(connection, owner, tx);
     } catch (e) {
       const pe = e as PreflightError;
-      if (pe.code === 'insufficient_sol') throw pe; // splitsen lost dit niet op
+      // Splitsen lost geen saldo- of RPC-probleem op: direct omhoog.
+      if (pe.code === 'insufficient_sol' || pe.code === 'rpc_unavailable') throw pe;
       if (fresh.length > 1 && depth < MAX_SPLIT_DEPTH) {
         const mid = Math.ceil(fresh.length / 2);
         await plan(fresh.slice(0, mid), depth + 1);
@@ -338,7 +431,7 @@ export async function planFromAccounts(params: {
         return;
       }
       for (const a of fresh) skipped.push({ address: a.address, reason: 'preflight_failed' });
-      errors.push(pe.message);
+      errors.push(humanizeSweepError(e));
       return;
     }
 
