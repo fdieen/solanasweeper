@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import {
-  buildBatches,
   summarize,
   lamportsToSol,
   FEE_BPS,
@@ -14,6 +13,7 @@ import {
   type Summary,
 } from '@/lib/funMode';
 import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy';
+import { planSweep, PreflightError } from '@/lib/sweep';
 import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
 import { lowGasNotice } from '@/lib/messages';
@@ -51,6 +51,7 @@ export default function FunMode({
   const [summary, setSummary] = useState<Summary | null>(null);
   const [result, setResult] = useState<{ closed: number; netSol: number; skipped: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [notice, setNotice] = useState(''); // uitleg bij overgeslagen batches na een geslaagde sweep
   const [balance, setBalance] = useState<number | null>(null); // wallet-SOL, voor de gas-check in de render
   const [referrer, setReferrer] = useState<PublicKey | null>(null); // gevalideerde referrer of null
 
@@ -111,6 +112,7 @@ export default function FunMode({
     if (!address) return;
     setPhase('working');
     setErrorMsg('');
+    setNotice('');
     try {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
@@ -122,17 +124,20 @@ export default function FunMode({
       setBalance(bal);
       if (bal < MIN_SOL_FOR_CLOSE) { setPhase('idle'); return; }
 
-      // Verse herverificatie net vóór tekenen
-      const fresh = await scanClosable(conn, owner);
-      if (fresh.length === 0) {
-        setErrorMsg('Accounts already closed.');
+      // Plannen: verse scan → chunken → per batch herbevestigen → preflight met
+      // split-retry. Alles vóór het tekenen, zodat één signAllTransactions volstaat.
+      const { blockhash } = await conn.getLatestBlockhash('confirmed');
+      const feeWallet = parseFeeWallet();
+      const { transactions, batches, skipped: planSkipped, errors: planErrors } = await planSweep({
+        connection: conn, owner, feeWallet, blockhash, referrer,
+      });
+
+      if (transactions.length === 0) {
+        // Niets over: of alles was al gesloten, of preflight wees alles af.
+        setErrorMsg(planErrors[0] ?? 'Accounts already closed.');
         setPhase('error');
         return;
       }
-
-      const { blockhash } = await conn.getLatestBlockhash('confirmed');
-      const feeWallet = parseFeeWallet();
-      const { transactions, batches } = buildBatches({ owner, accounts: fresh, feeWallet, blockhash, referrer });
 
       // Tekenen (1 approval indien mogelijk, anders per tx)
       const signer = walletProvider as SolanaSigner;
@@ -150,7 +155,9 @@ export default function FunMode({
       // Per batch: simuleren → versturen → bevestigen (geïsoleerd, atomair)
       let closed = 0;
       let reclaimed = 0;
-      let skipped = 0;
+      // Accounts die de planner al afwees (al gesloten, niet leeg, frozen, preflight)
+      // tellen mee in de skipped-melding, naast batches die alsnog on-chain falen.
+      let skipped = planSkipped.length;
       for (let i = 0; i < signed.length; i++) {
         const stx = signed[i];
         try {
@@ -166,7 +173,7 @@ export default function FunMode({
           const ok = await pollConfirm(conn, sig);
           if (ok) {
             closed += batches[i].length;
-            const batchGross = batches[i].reduce((s, a) => s + a.lamports, 0);
+            const batchGross = batches[i].reduce((s, a) => s + a.rentLamports, 0);
             reclaimed += batchGross;
             // Referral-payout registreren (fire-and-forget) voor deze bevestigde batch.
             if (referrer && feeWallet) {
@@ -187,6 +194,8 @@ export default function FunMode({
       const netLamports = reclaimed - Math.floor((reclaimed * FEE_BPS) / 10_000);
       const sweptResult = { closed, netSol: lamportsToSol(netLamports), skipped };
       setResult(sweptResult);
+      // Preflight-reden meegeven zodat "3 skipped" niet zonder uitleg blijft staan.
+      setNotice(planErrors[0] ?? '');
       setPhase('done');
 
       // Pas NA on-chain bevestiging (de pollConfirm hierboven is al gelopen): laat
@@ -206,9 +215,15 @@ export default function FunMode({
       }
     } catch (e) {
       console.error(e);
-      const msg = e instanceof Error && /reject|denied|user/i.test(e.message)
-        ? 'You cancelled the signature.'
-        : 'Something went wrong. No funds moved unless a transaction confirmed.';
+      let msg: string;
+      if (e instanceof PreflightError) {
+        // Al gebruikersklare tekst (te weinig SOL, simulatie-oorzaak) — direct tonen.
+        msg = e.message;
+      } else if (e instanceof Error && /reject|denied|user/i.test(e.message)) {
+        msg = 'You cancelled the signature.';
+      } else {
+        msg = 'Something went wrong. No funds moved unless a transaction confirmed.';
+      }
       setErrorMsg(msg);
       setPhase('error');
     }
@@ -236,10 +251,17 @@ export default function FunMode({
       )}
 
       {phase === 'done' && result && (
-        <p style={{ ...muted, marginTop: '8px', color: '#14F195' }}>
-          Closed {result.closed} account{result.closed === 1 ? '' : 's'} · {result.netSol.toFixed(4)} SOL reclaimed
-          {result.skipped > 0 ? ` · ${result.skipped} skipped` : ''}
-        </p>
+        <>
+          <p style={{ ...muted, marginTop: '8px', color: '#14F195' }}>
+            Closed {result.closed} account{result.closed === 1 ? '' : 's'} · {result.netSol.toFixed(4)} SOL reclaimed
+            {result.skipped > 0 ? ` · ${result.skipped} skipped` : ''}
+          </p>
+          {result.skipped > 0 && notice && (
+            <p style={{ ...muted, marginTop: '6px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)' }}>
+              {notice}
+            </p>
+          )}
+        </>
       )}
 
       {/* Pre-sign bevestigingsscherm — via portal naar <body>. De WalletScan-kaart eromheen
