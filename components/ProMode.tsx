@@ -8,7 +8,8 @@ import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
 import { summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
-import { planFromAccounts, humanizeSweepError, humanizeSimError, type CloseableAccount, type SkipReason } from '@/lib/sweep';
+import { planFromAccounts, humanizeSweepError, humanizeSimError, PreflightError, type CloseableAccount, type SkipReason } from '@/lib/sweep';
+import { logSweepEvent, logSkipsByReason } from '@/lib/events';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
 import { resolveReferrer, recordReferralPayout, shortAddress } from '@/lib/referral';
@@ -122,6 +123,10 @@ export default function ProMode() {
       setPhase('ready');
     } catch (e) {
       console.error('Pro scan failed', e);
+      logSweepEvent({
+        wallet: address, mode: 'pro', phase: 'scan', outcome: 'error',
+        errorCode: 'scan_failed', message: humanizeSweepError(e),
+      });
       setErrorMsg('Could not scan your wallet (RPC). Try again.');
       setPhase('error');
     }
@@ -194,24 +199,49 @@ export default function ProMode() {
     const skipAll = (labels: string[], reason: string) => {
       for (const label of labels) skipped.push({ label, reason });
     };
+    const wallet = address ?? '';
     for (let i = 0; i < signed.length; i++) {
       const labels = labelsPerTx[i] ?? [];
+      const planned = labels.length;
       try {
         const tx = signed[i];
         const sim = tx instanceof VersionedTransaction
           ? await conn.simulateTransaction(tx)
           : await conn.simulateTransaction(tx);
         if (sim.value.err) {
-          skipAll(labels, humanizeSimError(sim.value.err, sim.value.logs ?? []));
+          const reason = humanizeSimError(sim.value.err, sim.value.logs ?? []);
+          skipAll(labels, reason);
+          logSweepEvent({
+            wallet, mode: 'pro', phase: 'send', outcome: 'error',
+            errorCode: 'simulation_failed', message: reason, accountsPlanned: planned, accountsDone: 0,
+          });
           continue;
         }
         const sig = await conn.sendRawTransaction(signed[i].serialize(), { skipPreflight: false, maxRetries: 3 });
         const confirmed = await pollConfirm(conn, sig);
-        if (confirmed) { ok += labels.length; confirmedTxs.push({ i, sig }); }
-        else skipAll(labels, 'Not confirmed in time — nothing was changed. Please retry.');
+        if (confirmed) {
+          ok += planned;
+          confirmedTxs.push({ i, sig });
+          logSweepEvent({
+            wallet, mode: 'pro', phase: 'confirm', outcome: 'ok',
+            signature: sig, accountsPlanned: planned, accountsDone: planned,
+          });
+        } else {
+          skipAll(labels, 'Not confirmed in time — nothing was changed. Please retry.');
+          logSweepEvent({
+            wallet, mode: 'pro', phase: 'confirm', outcome: 'error',
+            errorCode: 'not_confirmed', signature: sig, message: 'Not confirmed in time',
+            accountsPlanned: planned, accountsDone: 0,
+          });
+        }
       } catch (e) {
         console.error('tx failed', e);
-        skipAll(labels, humanizeSweepError(e));
+        const reason = humanizeSweepError(e);
+        skipAll(labels, reason);
+        logSweepEvent({
+          wallet, mode: 'pro', phase: 'send', outcome: 'error',
+          errorCode: 'send_failed', message: reason, accountsPlanned: planned, accountsDone: 0,
+        });
       }
     }
     return { ok, skipped, confirmed: confirmedTxs };
@@ -235,14 +265,29 @@ export default function ProMode() {
     const pending = txs.map((_, i) => i); // nog niet afgehandeld
 
     if (supportsSignAndSend(signer) && signer.signAndSendTransaction) {
+      const wallet = address ?? '';
       while (pending.length > 0) {
         const i = pending[0];
         const labels = labelsPerTx[i] ?? [];
+        const planned = labels.length;
         try {
           const sig = await signer.signAndSendTransaction(txs[i]);
           const confirmed = await pollConfirm(conn, sig);
-          if (confirmed) { ok += labels.length; confirmedTxs.push({ i, sig }); }
-          else for (const label of labels) skipped.push({ label, reason: 'Not confirmed in time — nothing was burned. Please retry.' });
+          if (confirmed) {
+            ok += planned;
+            confirmedTxs.push({ i, sig });
+            logSweepEvent({
+              wallet, mode: 'pro', phase: 'confirm', outcome: 'ok',
+              signature: sig, accountsPlanned: planned, accountsDone: planned,
+            });
+          } else {
+            for (const label of labels) skipped.push({ label, reason: 'Not confirmed in time — nothing was burned. Please retry.' });
+            logSweepEvent({
+              wallet, mode: 'pro', phase: 'confirm', outcome: 'error',
+              errorCode: 'not_confirmed', signature: sig, message: 'Burn not confirmed in time',
+              accountsPlanned: planned, accountsDone: 0,
+            });
+          }
         } catch (e) {
           // Wallet kent de methode niet → deze tx NIET als mislukt tellen; hij gaat
           // samen met de rest door de fallback hieronder.
@@ -254,6 +299,10 @@ export default function ProMode() {
           // De wallet weigert of de simulatie faalt → reden tonen i.p.v. stil optellen.
           const reason = humanizeSweepError(e);
           for (const label of labels) skipped.push({ label, reason });
+          logSweepEvent({
+            wallet, mode: 'pro', phase: 'send', outcome: 'error',
+            errorCode: 'burn_send_failed', message: reason, accountsPlanned: planned, accountsDone: 0,
+          });
         }
         pending.shift();
       }
@@ -406,6 +455,23 @@ export default function ProMode() {
         ...swapRes.skipped,
       ];
 
+      // Skips die niet uit een transactie komen: planner-afwijzingen, de burn-guard en
+      // tokens zonder swaproute. Mislukte transacties zijn hierboven al per tx gelogd.
+      logSkipsByReason(
+        { wallet: address, mode: 'pro', phase: 'preflight' },
+        [
+          ...closeBuilt.skipped.map((sk) => sk.reason),
+          ...burnRejected.map((r) => r.reason),
+          ...swapSkipped.map((sk) => sk.reason),
+        ],
+      );
+      for (const message of closeBuilt.errors) {
+        logSweepEvent({
+          wallet: address, mode: 'pro', phase: 'preflight', outcome: 'error',
+          errorCode: 'batch_preflight_failed', message,
+        });
+      }
+
       const proResult: ProResult = {
         closed: closedCount,
         burned: burnedCount,
@@ -437,7 +503,15 @@ export default function ProMode() {
     } catch (e) {
       console.error(e);
       // Eén bron van waarheid voor de tekst (preflight, cancel, RPC-storing).
-      setErrorMsg(humanizeSweepError(e));
+      const message = humanizeSweepError(e);
+      logSweepEvent({
+        wallet: address, mode: 'pro',
+        phase: e instanceof PreflightError ? 'preflight' : 'sign',
+        outcome: 'error',
+        errorCode: e instanceof PreflightError ? e.code : 'sweep_failed',
+        message,
+      });
+      setErrorMsg(message);
       setPhase('error');
     }
   }

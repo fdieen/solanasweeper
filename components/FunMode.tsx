@@ -13,7 +13,8 @@ import {
   type Summary,
 } from '@/lib/funMode';
 import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy';
-import { planSweep, humanizeSweepError } from '@/lib/sweep';
+import { planSweep, humanizeSweepError, humanizeSimError, PreflightError } from '@/lib/sweep';
+import { logSweepEvent, logSkipsByReason } from '@/lib/events';
 import { resolveReferrer, recordReferralPayout, shortAddress } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
 import { formatSol } from '@/lib/pricing';
@@ -111,6 +112,10 @@ export default function FunMode({
       setPhase('confirm');
     } catch (e) {
       console.error(e);
+      logSweepEvent({
+        wallet: address, mode: 'fun', phase: 'scan', outcome: 'error',
+        errorCode: 'scan_failed', message: humanizeSweepError(e),
+      });
       setErrorMsg('Could not read your wallet (RPC). Try again.');
       setPhase('error');
     }
@@ -141,6 +146,15 @@ export default function FunMode({
         connection: conn, owner, feeWallet, blockhash, referrer,
       });
 
+      // Wat de planner afwees, per reden geteld (al gesloten, niet leeg, frozen, preflight).
+      logSkipsByReason(
+        { wallet: address, mode: 'fun', phase: 'preflight' },
+        planSkipped.map((sk) => sk.reason),
+      );
+      for (const message of planErrors) {
+        logSweepEvent({ wallet: address, mode: 'fun', phase: 'preflight', outcome: 'error', errorCode: 'batch_preflight_failed', message });
+      }
+
       if (transactions.length === 0) {
         // Niets over: of alles was al gesloten, of preflight wees alles af.
         setErrorMsg(planErrors[0] ?? 'Accounts already closed.');
@@ -169,10 +183,16 @@ export default function FunMode({
       let skipped = planSkipped.length;
       for (let i = 0; i < signed.length; i++) {
         const stx = signed[i];
+        const planned = batches[i].length;
         try {
           const sim = await conn.simulateTransaction(stx);
           if (sim.value.err) {
-            skipped += batches[i].length;
+            skipped += planned;
+            logSweepEvent({
+              wallet: address, mode: 'fun', phase: 'send', outcome: 'error',
+              errorCode: 'simulation_failed', message: humanizeSimError(sim.value.err, sim.value.logs ?? []),
+              accountsPlanned: planned, accountsDone: 0,
+            });
             continue;
           }
           const sig = await conn.sendRawTransaction(stx.serialize(), {
@@ -181,7 +201,11 @@ export default function FunMode({
           });
           const ok = await pollConfirm(conn, sig);
           if (ok) {
-            closed += batches[i].length;
+            logSweepEvent({
+              wallet: address, mode: 'fun', phase: 'confirm', outcome: 'ok',
+              signature: sig, accountsPlanned: planned, accountsDone: planned,
+            });
+            closed += planned;
             const batchGross = batches[i].reduce((s, a) => s + a.rentLamports, 0);
             reclaimed += batchGross;
             // Referral-payout registreren (fire-and-forget) voor deze bevestigde batch.
@@ -192,11 +216,21 @@ export default function FunMode({
               if (referrerLamports > 0) recordReferralPayout(sig);
             }
           } else {
-            skipped += batches[i].length;
+            skipped += planned;
+            logSweepEvent({
+              wallet: address, mode: 'fun', phase: 'confirm', outcome: 'error',
+              errorCode: 'not_confirmed', signature: sig,
+              message: 'Not confirmed in time', accountsPlanned: planned, accountsDone: 0,
+            });
           }
         } catch (e) {
           console.error('Batch failed', e);
-          skipped += batches[i].length;
+          skipped += planned;
+          logSweepEvent({
+            wallet: address, mode: 'fun', phase: 'send', outcome: 'error',
+            errorCode: 'send_failed', message: humanizeSweepError(e),
+            accountsPlanned: planned, accountsDone: 0,
+          });
         }
       }
 
@@ -225,7 +259,15 @@ export default function FunMode({
     } catch (e) {
       console.error(e);
       // Eén bron van waarheid voor de tekst (preflight, cancel, RPC-storing).
-      setErrorMsg(humanizeSweepError(e));
+      const message = humanizeSweepError(e);
+      logSweepEvent({
+        wallet: address, mode: 'fun',
+        phase: e instanceof PreflightError ? 'preflight' : 'sign',
+        outcome: 'error',
+        errorCode: e instanceof PreflightError ? e.code : 'sweep_failed',
+        message,
+      });
+      setErrorMsg(message);
       setPhase('error');
     }
   }
