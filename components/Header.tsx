@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import ConnectWalletButton from './ConnectWalletButton';
+import OpenInWalletButtons from './OpenInWalletButtons';
 
 /* Line-icons (huisstijl, stroke = currentColor → krijgt de teal-tint van de tegel) */
 const ICONS: Record<string, ReactNode> = {
@@ -220,8 +221,10 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Primaire actie */}
+        {/* Primaire actie. De deeplink-knoppen staan erboven en tonen zichzelf alleen
+            op mobiel zonder wallet-provider — zelfde regel als in de hero. */}
         <div style={{ position: 'relative', marginBottom: '26px' }}>
+          <OpenInWalletButtons />
           <ConnectWalletButton fullWidth showArrow={false} />
         </div>
 
