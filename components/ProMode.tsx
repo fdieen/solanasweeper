@@ -7,7 +7,7 @@ import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
-import { summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
+import { lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
 import { planFromAccounts, humanizeSweepError, humanizeSimError, PreflightError, type CloseableAccount, type SkipReason } from '@/lib/sweep';
 import { logSweepEvent, logSkipsByReason } from '@/lib/events';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';

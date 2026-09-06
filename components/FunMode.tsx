@@ -52,7 +52,6 @@ export default function FunMode({
   const { walletProvider } = useAppKitProvider('solana');
 
   const [phase, setPhase] = useState<Phase>('idle');
-  const [accounts, setAccounts] = useState<ClosableAccount[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [result, setResult] = useState<{ closed: number; netSol: number; skipped: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -107,7 +106,6 @@ export default function FunMode({
         setPhase('error');
         return;
       }
-      setAccounts(closable);
       setSummary(summarize(closable));
       // Referrer resolven voor de fee-split + confirm-weergave (binding > localStorage,
       // niet self, account bestaat). Faalt dit → null (100% naar de fee-wallet).
