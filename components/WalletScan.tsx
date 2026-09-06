@@ -141,6 +141,7 @@ function FunModeView({
   status: Status; emptyCount: number; reclaimSol: number; closable: ClosableAccount[];
   rescan: () => void; swept: SweptResult | null; onSwept: (r: SweptResult) => void;
 }) {
+  const pendingFees = closable.filter((a) => a.needsHarvest).length;
   // Na een geslaagde sweep: toon de clean-success (reclaimable 0.0000, telling 0),
   // de CTA is vervangen door "Wallet is clean ✓" met wat er zojuist is teruggewonnen.
   if (swept) return <CleanSuccess swept={swept} />;
@@ -176,6 +177,21 @@ function FunModeView({
               ? 'No empty token accounts found — your wallet is clean!'
               : `${emptyCount} empty token account${emptyCount === 1 ? '' : 's'} can be closed.`}
           </p>
+          {/* Token-2022 accounts met openstaande withheld fees: sluitbaar, maar alleen
+              nadat de sweep er een harvest-instructie vóór zet. Vroeger vielen ze uit
+              de telling; nu benoemen we ze, zodat het getal hierboven klopt. */}
+          {pendingFees > 0 && (
+            <p style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              margin: '6px 0 0', padding: '3px 9px',
+              fontSize: '0.72rem', color: 'rgba(153,69,255,0.9)',
+              background: 'rgba(153,69,255,0.12)',
+              border: '1px solid rgba(153,69,255,0.28)', borderRadius: '999px',
+            }}>
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#9945FF', flexShrink: 0 }} />
+              {pendingFees} with pending Token-2022 fees — harvested first
+            </p>
+          )}
           {emptyCount > 0 && <FunMode initialAccounts={closable} onSwept={onSwept} />}
         </>
       )}

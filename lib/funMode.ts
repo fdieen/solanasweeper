@@ -44,6 +44,13 @@ export type ClosableAccount = {
   pubkey: PublicKey;
   programId: PublicKey;
   lamports: number; // rent die terugkomt bij sluiten
+  /**
+   * Token-2022 met openstaande withheld transfer-fees. Zulke accounts zijn pas
+   * sluitbaar ná een harvest-instructie; lib/sweep.ts (planSweep) doet dat.
+   * Ze tellen wél mee in de scan en de reclaimable-som — vroeger werden ze
+   * stilzwijgend weggefilterd, waardoor die rent onzichtbaar bleef.
+   */
+  needsHarvest?: boolean;
 };
 
 export type Summary = {
@@ -76,7 +83,9 @@ type ParsedTokenItem = {
 /* ── Filter: ALLEEN écht lege, sluitbare accounts ──
  * - ruwe amount === "0" (string, geen floats)
  * - niet 'frozen'
- * - Token-2022: geen openstaande withheld transfer-fees (anders kan sluiten falen)
+ * - Token-2022 met openstaande withheld transfer-fees wordt NIET meer weggegooid:
+ *   die krijgt needsHarvest en is sluitbaar zodra planSweep er een harvest vóór zet.
+ *   Zo telt die rent mee in de checker i.p.v. onzichtbaar te blijven.
  */
 export function filterClosable(
   items: ParsedTokenItem[],
@@ -90,19 +99,20 @@ export function filterClosable(
     if (info.tokenAmount?.amount !== '0') continue; // niet leeg
     if (info.state === 'frozen') continue;           // bevroren → niet sluitbaar
 
-    // Token-2022: withheld transfer fees blokkeren sluiten
+    // Token-2022: openstaande withheld transfer-fees moeten eerst geharvest worden.
+    // De parsed accountdata hebben we hier al, dus dit kost geen extra RPC-ronde.
     const hasWithheld = (info.extensions ?? []).some(
       (e) =>
         e.extension === 'transferFeeAmount' &&
         e.state?.withheldAmount !== undefined &&
         e.state.withheldAmount !== '0'
     );
-    if (hasWithheld) continue;
 
     out.push({
       pubkey: item.pubkey,
       programId,
       lamports: item.account.lamports,
+      needsHarvest: hasWithheld,
     });
   }
   return out;
