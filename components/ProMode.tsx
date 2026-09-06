@@ -11,8 +11,9 @@ import { summarize, lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP 
 import { planFromAccounts, humanizeSweepError, humanizeSimError, type CloseableAccount, type SkipReason } from '@/lib/sweep';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
-import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
+import { resolveReferrer, recordReferralPayout, shortAddress } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
+import { formatSol } from '@/lib/pricing';
 import { lowGasNotice } from '@/lib/messages';
 import { track } from '@vercel/analytics';
 
@@ -158,7 +159,11 @@ export default function ProMode() {
     const swapOut = swapItems.reduce((s, h) => s + (valuations.get(h.mint.toBase58())?.outLamports ?? 0), 0);
     const gross = emptyRent + burnRent + swapOut;
     const fee = Math.floor((gross * FEE_BPS) / 10_000);
+    // De referral-split zit alleen op de rent-fee (close + burn), niet op de Jupiter-swapfee:
+    // die loopt via het Jupiter fee-account, buiten addFeeInstructions om.
+    const rentFee = Math.floor(((emptyRent + burnRent) * FEE_BPS) / 10_000);
     return {
+      rentFeeLamports: rentFee, // basis voor het referral-aandeel in het confirm-scherm
       emptyCount: empty.length,
       swapCount: swapItems.length,
       burnCount: burnItems.length,
@@ -558,9 +563,10 @@ export default function ProMode() {
             <KV label={`Close ${totals.emptyCount} empty + swap ${totals.swapCount}`} />
             <KV label="Gross" value={`${totals.grossSol.toFixed(4)} SOL`} />
             <KV label={`Fee (${FEE_BPS / 100}%)`} value={`− ${totals.feeSol.toFixed(4)} SOL`} dim />
-            {referrer && (
+            {referrer && splitFee(totals.rentFeeLamports, referrer).referrerLamports > 0 && (
               <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'rgba(20,241,149,0.85)', lineHeight: 1.4 }}>
-                Referral active — 25% of the fee on closed/burned accounts goes to your referrer, paid in the transaction.
+                Referral active — 25% of the fee on closed/burned accounts ({formatSol(lamportsToSol(splitFee(totals.rentFeeLamports, referrer).referrerLamports))} SOL)
+                {' '}goes to your referrer {shortAddress(referrer.toBase58())}, paid in the transaction.
               </p>
             )}
             <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '10px 0' }} />

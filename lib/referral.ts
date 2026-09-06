@@ -6,6 +6,12 @@ import { PublicKey, type Connection } from '@solana/web3.js';
  *   met timestamp. 30 dagen geldig, last-click wins.
  * - Negeert een referrer die gelijk is aan de (later) verbonden wallet (geen self-referral).
  * De on-chain fee-split gebruikt deze waarde; Supabase-tracking is optioneel en apart.
+ *
+ * Twee termijnen, bewust verschillend:
+ *  - de klik in localStorage geldt 30 dagen (MAX_AGE_MS) — dat is het attributievenster
+ *    vóór er ooit gesweept is;
+ *  - de vastgelegde binding op de server geldt 60 dagen vanaf het moment van binden
+ *    (migratie 0003). Een nieuwere klik overschrijft die binding, zie resolveReferrer.
  */
 
 const KEY = 'ss_ref';
@@ -23,6 +29,11 @@ export function isValidSolAddress(s: string): boolean {
 
 type Stored = { ref: string; ts: number };
 
+/** Adres verkort voor de UI: eerste 4 + laatste 4 tekens. */
+export function shortAddress(a: string): string {
+  return a.length <= 9 ? a : `${a.slice(0, 4)}…${a.slice(-4)}`;
+}
+
 /** Lees ?ref= uit de huidige URL en sla op (last-click wins). Alleen client. */
 export function captureRefFromUrl(): void {
   if (typeof window === 'undefined') return;
@@ -38,8 +49,8 @@ export function captureRefFromUrl(): void {
   }
 }
 
-/** De opgeslagen referrer als die nog geldig is (binnen 30 dagen), anders null. */
-export function getStoredReferrer(): string | null {
+/** De opgeslagen klik (adres + moment) als die nog geldig is, anders null. */
+export function getStoredReferral(): Stored | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem(KEY);
@@ -51,10 +62,15 @@ export function getStoredReferrer(): string | null {
       return null;
     }
     if (!isValidSolAddress(ref)) return null;
-    return ref;
+    return { ref, ts };
   } catch {
     return null;
   }
+}
+
+/** De opgeslagen referrer als die nog geldig is (binnen 30 dagen), anders null. */
+export function getStoredReferrer(): string | null {
+  return getStoredReferral()?.ref ?? null;
 }
 
 /**
@@ -70,22 +86,35 @@ export function getReferrerForWallet(connectedWallet: string | null | undefined)
 
 /**
  * De definitieve referrer voor een sweep, klaar om in de tx te splitsen:
- * 1) een reeds vastgelegde binding (overrulet localStorage), anders de localStorage-referrer;
- * 2) niet de wallet zelf;
+ * 1) de vastgelegde binding (server, 60 dagen geldig), TENZIJ er een nieuwere ?ref=-klik
+ *    in localStorage staat — een verse link overschrijft de bestaande binding, en de
+ *    record-route legt die nieuwe referrer daarna vast zodra de tx bevestigd is;
+ * 2) niet de wallet zelf (geen self-referral);
  * 3) het account moet on-chain bestaan (getAccountInfo != null).
  * Retourneert null als er geen geldige referrer is → dan 100% naar de fee-wallet.
  */
 export async function resolveReferrer(conn: Connection, owner: PublicKey): Promise<PublicKey | null> {
   const ownerStr = owner.toBase58();
 
-  let candidate: string | null = null;
+  let bound: string | null = null;
+  let boundAt = 0;
   try {
     const res = await fetch(`/api/referral/binding?wallet=${ownerStr}`, { cache: 'no-store' });
-    if (res.ok) candidate = ((await res.json()) as { referrer?: string | null })?.referrer ?? null;
+    if (res.ok) {
+      const json = (await res.json()) as { referrer?: string | null; boundAt?: string | null };
+      bound = json?.referrer ?? null;
+      const parsed = json?.boundAt ? Date.parse(json.boundAt) : NaN;
+      boundAt = Number.isNaN(parsed) ? 0 : parsed;
+    }
   } catch {
     /* server/route niet bereikbaar → val terug op localStorage */
   }
-  if (!candidate) candidate = getReferrerForWallet(ownerStr);
+
+  const clicked = getStoredReferral();
+  const clickWins = clicked !== null && (!bound || clicked.ts > boundAt);
+  let candidate = clickWins ? clicked.ref : bound;
+  // Self-referral kan via geen enkel pad de tx in: niet via de klik, niet via de binding.
+  if (candidate === ownerStr) candidate = clickWins ? bound : null;
   if (!candidate || candidate === ownerStr || !isValidSolAddress(candidate)) return null;
 
   const refPk = new PublicKey(candidate);

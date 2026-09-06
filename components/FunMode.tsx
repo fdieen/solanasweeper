@@ -14,8 +14,9 @@ import {
 } from '@/lib/funMode';
 import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy';
 import { planSweep, humanizeSweepError } from '@/lib/sweep';
-import { resolveReferrer, recordReferralPayout } from '@/lib/referral';
+import { resolveReferrer, recordReferralPayout, shortAddress } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
+import { formatSol } from '@/lib/pricing';
 import { lowGasNotice } from '@/lib/messages';
 import { track } from '@vercel/analytics';
 
@@ -39,9 +40,12 @@ function parseFeeWallet(): PublicKey | null {
 export default function FunMode({
   initialAccounts,
   onSwept,
+  onRescanned,
 }: {
   initialAccounts?: ClosableAccount[];
   onSwept?: (r: { closed: number; netSol: number; skipped: number }) => void;
+  /** Verse scanresultaten terug naar WalletScan, zodat de kaart hetzelfde toont als dit scherm. */
+  onRescanned?: (accounts: ClosableAccount[]) => void;
 }) {
   const { address, isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider('solana');
@@ -72,20 +76,25 @@ export default function FunMode({
 
   if (!isConnected) return null;
 
-  // Stap 1: bevestigingsscherm. Hergebruik het scan-resultaat van WalletScan
-  // (initialAccounts) i.p.v. opnieuw te scannen — bespaart een dure RPC-ronde.
-  // De échte verse her-verificatie gebeurt in execute() vlak vóór tekenen.
+  // Stap 1: bevestigingsscherm, altijd op een VERSE scan — net als Pro Mode, dat vlak
+  // vóór het bouwen opnieuw scant. Het scanresultaat van WalletScan kan minuten oud zijn
+  // (andere tab, andere sweep, een transfer in de tussentijd); dan klopt het bedrag in dit
+  // scherm niet met wat er straks getekend wordt. Kost één RPC-ronde per klik op de knop,
+  // niet per render. refreshBatch in de planner blijft het tweede vangnet vlak vóór tekenen.
   async function prepare() {
     if (!address) return;
     setPhase('preparing');
     setErrorMsg('');
     try {
-      let closable = initialAccounts ?? [];
-      if (closable.length === 0) {
-        // Geen doorgegeven resultaat (of leeg) → zelf scannen als fallback.
-        const conn = getProxyConnection();
-        const owner = new PublicKey(address);
-        closable = await scanClosable(conn, owner);
+      const conn = getProxyConnection();
+      const owner = new PublicKey(address);
+      let closable = await scanClosable(conn, owner);
+      // Scan mislukt/leeg maar de kaart had wél werk → val terug op wat WalletScan gaf,
+      // zodat een RPC-hik de knop niet doodslaat.
+      if (closable.length === 0 && (initialAccounts ?? []).length > 0) {
+        closable = initialAccounts ?? [];
+      } else {
+        onRescanned?.(closable); // kaart en dit scherm tonen nu hetzelfde
       }
       if (closable.length === 0) {
         setErrorMsg('No empty accounts to close right now.');
@@ -274,7 +283,8 @@ export default function FunMode({
             <Row label={`Fee (${FEE_BPS / 100}%)`} value={`− ${lamportsToSol(summary.feeLamports).toFixed(4)} SOL`} dim />
             {referrer && splitFee(summary.feeLamports, referrer).referrerLamports > 0 && (
               <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: 'rgba(20,241,149,0.85)', lineHeight: 1.4 }}>
-                Referral active — 25% of the fee ({lamportsToSol(splitFee(summary.feeLamports, referrer).referrerLamports).toFixed(4)} SOL) goes to your referrer, paid in this transaction.
+                Referral active — 25% of the fee ({formatSol(lamportsToSol(splitFee(summary.feeLamports, referrer).referrerLamports))} SOL)
+                {' '}goes to your referrer {shortAddress(referrer.toBase58())}, paid in this transaction.
               </p>
             )}
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '12px 0' }} />

@@ -28,6 +28,16 @@ export default function WalletScan() {
   // (Reown pingt de sessie → re-render) NIET opnieuw scant. Dít was de credit-drain.
   const scannedFor = useRef<string | null>(null);
 
+  // Eén plek waar een scanresultaat in state landt: telling én bedrag komen uit dezelfde
+  // ClosableAccount[] (echte lamports per account), nooit uit een aparte schatting.
+  const applyScan = useCallback((found: ClosableAccount[]) => {
+    const sum = summarize(found);
+    setClosable(found);
+    setEmptyCount(sum.count);
+    setReclaimSol(lamportsToSol(sum.grossLamports));
+    return sum;
+  }, []);
+
   const scan = useCallback(async () => {
     if (!address) return;
     setStatus('scanning');
@@ -36,10 +46,7 @@ export default function WalletScan() {
       const conn = getProxyConnection();
       const owner = new PublicKey(address);
       const found = await scanClosable(conn, owner);
-      const sum = summarize(found);
-      setClosable(found);
-      setEmptyCount(sum.count);
-      setReclaimSol(lamportsToSol(sum.grossLamports));
+      const sum = applyScan(found); // telling, bedrag én analytics uit dezelfde som
       setStatus('done');
       // Analytics: alleen aggregaten (aantal + geronde SOL), geen adres/identiteit.
       track('scan_completed', {
@@ -50,7 +57,7 @@ export default function WalletScan() {
       console.error('Wallet scan failed', e);
       setStatus('error');
     }
-  }, [address]);
+  }, [address, applyScan]);
 
   // Handmatige (re)scan vanuit de UI: bypass de guard zodat een Retry/Rescan altijd werkt.
   const rescan = useCallback(() => {
@@ -84,6 +91,18 @@ export default function WalletScan() {
     rescan(); // verse RPC-state ophalen zodat reclaimable/telling naar 0 gaan
   }, [rescan]);
 
+  /**
+   * Wisselen van mode → verse scan, zodat de teller klopt vóórdat iemand op de knop drukt.
+   * Pro Mode hoeft hier niets: die wordt conditioneel gerenderd, dus een wissel unmount hem
+   * en zijn eigen mount-scan draait opnieuw. Fun Mode leest uit deze state en moet dus wél
+   * expliciet herscannen. Bewust een RPC-ronde per wissel — een klik, geen render.
+   */
+  const switchMode = useCallback((m: Mode) => {
+    if (m === mode) return; // zelfde tab → geen extra RPC-ronde
+    setMode(m);
+    if (m === 'fun') rescan();
+  }, [mode, rescan]);
+
   if (!isConnected) return null;
 
   const card: React.CSSProperties = {
@@ -105,7 +124,7 @@ export default function WalletScan() {
         {(['fun', 'pro'] as Mode[]).map((m) => (
           <button
             key={m}
-            onClick={() => setMode(m)}
+            onClick={() => switchMode(m)}
             style={{
               fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.78rem',
               border: 'none', borderRadius: '999px', padding: '6px 16px', cursor: 'pointer',
@@ -129,6 +148,7 @@ export default function WalletScan() {
           rescan={rescan}
           swept={swept}
           onSwept={onSwept}
+          onRescanned={applyScan}
         />
       )}
     </div>
@@ -136,10 +156,11 @@ export default function WalletScan() {
 }
 
 function FunModeView({
-  status, emptyCount, reclaimSol, closable, rescan, swept, onSwept,
+  status, emptyCount, reclaimSol, closable, rescan, swept, onSwept, onRescanned,
 }: {
   status: Status; emptyCount: number; reclaimSol: number; closable: ClosableAccount[];
   rescan: () => void; swept: SweptResult | null; onSwept: (r: SweptResult) => void;
+  onRescanned: (accounts: ClosableAccount[]) => void;
 }) {
   const pendingFees = closable.filter((a) => a.needsHarvest).length;
   // Na een geslaagde sweep: toon de clean-success (reclaimable 0.0000, telling 0),
@@ -192,7 +213,7 @@ function FunModeView({
               {pendingFees} with pending Token-2022 fees — harvested first
             </p>
           )}
-          {emptyCount > 0 && <FunMode initialAccounts={closable} onSwept={onSwept} />}
+          {emptyCount > 0 && <FunMode initialAccounts={closable} onSwept={onSwept} onRescanned={onRescanned} />}
         </>
       )}
     </>

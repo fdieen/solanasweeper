@@ -101,11 +101,37 @@ export async function POST(req: Request) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ ok: true, tracked: false });
 
-  // Binding: eerste sweep legt vast (referred → referrer, beide uit de tx). Bestaande blijft.
-  await db.from('referral_bindings').upsert(
-    { referred_wallet: referred, referrer_wallet: referrer },
-    { onConflict: 'referred_wallet', ignoreDuplicates: true },
-  );
+  /* Binding (referred → referrer, beide uit de geverifieerde tx).
+   * - Nog geen binding → vastleggen, 60 dagen geldig (default uit migratie 0003).
+   * - Bestaande binding met een ANDERE referrer → overschrijven: de gebruiker kwam
+   *   aantoonbaar via een nieuwe ?ref=-link binnen (de tx betaalde die referrer uit), dus
+   *   dat is een nieuw moment van binden en de 60 dagen gaan opnieuw lopen.
+   * - Zelfde referrer → niets aanraken, zodat herhaalde sweeps de termijn niet eindeloos
+   *   oprekken.
+   */
+  const { data: existing } = await db
+    .from('referral_bindings')
+    .select('referrer_wallet')
+    .eq('referred_wallet', referred)
+    .maybeSingle();
+
+  if (!existing) {
+    await db.from('referral_bindings').upsert(
+      { referred_wallet: referred, referrer_wallet: referrer },
+      { onConflict: 'referred_wallet', ignoreDuplicates: true },
+    );
+  } else if (existing.referrer_wallet !== referrer) {
+    const now = new Date();
+    const expires = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+    await db
+      .from('referral_bindings')
+      .update({
+        referrer_wallet: referrer,
+        created_at: now.toISOString(),
+        expires_at: expires.toISOString(),
+      })
+      .eq('referred_wallet', referred);
+  }
 
   // Payout: idempotent op de unieke tx_signature.
   await db.from('referral_payouts').upsert(
