@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import CircuitBackground from '@/components/CircuitBackground';
 import HelpBot from '@/components/HelpBot';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
+import OpenInWalletButtons from '@/components/OpenInWalletButtons';
 import WalletScan from '@/components/WalletScan';
 import WalletPreview from '@/components/WalletPreview';
 import { HomeSchema } from '@/components/StructuredData';
@@ -191,6 +192,9 @@ export default function Home() {
 
             {/* Rechts: actie-kolom */}
             <div className="hero-action">
+              {/* Alleen mobiel zonder wallet-provider: opent deze pagina (incl. ?ref=) in
+                  de in-app browser van Phantom/Solflare. Rendert null in alle andere gevallen. */}
+              <OpenInWalletButtons />
               <ConnectWalletButton />
               <WalletScan />
 
