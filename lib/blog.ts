@@ -15,6 +15,14 @@ export type BlogArticle = {
 // Nieuwste eerst: /blog rendert deze volgorde ongewijzigd.
 export const BLOG_ARTICLES: BlogArticle[] = [
   {
+    slug: 'solana-rent-reduction-live-what-it-means',
+    title: 'Solana just cut rent by 9%. Here is what that actually means for your wallet.',
+    description:
+      'The first rent cut is live: 9% lower, four steps to go. Empty accounts still return the full deposit — accounts that hold tokens now sit on a surplus that has to be withdrawn.',
+    datePublished: '2026-09-07',
+    readingTime: '3 min read',
+  },
+  {
     slug: 'insufficient-funds-for-rent-solana',
     title: 'Insufficient funds for rent on Solana: what it means and how to fix it',
     description:
