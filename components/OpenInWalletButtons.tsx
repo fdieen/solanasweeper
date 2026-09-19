@@ -1,7 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import { track } from '@vercel/analytics';
+import { track } from '@/lib/analytics';
 
 /**
  * "Open in Phantom" / "Open in Solflare" — alleen op mobiel én alleen als er geen

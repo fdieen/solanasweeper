@@ -4,9 +4,15 @@ import WalletProviders from "@/components/WalletProviders";
 import ReferralCapture from "@/components/ReferralCapture";
 import { SiteSchema } from "@/components/StructuredData";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { FEE_PERCENT } from "@/lib/pricing";
 
 const SITE_URL = "https://solanasweeper.com";
+
+// GA4 meet-ID. Bewust een constante en geen NEXT_PUBLIC_-variabele: het ID staat sowieso
+// leesbaar in de HTML van elke bezoeker, dus er valt niets te verbergen, en een vergeten
+// env-var op Vercel is precies waarom de property wekenlang leeg bleef.
+const GA_MEASUREMENT_ID = "G-VQNERBSQL5";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -91,6 +97,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WalletProviders>{children}</WalletProviders>
         <Analytics />
       </body>
+      {/* Laadt gtag.js na hydration, zodat het de LCP niet vertraagt. Alleen in een
+          productiebuild: anders telt elke `next dev`-sessie mee in de cijfers. Een
+          preview-deploy op Vercel stuurt wél data — filter die in GA4 op hostname als
+          het storend wordt. */}
+      {process.env.NODE_ENV === "production" && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
     </html>
   );
 }

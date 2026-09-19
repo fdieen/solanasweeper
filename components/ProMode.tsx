@@ -16,7 +16,7 @@ import { resolveReferrer, recordReferralPayout, shortAddress } from '@/lib/refer
 import { splitFee } from '@/lib/fees';
 import { formatSol } from '@/lib/pricing';
 import { lowGasNotice } from '@/lib/messages';
-import { track } from '@vercel/analytics';
+import { track } from '@/lib/analytics';
 
 type AnyTx = Transaction | VersionedTransaction;
 type SolanaSigner = {

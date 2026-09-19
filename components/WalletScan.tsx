@@ -6,7 +6,7 @@ import { PublicKey } from '@solana/web3.js';
 import FunMode from './FunMode';
 import ProMode from './ProMode';
 import { getProxyConnection, scanClosable } from '@/lib/solanaProxy';
-import { track } from '@vercel/analytics';
+import { track } from '@/lib/analytics';
 import { summarize, lamportsToSol, type ClosableAccount } from '@/lib/funMode';
 
 type Status = 'idle' | 'scanning' | 'done' | 'error';
