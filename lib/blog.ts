@@ -15,6 +15,14 @@ export type BlogArticle = {
 // Nieuwste eerst: /blog rendert deze volgorde ongewijzigd.
 export const BLOG_ARTICLES: BlogArticle[] = [
   {
+    slug: 'why-rent-scanners-show-different-numbers',
+    title: 'Why two rent scanners give you different numbers for the same wallet',
+    description:
+      'Run two rent tools on one wallet and the totals rarely match. Dust, frozen accounts, Token-2022 coverage, metadata and gross-versus-net all move the number, and usually neither tool is wrong.',
+    datePublished: '2026-09-19',
+    readingTime: '4 min read',
+  },
+  {
     slug: 'solana-rent-reduction-live-what-it-means',
     title: 'Solana just cut rent by 9%. Here is what that actually means for your wallet.',
     description:

@@ -92,6 +92,23 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     readingTime: '4 min read',
   },
   {
+    slug: 'burn-or-swap-dust',
+    title: 'Burn or Swap Solana Dust? How to Decide (and What It Costs)',
+    h1: 'Burn or swap your dust?',
+    description:
+      'Most dust is worth less than the transaction that moves it. When swapping dust to SOL pays off, when burning is the honest answer, and what price impact and Token-2022 transfer fees do to a thin pool.',
+    keywords: [
+      'burn or swap Solana dust', 'swap dust to SOL', 'burn dust tokens Solana',
+      'Solana dust value', 'price impact thin pool', 'Token-2022 transfer fee',
+      'is burning tokens safe', 'convert dust to SOL',
+    ],
+    excerpt:
+      'Swapping dust sounds strictly better than burning it. It often is not. The deciding factor is whether a route exists at all, and what the route costs you.',
+    datePublished: '2026-09-19',
+    dateModified: '2026-09-19',
+    readingTime: '5 min read',
+  },
+  {
     slug: 'common-mistakes',
     title: 'Common Mistakes When Cleaning a Solana Wallet',
     h1: 'Common mistakes',

@@ -39,8 +39,10 @@ export default function Page() {
         Two ways out. Swap the dust for SOL, which recovers whatever trace value exists but only
         works if there is a route with any liquidity at all — for most dust there is not. Or burn
         it, which destroys the tokens and empties the account. Burning is irreversible, so it is the
-        right answer for genuine junk and the wrong one for anything you have not verified. Once an
-        account is genuinely empty, closing it is the straightforward part —{' '}
+        right answer for genuine junk and the wrong one for anything you have not verified. Which of
+        the two pays off is a narrower question than it looks:{' '}
+        <a href="/guide/burn-or-swap-dust">burn or swap</a>{' '}works through what each one costs. Once
+        an account is genuinely empty, closing it is the straightforward part —{' '}
         <a href="/guide/how-to-reclaim-your-sol">the three ways to do it</a>{' '}are here.
       </p>
       <p>
