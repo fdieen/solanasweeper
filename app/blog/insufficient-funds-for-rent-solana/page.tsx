@@ -171,6 +171,15 @@ export default function BlogInsufficientFundsForRent() {
             adds a little compute, and the fee grows with it.
           </p>
 
+          <h2>A different error with a similar name</h2>
+          <p>
+            If your wallet says <code>insufficient funds</code> without mentioning rent, or shows{' '}
+            <code>err 1</code> next to a failed simulation, that is the token program talking about
+            the token rather than the runtime talking about your SOL. Adding SOL will not fix it.{' '}
+            <a href="/errors/custom-program-error-0x1">Error 0x1</a>{' '}explains the difference, and{' '}
+            <a href="/errors">the other common Solana errors</a>{' '}are collected in one place.
+          </p>
+
           <h2>A note on Token-2022 accounts</h2>
           <p>
             Some newer tokens use the Token-2022 program with a <em>transfer fee</em> extension.

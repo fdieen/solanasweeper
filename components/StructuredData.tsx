@@ -18,6 +18,7 @@ import { FEE_PERCENT } from '@/lib/pricing';
 import { FAQS } from '@/lib/faq';
 import { GUIDE_ARTICLES, type GuideArticle } from '@/lib/guide';
 import { BLOG_ARTICLES, type BlogArticle } from '@/lib/blog';
+import { ERROR_PAGES, type ErrorPage } from '@/lib/errors';
 
 const SITE_URL = 'https://solanasweeper.com';
 
@@ -189,6 +190,75 @@ export function BlogIndexSchema() {
             name: a.title,
           })),
         },
+      }}
+    />
+  );
+}
+
+/** Overzichtspagina /errors. */
+export function ErrorIndexSchema() {
+  return (
+    <JsonLd
+      data={{
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        '@id': `${SITE_URL}/errors`,
+        url: `${SITE_URL}/errors`,
+        name: 'Solana error messages, explained',
+        description:
+          'What the common Solana transaction and token program errors mean, and how to clear them.',
+        publisher: ORG_REF,
+        mainEntity: {
+          '@type': 'ItemList',
+          itemListElement: ERROR_PAGES.map((e, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${SITE_URL}/errors/${e.slug}`,
+            name: e.errorText,
+          })),
+        },
+      }}
+    />
+  );
+}
+
+/**
+ * TechArticle + breadcrumb voor een foutmeldingspagina. Bewust TechArticle en geen
+ * Article: dit is naslag bij een concrete melding, geen redactioneel stuk.
+ */
+export function ErrorSchema({ page }: { page: ErrorPage }) {
+  const url = `${SITE_URL}/errors/${page.slug}`;
+  return (
+    <JsonLd
+      data={{
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'TechArticle',
+            '@id': `${url}#article`,
+            headline: page.title,
+            description: page.description,
+            datePublished: page.datePublished,
+            dateModified: page.dateModified,
+            author: ORG_REF,
+            publisher: ORG_REF,
+            mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+            isPartOf: {
+              '@type': 'CreativeWork',
+              name: 'Solana error messages, explained',
+              url: `${SITE_URL}/errors`,
+            },
+            about: page.errorText,
+            proficiencyLevel: 'Beginner',
+            image: OG_IMAGE,
+            inLanguage: 'en',
+          },
+          breadcrumb([
+            { name: 'Home', url: SITE_URL },
+            { name: 'Errors', url: `${SITE_URL}/errors` },
+            { name: page.code ?? page.h1, url },
+          ]),
+        ],
       }}
     />
   );

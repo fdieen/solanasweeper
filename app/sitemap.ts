@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { GUIDE_ARTICLES } from "@/lib/guide";
 import { BLOG_ARTICLES } from "@/lib/blog";
+import { ERROR_PAGES } from "@/lib/errors";
 
 const SITE_URL = "https://solanasweeper.com";
 
@@ -21,7 +22,8 @@ const CONTENT_UPDATED: Record<string, string> = {
   "/safety": "2026-08-15",
   "/faq": "2026-08-15",
   "/guide": "2026-07-09",
-  "/blog": "2026-09-07",
+  "/blog": "2026-09-19",
+  "/errors": "2026-09-20",
   "/referral": "2026-07-19",
   "/links": "2026-07-23",
   "/founders": "2026-07-26",
@@ -51,5 +53,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly",
   }));
 
-  return [...staticEntries, ...guideEntries, ...blogEntries];
+  // Foutmeldingen: lastmod uit de registry, zodat een gecorrigeerde uitleg zichtbaar is
+  // en een styling-deploy niet alles als gewijzigd meldt.
+  const errorEntries: MetadataRoute.Sitemap = ERROR_PAGES.map((e) => ({
+    url: `${SITE_URL}/errors/${e.slug}`,
+    lastModified: e.dateModified,
+    changeFrequency: "monthly",
+  }));
+
+  return [...staticEntries, ...guideEntries, ...blogEntries, ...errorEntries];
 }
