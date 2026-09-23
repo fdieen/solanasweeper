@@ -13,12 +13,8 @@ const FOUNDERS: Founder[] = [
     alt: 'Pixel portrait of Paul, SolanaSweeper co-founder',
     blurb: 'Been here since the forum days. Still opens the terminal before his coffee.',
     chip: 'Class of 2016',
-    // Huidtinten uit paul-pixel.png
+    // Huidtinten uit paul-pixel.png. Alleen het handje: bewust geen lach en geen ogen.
     skin: ['#b8724c', '#b35b2e', '#472411'],
-    // Mond net onder de snor (rij 33–34), tanden over de lichte lip op rij 35–37
-    smile: { x: 20, y: 35, teeth: '#f2e8dc', dark: '#472411' },
-    // Groene ogen, net onder de rand van zijn hoed
-    eyes: { color: '#4f9e5a', light: '#7cc487', left: [20, 27], right: [27, 27] },
   },
   {
     name: 'Frank',
@@ -26,26 +22,8 @@ const FOUNDERS: Founder[] = [
     alt: 'Pixel portrait of Frank, SolanaSweeper co-founder',
     blurb: 'Came in through the noise of 2017, survived the winter, never left.',
     chip: 'Class of 2017',
-    // Huidtinten uit frank-pixel.png
+    // Huidtinten uit frank-pixel.png. Alleen het handje: bewust geen lach en geen ogen.
     skin: ['#f39b78', '#e98c6f', '#6d483e'],
-    // Zelfde gebit als Paul (bewust identiek: kleuren én vorm), alleen de positie verschilt
-    smile: { x: 19, y: 34, teeth: '#f2e8dc', dark: '#472411' },
-    // Ogen open zolang de lach en de hand er zijn: gedempt oogwit, grijsblauwe iris,
-    // ooglidlijn erboven. Beide op rij 26, op even kolommen (zelfde fase t.o.v. het
-    // pixelraster-overlay) en identiek. De huid direct naast en onder elk oog wordt zolang
-    // in één tint overschilderd, zodat ook de omgeving van beide ogen gelijk is (dat dekt
-    // meteen de oorspronkelijke rechteroogpixels op rij 27).
-    eyes: {
-      color: '#6d93b3', light: '#6d93b3', left: [20, 26], right: [26, 26],
-      open: { sclera: '#e3d6cf', lid: '#5c3b32' },
-      cover: {
-        color: '#e07d60',
-        cells: [
-          [19, 26], [23, 26], [20, 27], [21, 27], [22, 27],
-          [25, 26], [29, 26], [26, 27], [27, 27], [28, 27],
-        ],
-      },
-    },
   },
 ];
 
