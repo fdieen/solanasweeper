@@ -1,28 +1,39 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import * as THREE from 'three';
 
 /**
  * KeyCanvas — 3D sleutel die langzaam ronddraait.
  * Transparant canvas, metallic met Solana-getinte glow.
+ *
+ * three.js wordt statisch geïmporteerd zodat het meekomt in de pagina-chunk en niet
+ * als extra lazy chunk na hydration (zie KeyClient). `onReady` vuurt na het eerste
+ * gerenderde frame, zodat de placeholder pas verdwijnt als er echt iets te zien is.
  */
-export default function KeyCanvas() {
+export default function KeyCanvas({ onReady }: { onReady?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // `onReady` zit in de deps: geef een stabiele callback mee (KeyClient doet dat met
+  // useCallback), anders wordt de scene bij elke render opnieuw opgebouwd.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     let destroyed = false;
     let animId: number;
 
-    async function init() {
-      const THREE = await import('three');
+    function init() {
       if (destroyed || !canvas) return;
 
       const W = canvas.offsetWidth || 160;
       const H = canvas.offsetHeight || 160;
 
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      let renderer: THREE.WebGLRenderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      } catch {
+        return; // geen WebGL: de SVG-placeholder in KeyClient blijft staan
+      }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(W, H, false);
       renderer.setClearColor(0x000000, 0);
@@ -93,6 +104,7 @@ export default function KeyCanvas() {
         renderer.render(scene, camera);
       }
       animate();
+      onReady?.();
 
       const onResize = () => {
         if (!canvas) return;
@@ -115,10 +127,9 @@ export default function KeyCanvas() {
       };
     }
 
-    let cleanup: (() => void) | undefined;
-    init().then(fn => { cleanup = fn; });
+    const cleanup = init();
     return () => { destroyed = true; cleanup?.(); };
-  }, []);
+  }, [onReady]);
 
   return <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />;
 }
