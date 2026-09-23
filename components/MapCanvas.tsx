@@ -1,30 +1,40 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type * as THREE_TYPE from 'three';
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 /**
  * MapCanvas — 3D cartoon-kaart met zwevende pin (toon-shaded).
  * Op hover tekent zich een nieuwe route over de kaart.
+ *
+ * three.js wordt statisch geïmporteerd zodat het meekomt in de pagina-chunk en niet
+ * als extra lazy chunk na hydration (zie MapPin). `onReady` vuurt na het eerste
+ * gerenderde frame, zodat de placeholder pas verdwijnt als er echt iets te zien is.
  */
-export default function MapCanvas() {
+export default function MapCanvas({ onReady }: { onReady?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // `onReady` zit in de deps: geef een stabiele callback mee (MapPin doet dat met
+  // useCallback), anders wordt de scene bij elke render opnieuw opgebouwd.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     let destroyed = false;
     let animId: number;
 
-    async function init() {
-      const THREE = await import('three');
-      const { RoundedBoxGeometry } = await import('three/examples/jsm/geometries/RoundedBoxGeometry.js');
+    function init() {
       if (destroyed || !canvas) return;
 
       const W = canvas.offsetWidth || 300;
       const H = canvas.offsetHeight || 260;
 
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      let renderer: THREE.WebGLRenderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      } catch {
+        return; // geen WebGL: de SVG-placeholder in MapPin blijft staan
+      }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(W, H, false);
       renderer.setClearColor(0x000000, 0);
@@ -80,13 +90,13 @@ export default function MapCanvas() {
       });
 
       // Route (tekent zichzelf bij hover)
-      const routes: THREE_TYPE.Vector3[][] = [
+      const routes: THREE.Vector3[][] = [
         [new THREE.Vector3(-1.8, 0.56, 0.9), new THREE.Vector3(-0.6, 0.56, 0.2), new THREE.Vector3(0.6, 0.56, 0.6), new THREE.Vector3(1.6, 0.56, -0.5)],
         [new THREE.Vector3(-1.5, 0.56, -0.8), new THREE.Vector3(-0.2, 0.56, -0.2), new THREE.Vector3(0.9, 0.56, -0.7), new THREE.Vector3(1.7, 0.56, 0.6)],
         [new THREE.Vector3(-1.2, 0.56, 1.0), new THREE.Vector3(0.0, 0.56, 0.4), new THREE.Vector3(0.4, 0.56, -0.6), new THREE.Vector3(1.5, 0.56, 0.2)],
       ];
       let routeIdx = 0;
-      let routeMesh: THREE_TYPE.Mesh | null = null;
+      let routeMesh: THREE.Mesh | null = null;
       const routeMat = new THREE.MeshBasicMaterial({ color: 0x14f195 });
       const startDot = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), new THREE.MeshBasicMaterial({ color: 0x14f195 }));
       map.add(startDot);
@@ -94,7 +104,7 @@ export default function MapCanvas() {
       map.add(endDot);
 
       let drawProgress = 0;
-      let curveRef: THREE_TYPE.CatmullRomCurve3 | null = null;
+      let curveRef: THREE.CatmullRomCurve3 | null = null;
 
       function buildRoute(idx: number) {
         if (routeMesh) { map.remove(routeMesh); routeMesh.geometry.dispose(); }
@@ -153,7 +163,7 @@ export default function MapCanvas() {
         // Route tekenen
         if (routeMesh && drawProgress < 1) {
           drawProgress = Math.min(1, drawProgress + 0.02);
-          const geo = routeMesh.geometry as THREE_TYPE.TubeGeometry;
+          const geo = routeMesh.geometry as THREE.TubeGeometry;
           const total = geo.index ? geo.index.count : 0;
           geo.setDrawRange(0, Math.floor(total * drawProgress));
         }
@@ -161,6 +171,7 @@ export default function MapCanvas() {
         renderer.render(scene, camera);
       }
       animate();
+      onReady?.();
 
       const onResize = () => {
         if (!canvas) return;
@@ -184,10 +195,9 @@ export default function MapCanvas() {
       };
     }
 
-    let cleanup: (() => void) | undefined;
-    init().then((fn) => { cleanup = fn; });
+    const cleanup = init();
     return () => { destroyed = true; cleanup?.(); };
-  }, []);
+  }, [onReady]);
 
   return <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />;
 }
