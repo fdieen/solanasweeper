@@ -586,21 +586,24 @@ html, body {
 .founders-card[data-waving] .founders-hand {
   animation: founders-wave 1.6s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
-/* De lach (tanden) staat aan zolang de hand boven is: tussen 18% en 76% van de zwaai.
-   step-end: geen fade, hij klapt aan en uit zoals pixel-art hoort. */
+/* De lach (tanden) loopt gelijk met de hand: de mond gaat open terwijl de hand omhoog
+   komt (0–18%), blijft open zolang er gezwaaid wordt en gaat weer dicht terwijl de hand
+   zakt (76–100%). Open/dicht = verticaal uitrekken vanaf de liplijn (transform-origin
+   bovenin), zodat het leest als een mond die opengaat, niet als iets dat verschijnt. */
 .founders-smile {
   position: absolute;
   display: block;
-  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: 50% 20%;
 }
 .founders-card[data-waving] .founders-smile {
-  animation: founders-smile 1.6s step-end both;
+  animation: founders-smile 1.6s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 @keyframes founders-smile {
-  0%   { opacity: 0; }
-  18%  { opacity: 1; }
-  76%  { opacity: 0; }
-  100% { opacity: 0; }
+  0%   { transform: scaleY(0); }
+  18%  { transform: scaleY(1); }
+  76%  { transform: scaleY(1); }
+  100% { transform: scaleY(0); }
 }
 @keyframes founders-wave {
   0%   { transform: translateY(110%) rotate(0deg); }
@@ -680,8 +683,8 @@ html, body {
   .founders-card[data-waving] .founders-smile { animation: founders-smile-still 1.2s step-end both; }
 }
 @keyframes founders-smile-still {
-  0%, 99% { opacity: 1; }
-  100%    { opacity: 0; }
+  0%, 99% { transform: scaleY(1); }
+  100%    { transform: scaleY(0); }
 }
 @keyframes founders-wave-still {
   0%, 99% { transform: translateY(0); }
