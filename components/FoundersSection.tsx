@@ -26,15 +26,8 @@ const FOUNDERS: Founder[] = [
     alt: 'Pixel portrait of Frank, SolanaSweeper co-founder',
     blurb: 'Came in through the noise of 2017, survived the winter, never left.',
     chip: 'Class of 2017',
-    // Huidtinten uit frank-pixel.png
+    // Huidtinten uit frank-pixel.png. Frank zwaait alleen: bewust geen lach en geen ogen.
     skin: ['#f39b78', '#e98c6f', '#6d483e'],
-    // Mond onder de neus (rij 30–32), tussen de wangen
-    // Zelfde tanden als Paul; wél een rij tandvlees erboven en een donkerdere mondlijn
-    // rondom, omdat de mond anders wegvalt tegen zijn lichte huid. y=33 zodat de tanden
-    // op dezelfde rij (35) blijven als zonder tandvlees.
-    smile: { x: 19, y: 33, teeth: '#f2e8dc', gums: '#c4625c', dark: '#3a1c14' },
-    // Lichtblauwe ogen; het rechteroog zit één rij lager door de kanteling van zijn hoofd
-    eyes: { color: '#6fb1e3', light: '#a6d4f3', left: [21, 26], right: [26, 27] },
   },
 ];
 

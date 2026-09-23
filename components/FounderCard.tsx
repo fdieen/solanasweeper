@@ -21,10 +21,12 @@ export type Founder = {
   chip: string;
   /** Huidtint uit het portret: [licht, schaduw, omlijning] */
   skin: [string, string, string];
-  /** Waar de lach over het portret valt (linkerbovenhoek op het 48-raster) + kleuren. */
-  smile: { x: number; y: number; teeth: string; teethShade?: string; gums?: string; dark: string };
-  /** Irissen die oplichten tijdens de lach: per oog de linkerpixel op het 48-raster (2 breed). */
-  eyes: { color: string; light: string; left: [number, number]; right: [number, number] };
+  /** Waar de lach over het portret valt (linkerbovenhoek op het 48-raster) + kleuren.
+      Weglaten = alleen zwaaien, geen lach. */
+  smile?: { x: number; y: number; teeth: string; teethShade?: string; gums?: string; dark: string };
+  /** Irissen die oplichten tijdens de lach: per oog de linkerpixel op het 48-raster (2 breed).
+      Weglaten = geen ogen. */
+  eyes?: { color: string; light: string; left: [number, number]; right: [number, number] };
 };
 
 /* Pixelkaart van de lach, 9 breed: mondhoeken omhoog, rij tanden, onderlip.
@@ -86,7 +88,7 @@ function HandSprite({ skin }: { skin: Founder['skin'] }) {
   );
 }
 
-function SmileSprite({ smile }: { smile: Founder['smile'] }) {
+function SmileSprite({ smile }: { smile: NonNullable<Founder['smile']> }) {
   const map = smile.gums ? SMILE_GUMS : SMILE;
   const w = map[0].length;
   const h = map.length;
@@ -123,7 +125,7 @@ function SmileSprite({ smile }: { smile: Founder['smile'] }) {
 /* Twee irissen van 2×1 pixel: iris + een lichtere pixel aan de buitenkant als glans. Het
    overlay beslaat het hele portret (viewBox 48×48), zodat de coördinaten 1-op-1 het
    raster van de foto zijn. */
-function EyesSprite({ eyes }: { eyes: Founder['eyes'] }) {
+function EyesSprite({ eyes }: { eyes: NonNullable<Founder['eyes']> }) {
   return (
     <svg className="founders-eyes" viewBox={`0 0 ${GRID} ${GRID}`} aria-hidden="true" shapeRendering="crispEdges">
       <rect x={eyes.left[0]} y={eyes.left[1]} width={1} height={1} fill={eyes.light} />
@@ -154,8 +156,8 @@ export default function FounderCard({ founder }: { founder: Founder }) {
           // Hand én lach animeren; alleen het einde van de hand-animatie sluit de zwaai af.
           onAnimationEnd={(e) => { if (e.animationName.startsWith('founders-wave')) setWaving(false); }}
         >
-          <EyesSprite eyes={founder.eyes} />
-          <SmileSprite smile={founder.smile} />
+          {founder.eyes && <EyesSprite eyes={founder.eyes} />}
+          {founder.smile && <SmileSprite smile={founder.smile} />}
           <HandSprite skin={founder.skin} />
         </div>
       </div>
