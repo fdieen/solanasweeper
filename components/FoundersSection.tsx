@@ -31,12 +31,20 @@ const FOUNDERS: Founder[] = [
     // Zelfde gebit als Paul (bewust identiek: kleuren én vorm), alleen de positie verschilt
     smile: { x: 19, y: 34, teeth: '#f2e8dc', dark: '#472411' },
     // Ogen open zolang de lach en de hand er zijn: gedempt oogwit, grijsblauwe iris,
-    // ooglidlijn erboven. Beide op rij 26 en identiek; de oorspronkelijke rechteroogpixels
-    // op rij 27 worden zolang in huidtint overschilderd zodat er geen dubbel oog ontstaat.
+    // ooglidlijn erboven. Beide op rij 26, op even kolommen (zelfde fase t.o.v. het
+    // pixelraster-overlay) en identiek. De huid direct naast en onder elk oog wordt zolang
+    // in één tint overschilderd, zodat ook de omgeving van beide ogen gelijk is (dat dekt
+    // meteen de oorspronkelijke rechteroogpixels op rij 27).
     eyes: {
-      color: '#6d93b3', light: '#6d93b3', left: [20, 26], right: [25, 26],
+      color: '#6d93b3', light: '#6d93b3', left: [20, 26], right: [26, 26],
       open: { sclera: '#e3d6cf', lid: '#5c3b32' },
-      cover: { color: '#e07d60', cells: [[26, 27], [27, 27]] },
+      cover: {
+        color: '#e07d60',
+        cells: [
+          [19, 26], [23, 26], [20, 27], [21, 27], [22, 27],
+          [25, 26], [29, 26], [26, 27], [27, 27], [28, 27],
+        ],
+      },
     },
   },
 ];
