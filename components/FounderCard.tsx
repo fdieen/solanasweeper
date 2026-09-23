@@ -22,15 +22,15 @@ export type Founder = {
   /** Huidtint uit het portret: [licht, schaduw, omlijning] */
   skin: [string, string, string];
   /** Waar de lach over het portret valt (linkerbovenhoek op het 48-raster) + kleuren. */
-  smile: { x: number; y: number; teeth: string; dark: string };
+  smile: { x: number; y: number; teeth: string; teethShade?: string; dark: string };
 };
 
 /* Pixelkaart van de lach, 9 breed × 4 hoog: mondhoeken omhoog, rij tanden, onderlip.
-   T = tand, O = donkere mondlijn. */
+   T = tand, U = ondertand (iets donkerder, valt in de schaduw van de lip), O = mondlijn. */
 const SMILE = [
   'O.......O',
   '.OTTTTTO.',
-  '..OTTTO..',
+  '..OUUUO..',
   '...OOO...',
 ];
 const SMILE_W = SMILE[0].length;
@@ -78,7 +78,7 @@ function HandSprite({ skin }: { skin: Founder['skin'] }) {
 }
 
 function SmileSprite({ smile }: { smile: Founder['smile'] }) {
-  const fill: Record<string, string> = { T: smile.teeth, O: smile.dark };
+  const fill: Record<string, string> = { T: smile.teeth, U: smile.teethShade ?? smile.teeth, O: smile.dark };
   return (
     <svg
       className="founders-smile"
