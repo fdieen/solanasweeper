@@ -27,8 +27,8 @@ const FOUNDERS: Founder[] = [
     // Huidtinten uit frank-pixel.png
     skin: ['#f39b78', '#e98c6f', '#6d483e'],
     // Mond onder de neus (rij 30–32), tussen de wangen
-    // Tanden gedempt (warm gebroken wit, ondertanden in lipschaduw) zodat ze niet oplichten
-    smile: { x: 19, y: 34, teeth: '#e3d2c7', teethShade: '#c9b3a6', dark: '#6d483e' },
+    // Zelfde gebit als Paul (bewust identiek), alleen de positie verschilt
+    smile: { x: 19, y: 34, teeth: '#f2e8dc', dark: '#472411' },
   },
 ];
 
