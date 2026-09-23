@@ -106,7 +106,7 @@ export default function MapCanvas({ onReady }: { onReady?: () => void }) {
       let drawProgress = 0;
       let curveRef: THREE.CatmullRomCurve3 | null = null;
 
-      function buildRoute(idx: number) {
+      function buildRoute(idx: number, instant = false) {
         if (routeMesh) { map.remove(routeMesh); routeMesh.geometry.dispose(); }
         const curve = new THREE.CatmullRomCurve3(routes[idx]);
         curveRef = curve;
@@ -115,9 +115,11 @@ export default function MapCanvas({ onReady }: { onReady?: () => void }) {
         map.add(routeMesh);
         startDot.position.copy(routes[idx][0]);
         endDot.position.copy(routes[idx][routes[idx].length - 1]);
-        drawProgress = 0;
+        drawProgress = instant ? 1 : 0;
       }
-      buildRoute(0);
+      // De eerste route staat er meteen: zo is frame 0 gelijk aan de placeholder-afbeelding
+      // in MapPin en tekent alleen een hover een nieuwe route.
+      buildRoute(0, true);
 
       // Pin: ring-kop met gat + punt eronder (klassieke map-pin)
       const pin = new THREE.Group();

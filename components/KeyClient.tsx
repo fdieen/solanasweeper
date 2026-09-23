@@ -4,13 +4,16 @@ import { useCallback, useState } from 'react';
 import KeyCanvas from './KeyCanvas';
 
 /**
- * KeyClient — de 3D-sleutel op /safety, met een statische SVG-sleutel eronder.
+ * KeyClient — de 3D-sleutel op /safety, met /safety-key-frame.png eronder: de eerste
+ * frame (t=0) van precies deze scene, headless gerenderd op 2x met transparante
+ * achtergrond. Die <img> staat in de server-HTML en is dus bij de eerste paint al in
+ * beeld; omdat het dezelfde frame is, valt de overgang naar het canvas niet op. Verander
+ * je de scene (camera, materiaal, lichten), render de PNG dan opnieuw.
  *
- * De SVG staat in de server-HTML en is dus bij de eerste paint al in beeld. KeyCanvas
- * wordt bewust statisch geïmporteerd (geen next/dynamic): zo zit three.js in de
- * pagina-chunk die de browser al vanuit de HTML ophaalt, in plaats van in een tweede
- * lazy chunk die pas na hydration wordt aangevraagd. Zodra het canvas zijn eerste frame
- * heeft gerenderd, vaagt de SVG weg. Zonder WebGL blijft de SVG gewoon staan.
+ * KeyCanvas wordt bewust statisch geïmporteerd (geen next/dynamic): zo zit three.js in
+ * de pagina-chunk die de browser al vanuit de HTML ophaalt, in plaats van in een tweede
+ * lazy chunk die pas na hydration wordt aangevraagd. Zonder WebGL blijft de afbeelding
+ * gewoon staan.
  */
 export default function KeyClient() {
   const [ready, setReady] = useState(false);
@@ -18,30 +21,19 @@ export default function KeyClient() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <svg
+      {/* eslint-disable-next-line @next/next/no-img-element -- exacte eerste frame, geen optimalisatie gewenst */}
+      <img
+        src="/safety-key-frame.png"
+        alt=""
         aria-hidden="true"
-        viewBox="0 0 100 100"
+        width={150}
+        height={150}
+        fetchPriority="high"
         style={{
           position: 'absolute', inset: 0, width: '100%', height: '100%',
           opacity: ready ? 0 : 1, transition: 'opacity 0.45s ease',
-          filter: 'drop-shadow(0 0 10px rgba(20,241,149,0.25))',
         }}
-      >
-        <defs>
-          <linearGradient id="keyMetal" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f2fbf7" />
-            <stop offset="45%" stopColor="#b9d6ca" />
-            <stop offset="100%" stopColor="#6f8f83" />
-          </linearGradient>
-        </defs>
-        {/* Zelfde opbouw als het 3D-model: ring, schacht, twee tanden, 20° gekanteld. */}
-        <g transform="rotate(-20 50 50)" fill="url(#keyMetal)">
-          <circle cx="50" cy="26" r="15" fill="none" stroke="url(#keyMetal)" strokeWidth="9" />
-          <rect x="45.5" y="38" width="9" height="46" rx="4" />
-          <rect x="53" y="64" width="12" height="6" rx="2" />
-          <rect x="53" y="74" width="9" height="6" rx="2" />
-        </g>
-      </svg>
+      />
       <div style={{ position: 'absolute', inset: 0, opacity: ready ? 1 : 0, transition: 'opacity 0.45s ease' }}>
         <KeyCanvas onReady={onReady} />
       </div>
