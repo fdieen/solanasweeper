@@ -28,13 +28,8 @@ const FOUNDERS: Founder[] = [
     chip: 'Class of 2017',
     // Huidtinten uit frank-pixel.png
     skin: ['#f39b78', '#e98c6f', '#6d483e'],
-    // Realistische lach: zachte liplijn in zijn eigen omlijningstint, rij gedempte
-    // boventanden, ondertanden in de schaduw, onderlip iets roder dan de huid, schaduw
-    // eronder. Rij 33–38, tussen de wangen.
-    smile: {
-      x: 19, y: 33, teeth: '#e4d5cb', teethShade: '#c6b3a7', dark: '#6d483e',
-      real: { corner: '#8a5a4b', lip: '#d47a66', shade: '#b5695a' },
-    },
+    // Zelfde gebit als Paul (bewust identiek: kleuren én vorm), alleen de positie verschilt
+    smile: { x: 19, y: 34, teeth: '#f2e8dc', dark: '#472411' },
     // Ogen gaan kort open: gedempt oogwit, grijsblauwe iris, ooglidlijn erboven. Beide op
     // rij 26 en identiek; de oorspronkelijke rechteroogpixels op rij 27 worden zolang in
     // huidtint overschilderd zodat er geen dubbel oog ontstaat.
