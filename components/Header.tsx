@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import ConnectWalletButton from './ConnectWalletButton';
 import OpenInWalletButtons from './OpenInWalletButtons';
 
@@ -82,8 +83,14 @@ const MENU: { title: string; items: { label: string; href: string; icon: string 
   },
 ];
 
+/** Actief op de pagina zelf én op zijn sub-routes: /guide/burn-or-swap-dust licht "Guide" op. */
+function isActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(href + '/');
+}
+
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname() ?? '';
 
   return (
     <>
@@ -118,12 +125,8 @@ export default function Header() {
             <a
               key={label}
               href={href}
-              style={{
-                fontFamily: 'General Sans, sans-serif', fontWeight: 500, fontSize: '0.9rem',
-                color: 'rgba(255,255,255,0.62)', textDecoration: 'none', transition: 'color 0.15s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.62)')}
+              className="nav-link"
+              aria-current={isActive(pathname, href) ? 'page' : undefined}
             >
               {label}
             </a>
@@ -131,12 +134,8 @@ export default function Header() {
           {/* Referral — subtiel groen accent zodat het als promo opvalt, niet schreeuwerig */}
           <a
             href="/referral"
-            style={{
-              fontFamily: 'General Sans, sans-serif', fontWeight: 600, fontSize: '0.9rem',
-              color: '#14F195', textDecoration: 'none', transition: 'color 0.15s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#5cffbf')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#14F195')}
+            className="nav-link nav-link-promo"
+            aria-current={isActive(pathname, '/referral') ? 'page' : undefined}
           >
             Earn 25%
           </a>
@@ -241,25 +240,11 @@ export default function Header() {
               <a
                 key={it.label}
                 href={it.href}
+                className="menu-link"
+                aria-current={isActive(pathname, it.href) ? 'page' : undefined}
                 onClick={() => setOpen(false)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '10px', margin: '0 -10px', borderRadius: '12px',
-                  fontFamily: 'General Sans, sans-serif', fontSize: '0.98rem', fontWeight: 500,
-                  color: 'rgba(255,255,255,0.82)', textDecoration: 'none',
-                  transition: 'background 0.15s, color 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.82)'; }}
               >
-                <span style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '34px', height: '34px', flexShrink: 0, borderRadius: '9px', color: '#14F195',
-                  background: 'linear-gradient(135deg, rgba(20,241,149,0.12), rgba(153,69,255,0.12))',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                }}>
-                  {ICONS[it.icon]}
-                </span>
+                <span className="menu-link-icon">{ICONS[it.icon]}</span>
                 {it.label}
               </a>
             ))}
