@@ -624,6 +624,17 @@ html, body {
   76%  { opacity: 1; }
   100% { opacity: 0; }
 }
+/* Kort open: mee met de mond open, na ~0,5 s weer dicht terwijl de hand nog zwaait. */
+.founders-card[data-waving] .founders-eyes--brief {
+  animation-name: founders-eyes-brief;
+}
+@keyframes founders-eyes-brief {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  48%  { opacity: 1; }
+  58%  { opacity: 0; }
+  100% { opacity: 0; }
+}
 @keyframes founders-wave {
   0%   { transform: translateY(110%) rotate(0deg); }
   18%  { transform: translateY(0)    rotate(0deg); }

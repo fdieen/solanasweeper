@@ -23,10 +23,20 @@ export type Founder = {
   skin: [string, string, string];
   /** Waar de lach over het portret valt (linkerbovenhoek op het 48-raster) + kleuren.
       Weglaten = alleen zwaaien, geen lach. */
-  smile?: { x: number; y: number; teeth: string; teethShade?: string; gums?: string; dark: string };
-  /** Irissen die oplichten tijdens de lach: per oog de linkerpixel op het 48-raster (2 breed).
+  smile?: {
+    x: number; y: number; teeth: string; teethShade?: string; gums?: string; dark: string;
+    /** Realistische variant: zachte liplijn, glimp tanden, onderlip + schaduw (zie SMILE_REAL). */
+    real?: { corner: string; lip: string; shade: string };
+  };
+  /** Ogen tijdens de lach. Standaard: 2 irispixels per oog (linkerpixel op het 48-raster).
+      Met `open`: 3 breed, oogwit + iris + oogwit, met een ooglidlijn erboven; `left`/`right`
+      zijn dan de linkerkolom van het oogwit. `brief`: kort open, dan weer dicht.
       Weglaten = geen ogen. */
-  eyes?: { color: string; light: string; left: [number, number]; right: [number, number] };
+  eyes?: {
+    color: string; light: string; left: [number, number]; right: [number, number];
+    open?: { sclera: string; lid: string };
+    brief?: boolean;
+  };
 };
 
 /* Pixelkaart van de lach, 9 breed: mondhoeken omhoog, rij tanden, onderlip.
@@ -45,6 +55,16 @@ const SMILE_GUMS = [
   '.OTTTTTO.',
   '..OUUUO..',
   '...OOO...',
+];
+/* Realistische lach: C = mondhoek (iets lichter dan de liplijn, lift van de wang),
+   O = liplijn, T = glimp tanden (gedempt), L = onderlip (iets roder dan de huid),
+   S = schaduw onder de lip. Geen wit, geen roze: alles binnen de tinten van de huid. */
+const SMILE_REAL = [
+  'C.......C',
+  '.OOOOOOO.',
+  '..TTTTT..',
+  '.LLLLLLL.',
+  '..SSSSS..',
 ];
 
 /* Pixelkaart van de hand, 11 breed × 13 hoog. L = licht, S = schaduw, O = omlijning. */
@@ -89,7 +109,7 @@ function HandSprite({ skin }: { skin: Founder['skin'] }) {
 }
 
 function SmileSprite({ smile }: { smile: NonNullable<Founder['smile']> }) {
-  const map = smile.gums ? SMILE_GUMS : SMILE;
+  const map = smile.real ? SMILE_REAL : smile.gums ? SMILE_GUMS : SMILE;
   const w = map[0].length;
   const h = map.length;
   const fill: Record<string, string> = {
@@ -97,6 +117,9 @@ function SmileSprite({ smile }: { smile: NonNullable<Founder['smile']> }) {
     U: smile.teethShade ?? smile.teeth,
     G: smile.gums ?? smile.dark,
     O: smile.dark,
+    C: smile.real?.corner ?? smile.dark,
+    L: smile.real?.lip ?? smile.dark,
+    S: smile.real?.shade ?? smile.dark,
   };
   return (
     <svg
@@ -126,12 +149,30 @@ function SmileSprite({ smile }: { smile: NonNullable<Founder['smile']> }) {
    overlay beslaat het hele portret (viewBox 48×48), zodat de coördinaten 1-op-1 het
    raster van de foto zijn. */
 function EyesSprite({ eyes }: { eyes: NonNullable<Founder['eyes']> }) {
+  const open = eyes.open;
+  const eye = ([x, y]: [number, number], flip: boolean) =>
+    open ? (
+      <>
+        <rect x={x} y={y - 1} width={3} height={1} fill={open.lid} />
+        <rect x={x} y={y} width={1} height={1} fill={open.sclera} />
+        <rect x={x + 1} y={y} width={1} height={1} fill={eyes.color} />
+        <rect x={x + 2} y={y} width={1} height={1} fill={open.sclera} />
+      </>
+    ) : (
+      <>
+        <rect x={x} y={y} width={1} height={1} fill={flip ? eyes.color : eyes.light} />
+        <rect x={x + 1} y={y} width={1} height={1} fill={flip ? eyes.light : eyes.color} />
+      </>
+    );
   return (
-    <svg className="founders-eyes" viewBox={`0 0 ${GRID} ${GRID}`} aria-hidden="true" shapeRendering="crispEdges">
-      <rect x={eyes.left[0]} y={eyes.left[1]} width={1} height={1} fill={eyes.light} />
-      <rect x={eyes.left[0] + 1} y={eyes.left[1]} width={1} height={1} fill={eyes.color} />
-      <rect x={eyes.right[0]} y={eyes.right[1]} width={1} height={1} fill={eyes.color} />
-      <rect x={eyes.right[0] + 1} y={eyes.right[1]} width={1} height={1} fill={eyes.light} />
+    <svg
+      className={`founders-eyes${eyes.brief ? ' founders-eyes--brief' : ''}`}
+      viewBox={`0 0 ${GRID} ${GRID}`}
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+    >
+      {eye(eyes.left, false)}
+      {eye(eyes.right, true)}
     </svg>
   );
 }
