@@ -4,13 +4,17 @@
 // Kleuren, typografie en spacing volgen de bestaande design tokens (zie de .founders-*
 // classes in globals.css), niet de hardcoded hex uit de mockup.
 
-const FOUNDERS = [
+import FounderCard, { type Founder } from './FounderCard';
+
+const FOUNDERS: Founder[] = [
   {
     name: 'Paul',
     img: '/founders/paul-pixel.png',
     alt: 'Pixel portrait of Paul, SolanaSweeper co-founder',
     blurb: 'Been here since the forum days. Still opens the terminal before his coffee.',
     chip: 'Class of 2016',
+    // Huidtinten uit paul-pixel.png
+    skin: ['#b8724c', '#b35b2e', '#472411'],
   },
   {
     name: 'Frank',
@@ -18,6 +22,8 @@ const FOUNDERS = [
     alt: 'Pixel portrait of Frank, SolanaSweeper co-founder',
     blurb: 'Came in through the noise of 2017, survived the winter, never left.',
     chip: 'Class of 2017',
+    // Huidtinten uit frank-pixel.png
+    skin: ['#f39b78', '#e98c6f', '#6d483e'],
   },
 ];
 
@@ -36,19 +42,7 @@ export default function FoundersSection() {
 
         <div className="founders-cards">
           {FOUNDERS.map((f) => (
-            <article key={f.name} className="founders-card">
-              {/* Portret op een SOL-E-scherm: afgerond display, groene gloed, pixelraster-overlay.
-                  Bewust een plain <img> (zoals het logo en de hero): de 48×48-bron blijft zo
-                  scherp via image-rendering: pixelated, zonder next/image-resampling. */}
-              <div className="founders-screen">
-                <img src={f.img} alt={f.alt} width={100} height={100} />
-              </div>
-              <div className="founders-who">
-                <h2>{f.name}</h2>
-                <p>{f.blurb}</p>
-                <span className="founders-chip">{f.chip}</span>
-              </div>
-            </article>
+            <FounderCard key={f.name} founder={f} />
           ))}
         </div>
 

@@ -565,6 +565,38 @@ html, body {
     repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.34) 0 1px, transparent 1px 4px);
 }
 
+/* Zwaaiend pixel-handje (zie components/FounderCard.tsx). De clip ligt precies op het
+   beeldvlak van het portret (binnen de 9px padding) en knipt de hand af zodra hij onder
+   de rand zakt. De hand staat rechtsonder, komt omhoog, zwaait om de pols en zakt terug. */
+.founders-hand-clip {
+  position: absolute;
+  inset: 9px;
+  border-radius: 10px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.founders-hand {
+  position: absolute;
+  right: 12.5%;
+  bottom: 0;
+  display: block;
+  transform: translateY(110%);
+  transform-origin: 50% 100%;
+}
+.founders-card[data-waving] .founders-hand {
+  animation: founders-wave 1.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes founders-wave {
+  0%   { transform: translateY(110%) rotate(0deg); }
+  18%  { transform: translateY(0)    rotate(0deg); }
+  30%  { transform: translateY(0)    rotate(22deg); }
+  42%  { transform: translateY(0)    rotate(-16deg); }
+  54%  { transform: translateY(0)    rotate(22deg); }
+  66%  { transform: translateY(0)    rotate(-10deg); }
+  76%  { transform: translateY(0)    rotate(0deg); }
+  100% { transform: translateY(110%) rotate(0deg); }
+}
+
 .founders-who { min-width: 0; }
 .founders-who h2 {
   font-family: 'General Sans', sans-serif;
@@ -627,4 +659,10 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .founders-card { transition: none; }
   .founders-card:hover { transform: none; }
+  /* Geen zwaai-animatie; de hand komt dan kort stil omhoog en verdwijnt weer. */
+  .founders-card[data-waving] .founders-hand { animation: founders-wave-still 1.2s step-end both; }
+}
+@keyframes founders-wave-still {
+  0%, 99% { transform: translateY(0); }
+  100%    { transform: translateY(110%); }
 }
