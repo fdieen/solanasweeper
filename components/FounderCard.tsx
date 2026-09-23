@@ -36,6 +36,9 @@ export type Founder = {
     color: string; light: string; left: [number, number]; right: [number, number];
     open?: { sclera: string; lid: string };
     brief?: boolean;
+    /** Pixels van het portret die in huidtint worden overschilderd zolang de ogen open
+        zijn (bv. de oorspronkelijke, lager staande oogpixels), zodat er geen dubbel oog ontstaat. */
+    cover?: { color: string; cells: [number, number][] };
   };
 };
 
@@ -57,12 +60,14 @@ const SMILE_GUMS = [
   '...OOO...',
 ];
 /* Realistische lach: C = mondhoek (iets lichter dan de liplijn, lift van de wang),
-   O = liplijn, T = glimp tanden (gedempt), L = onderlip (iets roder dan de huid),
+   O = liplijn, T = boventanden (gedempt, direct onder de bovenlip), U = ondertanden
+   (in de schaduw van de mond, dus donkerder), L = onderlip (iets roder dan de huid),
    S = schaduw onder de lip. Geen wit, geen roze: alles binnen de tinten van de huid. */
 const SMILE_REAL = [
   'C.......C',
   '.OOOOOOO.',
-  '..TTTTT..',
+  '.TTTTTTT.',
+  '..UUUUU..',
   '.LLLLLLL.',
   '..SSSSS..',
 ];
@@ -171,6 +176,9 @@ function EyesSprite({ eyes }: { eyes: NonNullable<Founder['eyes']> }) {
       aria-hidden="true"
       shapeRendering="crispEdges"
     >
+      {eyes.cover?.cells.map(([x, y]) => (
+        <rect key={`c${x}-${y}`} x={x} y={y} width={1} height={1} fill={eyes.cover!.color} />
+      ))}
       {eye(eyes.left, false)}
       {eye(eyes.right, true)}
     </svg>
