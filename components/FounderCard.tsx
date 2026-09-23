@@ -22,19 +22,26 @@ export type Founder = {
   /** Huidtint uit het portret: [licht, schaduw, omlijning] */
   skin: [string, string, string];
   /** Waar de lach over het portret valt (linkerbovenhoek op het 48-raster) + kleuren. */
-  smile: { x: number; y: number; teeth: string; teethShade?: string; dark: string };
+  smile: { x: number; y: number; teeth: string; teethShade?: string; gums?: string; dark: string };
 };
 
-/* Pixelkaart van de lach, 9 breed × 4 hoog: mondhoeken omhoog, rij tanden, onderlip.
-   T = tand, U = ondertand (iets donkerder, valt in de schaduw van de lip), O = mondlijn. */
+/* Pixelkaart van de lach, 9 breed: mondhoeken omhoog, rij tanden, onderlip.
+   T = tand, U = ondertand (iets donkerder, valt in de schaduw van de lip), O = mondlijn,
+   G = tandvlees. Met `gums` komt er een rij tandvlees boven de tanden en sluit de mondlijn
+   rondom (5 hoog); zonder is het de compacte 4-hoge versie. */
 const SMILE = [
   'O.......O',
   '.OTTTTTO.',
   '..OUUUO..',
   '...OOO...',
 ];
-const SMILE_W = SMILE[0].length;
-const SMILE_H = SMILE.length;
+const SMILE_GUMS = [
+  'O.......O',
+  'OOGGGGGOO',
+  '.OTTTTTO.',
+  '..OUUUO..',
+  '...OOO...',
+];
 
 /* Pixelkaart van de hand, 11 breed × 13 hoog. L = licht, S = schaduw, O = omlijning. */
 const HAND = [
@@ -78,23 +85,31 @@ function HandSprite({ skin }: { skin: Founder['skin'] }) {
 }
 
 function SmileSprite({ smile }: { smile: Founder['smile'] }) {
-  const fill: Record<string, string> = { T: smile.teeth, U: smile.teethShade ?? smile.teeth, O: smile.dark };
+  const map = smile.gums ? SMILE_GUMS : SMILE;
+  const w = map[0].length;
+  const h = map.length;
+  const fill: Record<string, string> = {
+    T: smile.teeth,
+    U: smile.teethShade ?? smile.teeth,
+    G: smile.gums ?? smile.dark,
+    O: smile.dark,
+  };
   return (
     <svg
       className="founders-smile"
-      viewBox={`0 0 ${SMILE_W} ${SMILE_H}`}
-      width={SMILE_W}
-      height={SMILE_H}
+      viewBox={`0 0 ${w} ${h}`}
+      width={w}
+      height={h}
       aria-hidden="true"
       style={{
         left: `${(smile.x / GRID) * 100}%`,
         top: `${(smile.y / GRID) * 100}%`,
-        width: `${(SMILE_W / GRID) * 100}%`,
-        height: `${(SMILE_H / GRID) * 100}%`,
+        width: `${(w / GRID) * 100}%`,
+        height: `${(h / GRID) * 100}%`,
       }}
       shapeRendering="crispEdges"
     >
-      {SMILE.flatMap((row, y) =>
+      {map.flatMap((row, y) =>
         Array.from(row).map((c, x) =>
           c === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill[c]} />,
         ),
