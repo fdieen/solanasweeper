@@ -15,6 +15,8 @@ const FOUNDERS: Founder[] = [
     chip: 'Class of 2016',
     // Huidtinten uit paul-pixel.png
     skin: ['#b8724c', '#b35b2e', '#472411'],
+    // Mond net onder de snor (rij 33–34), tanden over de lichte lip op rij 35–37
+    smile: { x: 20, y: 35, teeth: '#f2e8dc', dark: '#472411' },
   },
   {
     name: 'Frank',
@@ -24,6 +26,8 @@ const FOUNDERS: Founder[] = [
     chip: 'Class of 2017',
     // Huidtinten uit frank-pixel.png
     skin: ['#f39b78', '#e98c6f', '#6d483e'],
+    // Mond onder de neus (rij 30–32), tussen de wangen
+    smile: { x: 20, y: 34, teeth: '#fbf2ec', dark: '#6d483e' },
   },
 ];
 

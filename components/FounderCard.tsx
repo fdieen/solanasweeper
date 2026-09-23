@@ -21,7 +21,20 @@ export type Founder = {
   chip: string;
   /** Huidtint uit het portret: [licht, schaduw, omlijning] */
   skin: [string, string, string];
+  /** Waar de lach over het portret valt (linkerbovenhoek op het 48-raster) + kleuren. */
+  smile: { x: number; y: number; teeth: string; dark: string };
 };
+
+/* Pixelkaart van de lach, 9 breed × 4 hoog: mondhoeken omhoog, rij tanden, onderlip.
+   T = tand, O = donkere mondlijn. */
+const SMILE = [
+  'O.......O',
+  '.OTTTTTO.',
+  '..OTTTO..',
+  '...OOO...',
+];
+const SMILE_W = SMILE[0].length;
+const SMILE_H = SMILE.length;
 
 /* Pixelkaart van de hand, 11 breed × 13 hoog. L = licht, S = schaduw, O = omlijning. */
 const HAND = [
@@ -64,6 +77,32 @@ function HandSprite({ skin }: { skin: Founder['skin'] }) {
   );
 }
 
+function SmileSprite({ smile }: { smile: Founder['smile'] }) {
+  const fill: Record<string, string> = { T: smile.teeth, O: smile.dark };
+  return (
+    <svg
+      className="founders-smile"
+      viewBox={`0 0 ${SMILE_W} ${SMILE_H}`}
+      width={SMILE_W}
+      height={SMILE_H}
+      aria-hidden="true"
+      style={{
+        left: `${(smile.x / GRID) * 100}%`,
+        top: `${(smile.y / GRID) * 100}%`,
+        width: `${(SMILE_W / GRID) * 100}%`,
+        height: `${(SMILE_H / GRID) * 100}%`,
+      }}
+      shapeRendering="crispEdges"
+    >
+      {SMILE.flatMap((row, y) =>
+        Array.from(row).map((c, x) =>
+          c === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill[c]} />,
+        ),
+      )}
+    </svg>
+  );
+}
+
 export default function FounderCard({ founder }: { founder: Founder }) {
   const [waving, setWaving] = useState(false);
 
@@ -79,7 +118,12 @@ export default function FounderCard({ founder }: { founder: Founder }) {
       <div className="founders-screen">
         {/* eslint-disable-next-line @next/next/no-img-element -- pixel-art, geen resampling gewenst */}
         <img src={founder.img} alt={founder.alt} width={100} height={100} />
-        <div className="founders-hand-clip" onAnimationEnd={() => setWaving(false)}>
+        <div
+          className="founders-hand-clip"
+          // Hand én lach animeren; alleen het einde van de hand-animatie sluit de zwaai af.
+          onAnimationEnd={(e) => { if (e.animationName.startsWith('founders-wave')) setWaving(false); }}
+        >
+          <SmileSprite smile={founder.smile} />
           <HandSprite skin={founder.skin} />
         </div>
       </div>

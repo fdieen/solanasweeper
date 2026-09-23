@@ -586,6 +586,22 @@ html, body {
 .founders-card[data-waving] .founders-hand {
   animation: founders-wave 1.6s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
+/* De lach (tanden) staat aan zolang de hand boven is: tussen 18% en 76% van de zwaai.
+   step-end: geen fade, hij klapt aan en uit zoals pixel-art hoort. */
+.founders-smile {
+  position: absolute;
+  display: block;
+  opacity: 0;
+}
+.founders-card[data-waving] .founders-smile {
+  animation: founders-smile 1.6s step-end both;
+}
+@keyframes founders-smile {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  76%  { opacity: 0; }
+  100% { opacity: 0; }
+}
 @keyframes founders-wave {
   0%   { transform: translateY(110%) rotate(0deg); }
   18%  { transform: translateY(0)    rotate(0deg); }
@@ -661,6 +677,11 @@ html, body {
   .founders-card:hover { transform: none; }
   /* Geen zwaai-animatie; de hand komt dan kort stil omhoog en verdwijnt weer. */
   .founders-card[data-waving] .founders-hand { animation: founders-wave-still 1.2s step-end both; }
+  .founders-card[data-waving] .founders-smile { animation: founders-smile-still 1.2s step-end both; }
+}
+@keyframes founders-smile-still {
+  0%, 99% { opacity: 1; }
+  100%    { opacity: 0; }
 }
 @keyframes founders-wave-still {
   0%, 99% { transform: translateY(0); }
