@@ -605,6 +605,25 @@ html, body {
   76%  { transform: scaleY(1); }
   100% { transform: scaleY(0); }
 }
+/* De ogen lichten op met dezelfde timing als de mond: in tijdens het opkomen van de
+   hand, uit tijdens het zakken. Overlay over het hele portret (zie EyesSprite). */
+.founders-eyes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+}
+.founders-card[data-waving] .founders-eyes {
+  animation: founders-eyes 1.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes founders-eyes {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  76%  { opacity: 1; }
+  100% { opacity: 0; }
+}
 @keyframes founders-wave {
   0%   { transform: translateY(110%) rotate(0deg); }
   18%  { transform: translateY(0)    rotate(0deg); }
@@ -681,6 +700,11 @@ html, body {
   /* Geen zwaai-animatie; de hand komt dan kort stil omhoog en verdwijnt weer. */
   .founders-card[data-waving] .founders-hand { animation: founders-wave-still 1.2s step-end both; }
   .founders-card[data-waving] .founders-smile { animation: founders-smile-still 1.2s step-end both; }
+  .founders-card[data-waving] .founders-eyes { animation: founders-eyes-still 1.2s step-end both; }
+}
+@keyframes founders-eyes-still {
+  0%, 99% { opacity: 1; }
+  100%    { opacity: 0; }
 }
 @keyframes founders-smile-still {
   0%, 99% { transform: scaleY(1); }

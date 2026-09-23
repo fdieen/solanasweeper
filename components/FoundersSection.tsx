@@ -17,6 +17,8 @@ const FOUNDERS: Founder[] = [
     skin: ['#b8724c', '#b35b2e', '#472411'],
     // Mond net onder de snor (rij 33–34), tanden over de lichte lip op rij 35–37
     smile: { x: 20, y: 35, teeth: '#f2e8dc', dark: '#472411' },
+    // Groene ogen, net onder de rand van zijn hoed
+    eyes: { color: '#4f9e5a', light: '#7cc487', left: [20, 27], right: [27, 27] },
   },
   {
     name: 'Frank',
@@ -31,6 +33,8 @@ const FOUNDERS: Founder[] = [
     // rondom, omdat de mond anders wegvalt tegen zijn lichte huid. y=33 zodat de tanden
     // op dezelfde rij (35) blijven als zonder tandvlees.
     smile: { x: 19, y: 33, teeth: '#f2e8dc', gums: '#c4625c', dark: '#3a1c14' },
+    // Lichtblauwe ogen; het rechteroog zit één rij lager door de kanteling van zijn hoofd
+    eyes: { color: '#6fb1e3', light: '#a6d4f3', left: [21, 26], right: [26, 27] },
   },
 ];
 
