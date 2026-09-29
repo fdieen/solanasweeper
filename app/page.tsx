@@ -137,8 +137,11 @@ export default function Home() {
               links tekst + trust-cards, midden de diamant (leeg), rechts de actie-kolom. */}
           <div className="hero-grid">
 
-            {/* Links: hero-tekst */}
+            {/* Links: hero-tekst. Op mobiel is .hero-intro `display: contents`, zodat de twee
+                helften losse flex-items worden en de actie-kolom er tussen kan schuiven
+                (zie .hero-grid in globals.css). Op desktop is het één grid-cel. */}
             <div className="hero-intro">
+              <div className="hero-intro-top">
               <h1 style={{
                 fontFamily: 'General Sans, sans-serif',
                 fontWeight: 700,
@@ -162,6 +165,9 @@ export default function Home() {
                 Every token you have ever held left an empty account behind with about 0.00204 SOL locked inside.
                 SolanaSweeper swaps the dust instead of burning it, closes the accounts, and sends the SOL back to your wallet.
               </p>
+              </div>
+
+              <div className="hero-intro-bottom">
               <p style={{
                 fontFamily: 'General Sans, sans-serif',
                 fontWeight: 700,
@@ -188,6 +194,7 @@ export default function Home() {
                   See how it works
                 </a>
               </p>
+              </div>
             </div>
 
             {/* Rechts: actie-kolom */}
