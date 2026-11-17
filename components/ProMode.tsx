@@ -4,11 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
-import { getProxyConnection, pollConfirm } from '@/lib/solanaProxy';
+import { getProxyConnection, pollConfirm, pollConfirmMany, freshBlockhash, blockhashExpired } from '@/lib/solanaProxy';
 import { scanHoldings, valuateAll } from '@/lib/holdings';
 import { classifyHoldings, type TokenHolding, type Valuation } from '@/lib/classify';
 import { lamportsToSol, FEE_BPS, MIN_SOL_FOR_CLOSE, MIN_SOL_FOR_SWAP } from '@/lib/funMode';
-import { planFromAccounts, humanizeSweepError, humanizeSimError, PreflightError, type CloseableAccount, type SkipReason } from '@/lib/sweep';
+import {
+  planFromAccounts, humanizeSweepError, humanizeSendError, withErrorDetail, PreflightError,
+  BLOCKHASH_EXPIRED_MESSAGE, type CloseableAccount, type SkipReason,
+} from '@/lib/sweep';
 import { logSweepEvent, logSkipsByReason } from '@/lib/events';
 import { buildBurnBatches, filterBurnSafe } from '@/lib/proMode';
 import { getQuote, buildSwapTransaction } from '@/lib/jupiter';
@@ -194,7 +197,16 @@ export default function ProMode() {
   }
 
   // labelsPerTx: de items die in tx i zitten, zodat een mislukte tx per item een reden oplevert.
-  async function sendAndCount(conn: ReturnType<typeof getProxyConnection>, signed: AnyTx[], labelsPerTx: string[][]) {
+  // Eerst alles versturen, dan alles in één poll-lus bevestigen. Vroeger wachtte elke tx
+  // tot 45 s op bevestiging vóór de volgende ging, waardoor de blockhash van de latere
+  // txs verliep en ze allemaal faalden. sendRawTransaction met preflight laat de node
+  // simuleren met ónze blockhash (simulateTransaction vervangt die stilletjes).
+  async function sendAndCount(
+    conn: ReturnType<typeof getProxyConnection>,
+    signed: AnyTx[],
+    labelsPerTx: string[][],
+    lastValidBlockHeight?: number,
+  ) {
     let ok = 0;
     const skipped: SkipDetail[] = [];
     const confirmedTxs: { i: number; sig: string }[] = [];
@@ -202,50 +214,43 @@ export default function ProMode() {
       for (const label of labels) skipped.push({ label, reason });
     };
     const wallet = address ?? '';
+    const sent: { i: number; sig: string }[] = [];
     for (let i = 0; i < signed.length; i++) {
       const labels = labelsPerTx[i] ?? [];
-      const planned = labels.length;
       try {
-        const tx = signed[i];
-        const sim = tx instanceof VersionedTransaction
-          ? await conn.simulateTransaction(tx)
-          : await conn.simulateTransaction(tx);
-        if (sim.value.err) {
-          const reason = humanizeSimError(sim.value.err, sim.value.logs ?? []);
-          skipAll(labels, reason);
-          logSweepEvent({
-            wallet, mode: 'pro', phase: 'send', outcome: 'error',
-            errorCode: 'simulation_failed', message: reason, accountsPlanned: planned, accountsDone: 0,
-          });
-          continue;
-        }
         const sig = await conn.sendRawTransaction(signed[i].serialize(), { skipPreflight: false, maxRetries: 3 });
-        const confirmed = await pollConfirm(conn, sig);
-        if (confirmed) {
-          ok += planned;
-          confirmedTxs.push({ i, sig });
-          logSweepEvent({
-            wallet, mode: 'pro', phase: 'confirm', outcome: 'ok',
-            signature: sig, accountsPlanned: planned, accountsDone: planned,
-          });
-        } else {
-          skipAll(labels, 'Not confirmed in time — nothing was changed. Please retry.');
-          logSweepEvent({
-            wallet, mode: 'pro', phase: 'confirm', outcome: 'error',
-            errorCode: 'not_confirmed', signature: sig, message: 'Not confirmed in time',
-            accountsPlanned: planned, accountsDone: 0,
-          });
-        }
+        sent.push({ i, sig });
       } catch (e) {
         console.error('tx failed', e);
-        const reason = humanizeSweepError(e);
+        const reason = humanizeSendError(e);
         skipAll(labels, reason);
         logSweepEvent({
           wallet, mode: 'pro', phase: 'send', outcome: 'error',
-          errorCode: 'send_failed', message: reason, accountsPlanned: planned, accountsDone: 0,
+          errorCode: 'send_failed', message: withErrorDetail(reason, e),
+          accountsPlanned: labels.length, accountsDone: 0,
         });
       }
     }
+    const results = await pollConfirmMany(conn, sent.map((x) => x.sig), lastValidBlockHeight);
+    sent.forEach(({ i, sig }, k) => {
+      const labels = labelsPerTx[i] ?? [];
+      const planned = labels.length;
+      if (results[k]) {
+        ok += planned;
+        confirmedTxs.push({ i, sig });
+        logSweepEvent({
+          wallet, mode: 'pro', phase: 'confirm', outcome: 'ok',
+          signature: sig, accountsPlanned: planned, accountsDone: planned,
+        });
+      } else {
+        skipAll(labels, 'Not confirmed in time — nothing was changed. Please retry.');
+        logSweepEvent({
+          wallet, mode: 'pro', phase: 'confirm', outcome: 'error',
+          errorCode: 'not_confirmed', signature: sig, message: 'Not confirmed before the blockhash expired',
+          accountsPlanned: planned, accountsDone: 0,
+        });
+      }
+    });
     return { ok, skipped, confirmed: confirmedTxs };
   }
 
@@ -273,8 +278,13 @@ export default function ProMode() {
         const labels = labelsPerTx[i] ?? [];
         const planned = labels.length;
         try {
-          const sig = await signer.signAndSendTransaction(txs[i]);
-          const confirmed = await pollConfirm(conn, sig);
+          // Elke burn vraagt een eigen approval; verse blockhash per tx zodat een
+          // gebruiker die rustig doorklikt niet tegen een verlopen blockhash aanloopt.
+          const bh = await freshBlockhash(conn);
+          const tx = txs[i];
+          if (tx instanceof Transaction) tx.recentBlockhash = bh.blockhash;
+          const sig = await signer.signAndSendTransaction(tx);
+          const confirmed = await pollConfirm(conn, sig, { lastValidBlockHeight: bh.lastValidBlockHeight });
           if (confirmed) {
             ok += planned;
             confirmedTxs.push({ i, sig });
@@ -303,7 +313,7 @@ export default function ProMode() {
           for (const label of labels) skipped.push({ label, reason });
           logSweepEvent({
             wallet, mode: 'pro', phase: 'send', outcome: 'error',
-            errorCode: 'burn_send_failed', message: reason, accountsPlanned: planned, accountsDone: 0,
+            errorCode: 'burn_send_failed', message: withErrorDetail(reason, e), accountsPlanned: planned, accountsDone: 0,
           });
         }
         pending.shift();
@@ -313,8 +323,13 @@ export default function ProMode() {
     if (pending.length > 0) {
       // Fallback: zelf tekenen en versturen. signGroup gooit als de wallet ook dit niet
       // kan — die fout landt in humanizeSweepError met een leesbare tekst.
+      const bh = await freshBlockhash(conn);
+      for (const i of pending) {
+        const tx = txs[i];
+        if (tx instanceof Transaction) tx.recentBlockhash = bh.blockhash;
+      }
       const signed = await signGroup(pending.map((i) => txs[i]));
-      const res = await sendAndCount(conn, signed, pending.map((i) => labelsPerTx[i] ?? []));
+      const res = await sendAndCount(conn, signed, pending.map((i) => labelsPerTx[i] ?? []), bh.lastValidBlockHeight);
       ok += res.ok;
       skipped.push(...res.skipped);
       for (const c of res.confirmed) confirmedTxs.push({ i: pending[c.i], sig: c.sig });
@@ -400,16 +415,35 @@ export default function ProMode() {
       }
 
       // Closes + swaps: vooraf tekenen (sign-all), daarna versturen via sendRaw.
+      // Verse blockhash pas hier: scannen, quotes ophalen en plannen kosten tijd, en een
+      // blockhash leeft maar 60–90 s. De swaps hebben Jupiter's eigen (verse) blockhash.
+      const closeHash = await freshBlockhash(conn);
+      for (const tx of closeBuilt.transactions) tx.recentBlockhash = closeHash.blockhash;
       const signedCloses = await signGroup(closeBuilt.transactions);
       const signedVersioned = await signGroup(versionedTxs);
       track('sweep_signed', { mode: 'pro' });
 
-      const closeRes = await sendAndCount(conn, signedCloses, closeLabels);
+      // Stond de wallet-popup te lang open, dan kunnen de closes niet meer landen.
+      const closesExpired = signedCloses.length > 0
+        && (await blockhashExpired(conn, closeHash.lastValidBlockHeight));
+      if (closesExpired) {
+        logSweepEvent({
+          wallet: address, mode: 'pro', phase: 'sign', outcome: 'error',
+          errorCode: 'blockhash_expired', message: BLOCKHASH_EXPIRED_MESSAGE,
+          accountsPlanned: closeBuilt.batches.reduce((s, b) => s + b.length, 0), accountsDone: 0,
+        });
+      }
+      const closeRes = closesExpired
+        ? { ok: 0, confirmed: [] as { i: number; sig: string }[],
+            skipped: closeLabels.flat().map((label) => ({ label, reason: BLOCKHASH_EXPIRED_MESSAGE })) }
+        : await sendAndCount(conn, signedCloses, closeLabels, closeHash.lastValidBlockHeight);
+
+      // Swaps direct na de closes versturen — vroeger pas ná de burns, die elk een eigen
+      // approval vragen; tegen die tijd was Jupiter's blockhash vaak al verlopen.
+      const swapRes = await sendAndCount(conn, signedVersioned, swapLabels);
 
       // Burns: wallet tekent én verstuurt zelf (veilige Phantom-route).
       const burnRes = await sendBurnGroup(conn, burnBuilt.transactions, burnLabels);
-
-      const swapRes = await sendAndCount(conn, signedVersioned, swapLabels);
 
       // Referral-payouts registreren voor bevestigde close- en burn-batches. De fee-split
       // zit alleen op de rent-fee (SystemProgram-transfer), niet op de Jupiter-swap-fee.
@@ -467,7 +501,7 @@ export default function ProMode() {
           ...swapSkipped.map((sk) => sk.reason),
         ],
       );
-      for (const message of closeBuilt.errors) {
+      for (const message of closeBuilt.errorDetails) {
         logSweepEvent({
           wallet: address, mode: 'pro', phase: 'preflight', outcome: 'error',
           errorCode: 'batch_preflight_failed', message,
@@ -511,7 +545,7 @@ export default function ProMode() {
         phase: e instanceof PreflightError ? 'preflight' : 'sign',
         outcome: 'error',
         errorCode: e instanceof PreflightError ? e.code : 'sweep_failed',
-        message,
+        message: withErrorDetail(message, e),
       });
       setErrorMsg(message);
       setPhase('error');

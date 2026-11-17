@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 /**
  * Classificatie voor Pro Mode.
@@ -61,7 +62,8 @@ export function hasValue(v: Valuation | undefined): boolean {
  */
 export function classifyToken(h: TokenHolding, v: Valuation | undefined): Category {
   if (h.compressed) return 'skip-compressed'; // v1: cNFTs uitsluiten
-  if (h.frozen) return 'skip-frozen';          // niet burn/close-baar
+  // Bevroren: niet te burnen. Leeg + klassiek Token-programma sluit wél (on-chain getoetst).
+  if (h.frozen && !(h.amountRaw === '0' && h.programId.equals(TOKEN_PROGRAM_ID))) return 'skip-frozen';
   // Swappen kan nog (owner mag transfereren); sluiten/burn+close niet — de burn-tx
   // sluit het account erna en zou dus als geheel falen.
   if (h.closeLocked && (h.amountRaw === '0' || h.isNft || !hasValue(v))) return 'skip-close-locked';

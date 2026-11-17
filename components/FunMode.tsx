@@ -12,8 +12,10 @@ import {
   type ClosableAccount,
   type Summary,
 } from '@/lib/funMode';
-import { getProxyConnection, scanClosable, pollConfirm } from '@/lib/solanaProxy';
-import { planSweep, humanizeSweepError, humanizeSimError, PreflightError } from '@/lib/sweep';
+import { getProxyConnection, scanClosable, freshBlockhash, blockhashExpired, pollConfirmMany } from '@/lib/solanaProxy';
+import {
+  planSweep, humanizeSweepError, humanizeSendError, withErrorDetail, PreflightError, BLOCKHASH_EXPIRED_MESSAGE,
+} from '@/lib/sweep';
 import { logSweepEvent, logSkipsByReason } from '@/lib/events';
 import { resolveReferrer, recordReferralPayout, shortAddress } from '@/lib/referral';
 import { splitFee } from '@/lib/fees';
@@ -117,7 +119,7 @@ export default function FunMode({
       console.error(e);
       logSweepEvent({
         wallet: address, mode: 'fun', phase: 'scan', outcome: 'error',
-        errorCode: 'scan_failed', message: humanizeSweepError(e),
+        errorCode: 'scan_failed', message: withErrorDetail(humanizeSweepError(e), e),
       });
       setErrorMsg('Could not read your wallet (RPC). Try again.');
       setPhase('error');
@@ -143,18 +145,18 @@ export default function FunMode({
 
       // Plannen: verse scan → chunken → per batch herbevestigen → preflight met
       // split-retry. Alles vóór het tekenen, zodat één signAllTransactions volstaat.
-      const { blockhash } = await conn.getLatestBlockhash('confirmed');
       const feeWallet = parseFeeWallet();
-      const { transactions, batches, skipped: planSkipped, errors: planErrors } = await planSweep({
-        connection: conn, owner, feeWallet, blockhash, referrer,
-      });
+      const { blockhash: planHash } = await conn.getLatestBlockhash('confirmed');
+      const {
+        transactions, batches, skipped: planSkipped, errors: planErrors, errorDetails: planErrorDetails,
+      } = await planSweep({ connection: conn, owner, feeWallet, blockhash: planHash, referrer });
 
       // Wat de planner afwees, per reden geteld (al gesloten, niet leeg, frozen, preflight).
       logSkipsByReason(
         { wallet: address, mode: 'fun', phase: 'preflight' },
         planSkipped.map((sk) => sk.reason),
       );
-      for (const message of planErrors) {
+      for (const message of planErrorDetails) {
         logSweepEvent({ wallet: address, mode: 'fun', phase: 'preflight', outcome: 'error', errorCode: 'batch_preflight_failed', message });
       }
 
@@ -164,6 +166,11 @@ export default function FunMode({
         setPhase('error');
         return;
       }
+
+      // Verse blockhash pas NA het plannen: plannen met split-retry kan lang duren, en
+      // een blockhash leeft maar 60–90 s. Ongetekende legacy-txs mogen we nog aanpassen.
+      const { blockhash, lastValidBlockHeight } = await freshBlockhash(conn);
+      for (const tx of transactions) tx.recentBlockhash = blockhash;
 
       // Tekenen (1 approval indien mogelijk, anders per tx)
       const signer = walletProvider as SolanaSigner;
@@ -178,70 +185,85 @@ export default function FunMode({
       }
       track('sweep_signed', { mode: 'fun', transactions: signed.length });
 
-      // Per batch: simuleren → versturen → bevestigen (geïsoleerd, atomair)
+      // Stond de wallet-popup te lang open, dan kan niets meer landen. Eén duidelijke
+      // melding i.p.v. N keer "send failed".
+      if (await blockhashExpired(conn, lastValidBlockHeight)) {
+        logSweepEvent({
+          wallet: address, mode: 'fun', phase: 'sign', outcome: 'error',
+          errorCode: 'blockhash_expired', message: BLOCKHASH_EXPIRED_MESSAGE,
+          accountsPlanned: batches.reduce((s, b) => s + b.length, 0), accountsDone: 0,
+        });
+        setErrorMsg(BLOCKHASH_EXPIRED_MESSAGE);
+        setPhase('error');
+        return;
+      }
+
+      // 1) Alles direct achter elkaar versturen. Vroeger: per batch versturen en dan tot
+      //    45 s op bevestiging wachten — de blockhash van latere batches verliep intussen
+      //    en die faalden allemaal. sendRawTransaction met preflight laat de node zelf
+      //    simuleren (met ónze blockhash, anders dan simulateTransaction).
       let closed = 0;
       let reclaimed = 0;
       // Accounts die de planner al afwees (al gesloten, niet leeg, frozen, preflight)
       // tellen mee in de skipped-melding, naast batches die alsnog on-chain falen.
       let skipped = planSkipped.length;
+      let sendError = '';
+      const sent: { i: number; sig: string }[] = [];
       for (let i = 0; i < signed.length; i++) {
-        const stx = signed[i];
         const planned = batches[i].length;
         try {
-          const sim = await conn.simulateTransaction(stx);
-          if (sim.value.err) {
-            skipped += planned;
-            logSweepEvent({
-              wallet: address, mode: 'fun', phase: 'send', outcome: 'error',
-              errorCode: 'simulation_failed', message: humanizeSimError(sim.value.err, sim.value.logs ?? []),
-              accountsPlanned: planned, accountsDone: 0,
-            });
-            continue;
-          }
-          const sig = await conn.sendRawTransaction(stx.serialize(), {
+          const sig = await conn.sendRawTransaction(signed[i].serialize(), {
             skipPreflight: false,
             maxRetries: 3,
           });
-          const ok = await pollConfirm(conn, sig);
-          if (ok) {
-            logSweepEvent({
-              wallet: address, mode: 'fun', phase: 'confirm', outcome: 'ok',
-              signature: sig, accountsPlanned: planned, accountsDone: planned,
-            });
-            closed += planned;
-            const batchGross = batches[i].reduce((s, a) => s + a.rentLamports, 0);
-            reclaimed += batchGross;
-            // Referral-payout registreren (fire-and-forget) voor deze bevestigde batch.
-            if (referrer && feeWallet) {
-              const batchFee = Math.floor((batchGross * FEE_BPS) / 10_000);
-              const { referrerLamports } = splitFee(batchFee, referrer);
-              // Alleen de signature melden; de server verifieert + leidt de rest af.
-              if (referrerLamports > 0) recordReferralPayout(sig);
-            }
-          } else {
-            skipped += planned;
-            logSweepEvent({
-              wallet: address, mode: 'fun', phase: 'confirm', outcome: 'error',
-              errorCode: 'not_confirmed', signature: sig,
-              message: 'Not confirmed in time', accountsPlanned: planned, accountsDone: 0,
-            });
-          }
+          sent.push({ i, sig });
         } catch (e) {
           console.error('Batch failed', e);
           skipped += planned;
+          const message = humanizeSendError(e);
+          sendError ||= message;
           logSweepEvent({
             wallet: address, mode: 'fun', phase: 'send', outcome: 'error',
-            errorCode: 'send_failed', message: humanizeSweepError(e),
+            errorCode: 'send_failed', message: withErrorDetail(message, e),
             accountsPlanned: planned, accountsDone: 0,
           });
         }
       }
 
+      // 2) Alles tegelijk bevestigen, tot het definitief is (bevestigd of blockhash verlopen).
+      const confirmed = await pollConfirmMany(conn, sent.map((s) => s.sig), lastValidBlockHeight);
+      sent.forEach(({ i, sig }, k) => {
+        const planned = batches[i].length;
+        if (confirmed[k]) {
+          logSweepEvent({
+            wallet: address, mode: 'fun', phase: 'confirm', outcome: 'ok',
+            signature: sig, accountsPlanned: planned, accountsDone: planned,
+          });
+          closed += planned;
+          const batchGross = batches[i].reduce((s, a) => s + a.rentLamports, 0);
+          reclaimed += batchGross;
+          // Referral-payout registreren (fire-and-forget) voor deze bevestigde batch.
+          if (referrer && feeWallet) {
+            const batchFee = Math.floor((batchGross * FEE_BPS) / 10_000);
+            const { referrerLamports } = splitFee(batchFee, referrer);
+            // Alleen de signature melden; de server verifieert + leidt de rest af.
+            if (referrerLamports > 0) recordReferralPayout(sig);
+          }
+        } else {
+          skipped += planned;
+          logSweepEvent({
+            wallet: address, mode: 'fun', phase: 'confirm', outcome: 'error',
+            errorCode: 'not_confirmed', signature: sig,
+            message: 'Not confirmed before the blockhash expired', accountsPlanned: planned, accountsDone: 0,
+          });
+        }
+      });
+
       const netLamports = reclaimed - Math.floor((reclaimed * FEE_BPS) / 10_000);
       const sweptResult = { closed, netSol: lamportsToSol(netLamports), skipped };
       setResult(sweptResult);
       // Preflight-reden meegeven zodat "3 skipped" niet zonder uitleg blijft staan.
-      setNotice(planErrors[0] ?? '');
+      setNotice(planErrors[0] ?? sendError);
       setPhase('done');
 
       // Pas NA on-chain bevestiging (de pollConfirm hierboven is al gelopen): laat
@@ -268,7 +290,7 @@ export default function FunMode({
         phase: e instanceof PreflightError ? 'preflight' : 'sign',
         outcome: 'error',
         errorCode: e instanceof PreflightError ? e.code : 'sweep_failed',
-        message,
+        message: withErrorDetail(message, e),
       });
       setErrorMsg(message);
       setPhase('error');

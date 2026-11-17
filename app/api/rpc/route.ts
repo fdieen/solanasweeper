@@ -133,18 +133,37 @@ export async function POST(req: NextRequest) {
   logRpc('fwd', ip, methods);
 
   // Doorsturen naar Helius
-  try {
-    const res = await fetch(upstream, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    return new Response(text, {
-      status: res.status,
-      headers: { 'content-type': 'application/json' },
-    });
-  } catch {
-    return jsonRpcError('Upstream RPC request failed', 502);
+  // Helius knijpt bij pieken af met 429 (al bij ~30 gelijktijdige calls). De client
+  // draait met disableRetryOnRateLimit, dus zonder retry hier werd elke piek meteen
+  // "Could not estimate fee" in de UI. Kort opnieuw proberen met backoff is veilig, ook
+  // voor sendTransaction: dezelfde getekende tx heeft dezelfde signature (idempotent).
+  const payload = JSON.stringify(body);
+  const delays = [250, 600, 1200];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(upstream, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: payload,
+      });
+      const retryable = res.status === 429 || res.status >= 500;
+      if (retryable && attempt < delays.length) {
+        await res.body?.cancel();
+        await new Promise((r) => setTimeout(r, delays[attempt]));
+        continue;
+      }
+      if (retryable) console.warn(`[rpc] upstream ${res.status} after ${attempt} retries`);
+      const text = await res.text();
+      return new Response(text, {
+        status: res.status,
+        headers: { 'content-type': 'application/json' },
+      });
+    } catch {
+      if (attempt < delays.length) {
+        await new Promise((r) => setTimeout(r, delays[attempt]));
+        continue;
+      }
+      return jsonRpcError('Upstream RPC request failed', 502);
+    }
   }
 }

@@ -112,7 +112,9 @@ export function filterClosable(
     if (!info) continue;
 
     if (info.tokenAmount?.amount !== '0') continue; // niet leeg
-    if (info.state === 'frozen') continue;           // bevroren → niet sluitbaar
+    // Bevroren + leeg sluit gewoon bij het klassieke Token-programma (on-chain getoetst);
+    // Token-2022 niet geverifieerd → daar overslaan.
+    if (info.state === 'frozen' && programId.equals(TOKEN_2022_PROGRAM_ID)) continue;
     if (hasForeignCloseAuthority(info.closeAuthority, info.owner)) continue; // alleen de authority kan sluiten
 
     // Token-2022: openstaande withheld transfer-fees moeten eerst geharvest worden.

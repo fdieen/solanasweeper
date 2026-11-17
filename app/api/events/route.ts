@@ -18,14 +18,14 @@ const MODES = new Set(['fun', 'pro']);
 const PHASES = new Set(['scan', 'preflight', 'sign', 'send', 'confirm']);
 const OUTCOMES = new Set(['ok', 'skipped', 'error']);
 
-const MAX_MESSAGE = 300;   // onze eigen humanize-teksten zijn kort; kap de rest af
+const MAX_MESSAGE = 600;   // UI-tekst + technisch detail (withErrorDetail); kap de rest af
 const MAX_ERROR_CODE = 64;
 
 /* Rate-limit per IP (fail-open, in-memory) — zelfde vorm als in /api/rpc. Houdt een
  * kapotte client of een grapjas met curl uit de tabel; bij twijfel liever loggen dan
  * blokkeren, want dit pad mag nooit iets breken. */
 const WINDOW_MS = 60_000;
-const MAX_EVENTS_PER_WINDOW = 60;
+const MAX_EVENTS_PER_WINDOW = 240; // een wallet met veel batches logt er snel 30+ per poging
 const ipHits = new Map<string, number[]>();
 
 function withinRateLimit(ip: string): boolean {

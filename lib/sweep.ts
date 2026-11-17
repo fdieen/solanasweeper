@@ -95,7 +95,9 @@ export async function scanCloseableAccounts(
     const isT22 = account.owner.equals(TOKEN_2022_PROGRAM_ID);
 
     if (data.amount !== BigInt(0)) { skipped.push({ address: pubkey, reason: 'not_empty' }); continue; }
-    if (data.state === 2) { skipped.push({ address: pubkey, reason: 'frozen' }); continue; }
+    // Bevroren + leeg is bij het klassieke Token-programma gewoon sluitbaar (on-chain
+    // getoetst). Voor Token-2022 niet geverifieerd → daar blijven we voorzichtig.
+    if (data.state === 2 && isT22) { skipped.push({ address: pubkey, reason: 'frozen' }); continue; }
     if (rawHasForeignCloseAuthority(data)) { skipped.push({ address: pubkey, reason: 'foreign_close_authority' }); continue; }
 
     let needsHarvest = false;
@@ -355,6 +357,45 @@ export function humanizeSweepError(e: unknown): string {
   return 'Something went wrong. No funds moved unless a transaction confirmed.';
 }
 
+/**
+ * Technische oorzaak van een fout, kort en op één regel, voor sweep_events. De UI blijft
+ * de gehumaniseerde tekst tonen; zonder dit detail zag je in de logs alleen "please
+ * retry" en was niet te achterhalen wát er faalde (blockhash, programmafout, 429, …).
+ * Bevat geen geheimen: hooguit publieke adressen en programmalogs.
+ */
+export function errorDetail(e: unknown): string {
+  try {
+    const o = (e ?? {}) as { message?: unknown; logs?: unknown; transactionLogs?: unknown };
+    const msg = e instanceof Error ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
+    const logs = (Array.isArray(o.logs) ? o.logs : Array.isArray(o.transactionLogs) ? o.transactionLogs : []) as string[];
+    const tail = logs.filter((l) => /error|failed|insufficient|invalid|mismatch/i.test(String(l))).slice(-2).join(' / ');
+    return [msg, tail].filter(Boolean).join(' :: ').replace(/\s+/g, ' ').slice(0, 300);
+  } catch {
+    return '';
+  }
+}
+
+export const BLOCKHASH_EXPIRED_MESSAGE =
+  'The approval took too long, so the network would reject the transaction. Nothing was sent. Please try again.';
+
+/**
+ * Fout bij sendRawTransaction (met preflight) naar UI-tekst. De node simuleert zelf en
+ * geeft programmalogs mee; die zijn specifieker dan de generieke humanizeSweepError.
+ */
+export function humanizeSendError(e: unknown): string {
+  const o = (e ?? {}) as { logs?: unknown; transactionLogs?: unknown };
+  const logs = Array.isArray(o.logs) ? o.logs : Array.isArray(o.transactionLogs) ? o.transactionLogs : [];
+  if (/blockhash not found|block height exceeded/i.test(errorDetail(e))) return BLOCKHASH_EXPIRED_MESSAGE;
+  if (logs.length > 0) return humanizeSimError(e, logs as string[]);
+  return humanizeSweepError(e);
+}
+
+/** UI-tekst + technisch detail, voor de message-kolom van sweep_events. */
+export function withErrorDetail(uiMessage: string, e: unknown): string {
+  const d = errorDetail(e);
+  return d && d !== uiMessage ? `${uiMessage} | ${d}` : uiMessage;
+}
+
 /* ── Plannen: scan → chunk → refresh → preflight (met split-retry) ── */
 export interface SweepPlan {
   transactions: Transaction[];
@@ -362,6 +403,8 @@ export interface SweepPlan {
   skipped: SkippedAccount[];
   /** Batches die na splitsen alsnog faalden; message is UI-klaar. */
   errors: string[];
+  /** Zelfde fouten, met de technische oorzaak erachter — alleen voor de logging. */
+  errorDetails: string[];
 }
 
 /**
@@ -410,6 +453,7 @@ export async function planFromAccounts(params: {
   const transactions: Transaction[] = [];
   const batches: CloseableAccount[][] = [];
   const errors: string[] = [];
+  const errorDetails: string[] = [];
 
   const plan = async (batch: CloseableAccount[], depth = 0): Promise<void> => {
     const fresh = await refreshBatch(connection, batch);
@@ -436,6 +480,7 @@ export async function planFromAccounts(params: {
       }
       for (const a of fresh) skipped.push({ address: a.address, reason: 'preflight_failed' });
       errors.push(humanizeSweepError(e));
+      errorDetails.push(withErrorDetail(humanizeSweepError(e), e));
       return;
     }
 
@@ -445,7 +490,7 @@ export async function planFromAccounts(params: {
 
   for (const batch of chunkBatches(closeable)) await plan(batch);
 
-  return { transactions, batches, skipped, errors };
+  return { transactions, batches, skipped, errors, errorDetails };
 }
 
 /** Fee-berekening over een lijst CloseableAccounts, zelfde vorm als summarize() in funMode. */
