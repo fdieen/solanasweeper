@@ -13,6 +13,12 @@ export type TokenHolding = {
   decimals: number;
   lamports: number;  // rent in het token-account (terug bij sluiten)
   frozen: boolean;
+  /**
+   * closeAuthority staat op een ander adres dan de owner: alleen die authority kan
+   * het account sluiten, dus de rent is voor de gebruiker onbereikbaar. Zie
+   * hasForeignCloseAuthority in lib/funMode.ts.
+   */
+  closeLocked?: boolean;
   isNft: boolean;
   compressed: boolean;
   name?: string;     // metadata (DAS) — voor de burn-UI (naam herkennen)
@@ -39,6 +45,7 @@ export type Category =
   | 'burn'            // fungible junk → burn-kandidaat (opt-in)
   | 'nft'             // NFT → burn-kandidaat (opt-in), nooit swap
   | 'skip-frozen'     // bevroren → niet burn/close-baar
+  | 'skip-close-locked' // vreemde closeAuthority → close faalt altijd (0x4)
   | 'skip-compressed';// compressed NFT → v1 uitgesloten
 
 /** Een token heeft waarde zodra er een route, prijs, óf tokenlijst-vermelding is. */
@@ -55,6 +62,9 @@ export function hasValue(v: Valuation | undefined): boolean {
 export function classifyToken(h: TokenHolding, v: Valuation | undefined): Category {
   if (h.compressed) return 'skip-compressed'; // v1: cNFTs uitsluiten
   if (h.frozen) return 'skip-frozen';          // niet burn/close-baar
+  // Swappen kan nog (owner mag transfereren); sluiten/burn+close niet — de burn-tx
+  // sluit het account erna en zou dus als geheel falen.
+  if (h.closeLocked && (h.amountRaw === '0' || h.isNft || !hasValue(v))) return 'skip-close-locked';
   if (h.amountRaw === '0') return 'empty';      // Fun Mode
   if (h.isNft) return 'nft';                    // NFT → opt-in burn, nooit swap
   if (hasValue(v)) return 'swap';               // WAARDE → nooit burnen

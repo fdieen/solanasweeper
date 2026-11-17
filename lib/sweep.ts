@@ -41,7 +41,7 @@ import {
 } from '@solana/spl-token';
 import { addFeeInstructions } from './fees';
 import { FEE_BPS } from './pricing';
-import { CLOSE_FEE_ENABLED } from './funMode';
+import { CLOSE_FEE_ENABLED, rawHasForeignCloseAuthority } from './funMode';
 
 /* ── Config ── */
 const MIN_WALLET_RESERVE = 1_000_000; // ~0.001 SOL, gelijk aan MIN_SOL_FOR_CLOSE
@@ -58,7 +58,8 @@ export interface CloseableAccount {
   rentLamports: number;
 }
 
-export type SkipReason = 'not_empty' | 'already_closed' | 'frozen' | 'preflight_failed';
+export type SkipReason =
+  | 'not_empty' | 'already_closed' | 'frozen' | 'foreign_close_authority' | 'preflight_failed';
 
 export interface SkippedAccount {
   address: PublicKey;
@@ -95,6 +96,7 @@ export async function scanCloseableAccounts(
 
     if (data.amount !== BigInt(0)) { skipped.push({ address: pubkey, reason: 'not_empty' }); continue; }
     if (data.state === 2) { skipped.push({ address: pubkey, reason: 'frozen' }); continue; }
+    if (rawHasForeignCloseAuthority(data)) { skipped.push({ address: pubkey, reason: 'foreign_close_authority' }); continue; }
 
     let needsHarvest = false;
     if (isT22) {
@@ -127,7 +129,9 @@ export async function refreshBatch(
     const info = infos[i];
     if (!info || info.data.length === 0) return false; // al gesloten
     if (!info.owner.equals(a.programId)) return false; // verkeerd programma
-    return AccountLayout.decode(info.data).amount === BigInt(0);
+    const data = AccountLayout.decode(info.data);
+    if (rawHasForeignCloseAuthority(data)) return false; // authority intussen gewijzigd
+    return data.amount === BigInt(0);
   });
 }
 

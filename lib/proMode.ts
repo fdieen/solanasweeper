@@ -47,6 +47,7 @@ export function filterBurnSafe(
   for (const h of selected) {
     if (h.compressed) { rejected.push({ holding: h, reason: 'Compressed NFTs cannot be burned yet.' }); continue; }
     if (h.frozen) { rejected.push({ holding: h, reason: 'Account is frozen — the token program blocks burning.' }); continue; }
+    if (h.closeLocked) { rejected.push({ holding: h, reason: 'Another address controls closing this account, so its rent cannot be reclaimed.' }); continue; }
     if (h.amountRaw === '0') { rejected.push({ holding: h, reason: 'Account is already empty — nothing to burn.' }); continue; }
     const v = valuations.get(h.mint.toBase58());
     if (!h.isNft && hasValue(v)) {

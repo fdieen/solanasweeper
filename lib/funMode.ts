@@ -19,6 +19,29 @@ export const MIN_SOL_FOR_CLOSE = 1_000_000; // 0.001 SOL — close/burn (base fe
 export const MIN_SOL_FOR_SWAP = 3_000_000;  // 0.003 SOL — Jupiter-swap (transient wSOL rent + marge)
 
 /**
+ * Close-authority-check. Een token-account met een gezette closeAuthority die NIET de
+ * owner is, kan alleen door die authority gesloten worden (Token-programma: 0x4
+ * "owner does not match"). Drainers en sommige airdrop-scams zetten dit om de rent
+ * zelf te kunnen innen. Zulke accounts zijn voor ons onsluitbaar: niet meetellen,
+ * geen tx voor bouwen — anders faalt elke poging en blijft de gebruiker retryen.
+ */
+export function hasForeignCloseAuthority(
+  closeAuthority: string | null | undefined,
+  owner: string | null | undefined,
+): boolean {
+  return Boolean(closeAuthority && owner && closeAuthority !== owner);
+}
+
+/** Zelfde check op ruwe AccountLayout-data (closeAuthorityOption 1 = gezet). */
+export function rawHasForeignCloseAuthority(data: {
+  closeAuthorityOption: number;
+  closeAuthority: PublicKey;
+  owner: PublicKey;
+}): boolean {
+  return data.closeAuthorityOption === 1 && !data.closeAuthority.equals(data.owner);
+}
+
+/**
  * Close-fee schakelaar (analoog aan BURN_FEE_ENABLED voor burns). De close-tx int
  * 10% van de teruggewonnen rent naar de fee-wallet via een SystemProgram.transfer.
  *
@@ -60,6 +83,8 @@ type ParsedTokenItem = {
         info?: {
           tokenAmount?: { amount?: string };
           state?: string;
+          owner?: string;
+          closeAuthority?: string;
           extensions?: Array<{
             extension?: string;
             state?: { withheldAmount?: string };
@@ -88,6 +113,7 @@ export function filterClosable(
 
     if (info.tokenAmount?.amount !== '0') continue; // niet leeg
     if (info.state === 'frozen') continue;           // bevroren → niet sluitbaar
+    if (hasForeignCloseAuthority(info.closeAuthority, info.owner)) continue; // alleen de authority kan sluiten
 
     // Token-2022: openstaande withheld transfer-fees moeten eerst geharvest worden.
     // De parsed accountdata hebben we hier al, dus dit kost geen extra RPC-ronde.

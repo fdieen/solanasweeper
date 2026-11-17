@@ -71,6 +71,7 @@ const CLOSE_SKIP_TEXT: Record<SkipReason, string> = {
   already_closed: 'Account was already closed.',
   not_empty: 'Account is no longer empty.',
   frozen: 'Account is frozen — it cannot be closed.',
+  foreign_close_authority: 'Another address controls closing this account, so its rent cannot be reclaimed.',
   preflight_failed: 'Simulation failed, so this account was left untouched.',
 };
 

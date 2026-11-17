@@ -1,5 +1,5 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from './funMode';
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, hasForeignCloseAuthority } from './funMode';
 import { valuateMint } from './jupiter';
 import type { TokenHolding, Valuation } from './classify';
 
@@ -65,6 +65,8 @@ async function getTokenAccounts(connection: Connection, owner: PublicKey): Promi
             tokenAmount?: { amount?: string; decimals?: number };
             state?: string;
             mint?: string;
+            owner?: string;
+            closeAuthority?: string;
             extensions?: Array<{ extension?: string; state?: { withheldAmount?: string } }>;
           };
         };
@@ -81,6 +83,7 @@ async function getTokenAccounts(connection: Connection, owner: PublicKey): Promi
         decimals,
         lamports: acc.account.lamports,
         frozen: info.state === 'frozen',
+        closeLocked: hasForeignCloseAuthority(info.closeAuthority, info.owner),
         // voorlopige NFT-heuristiek; DAS overschrijft hieronder indien bekend
         isNft: decimals === 0 && amountRaw === '1',
         compressed: false,
